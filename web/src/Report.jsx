@@ -71,6 +71,12 @@ function Finding({ f, card, report, runId, byPersona, personas, selected }) {
       <div className="finding-main">
         <span className={`badge ${f.type}`}>{TYPE_LABEL[f.type] ?? f.type}</span>
         <h3>{card?.title ?? `${TYPE_LABEL[f.type]} around (${f.center.x}, ${f.center.y})`}</h3>
+        {card?.confidence && (
+          <p className={`confidence conf-${card.confidence}`}>
+            Confidence: {card.confidence}
+            {card.could_be_ghost_skill ? ' · could be the ghosts’ own lack of skill, not the design' : ''}
+          </p>
+        )}
         <p className="stat-line mono">
           {statLine(f, report)}
           {extra.length ? ` · ${extra.join(' · ')}` : ''}

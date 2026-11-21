@@ -154,6 +154,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .badge.confusion { background: var(--blue); }
 .badge.quit { background: #b5179e; color: #fff; }
 .stat-line { margin: 0 0 10px; color: var(--muted); font-size: 0.82rem; }
+.confidence { margin: 0 0 8px; font-size: 0.8rem; color: var(--muted); }
+.confidence.conf-high { color: var(--good); }
+.confidence.conf-low { color: var(--amber); }
 .card-fields { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0 0 12px; }
 .card-fields dt { color: var(--muted); font-size: 0.85rem; }
 .card-fields dd { margin: 0; line-height: 1.4; }

@@ -12,14 +12,26 @@ const CARD_SCHEMA = {
     what_happens: { type: 'string', description: 'What the ghosts experienced here, one sentence, grounded in the evidence.' },
     likely_cause: { type: 'string', description: 'Most likely design cause, one sentence. Say "unclear" if the evidence does not show it.' },
     suggested_fix: { type: 'string', description: 'One concrete change the developer could try, one sentence.' },
+    could_be_ghost_skill: {
+      type: 'boolean',
+      description: 'True if the evidence could also be explained by the ghosts being clumsy at a precise action (a timed jump, an exact landing), rather than by the game design.',
+    },
+    confidence: {
+      type: 'string',
+      enum: ['high', 'medium', 'low'],
+      description: 'How sure a developer can be that this is a real design problem. High only when game-reported events (deaths, objectives) clearly support it and ghost skill is unlikely to explain it.',
+    },
   },
-  required: ['title', 'what_happens', 'likely_cause', 'suggested_fix'],
+  required: ['title', 'what_happens', 'likely_cause', 'suggested_fix', 'could_be_ghost_skill', 'confidence'],
   additionalProperties: false,
 };
 
 const SYSTEM = [
   'You are a game-design analyst reviewing an automated playtest done by AI "ghost" players with different personalities.',
   'Explain only the finding you are given, using only its evidence. Do not invent numbers or events.',
+  // Added after a human review on a real game (docs/ai-review-log.md, R5): all ghosts got stuck at a jump a
+  // person found easy, and the card blamed the platform height.
+  'The ghosts are AI players: they read the screen well but can be clumsy at precise jumps and timing. When their failure could be their own lack of skill, say so in likely_cause and lower the confidence. When the ghosts said a control or mechanic did nothing or made no sense, consider whether the game explains it.',
   'BLOCKER: nobody who reached the spot got past it, so treat it as a likely bug or design error.',
   'FRICTION: ghosts died but some got past; it may be intended challenge, so suggest a gentle change (a hint, a checkpoint, clearer visuals) rather than removing the challenge.',
   'MISSED: most ghosts never reached an objective (for example they never found an item); focus on why it was not noticed or understood.',
@@ -27,7 +39,36 @@ const SYSTEM = [
   'CONFUSION: several ghosts said they did not understand something here; focus on what is unclear.',
 ].join('\n');
 
-function factsFor(f, report) {
+// A control or mechanic that "did nothing" is the strongest sign of something the game does not explain.
+const NOTHING_HAPPENED = /(did ?n.t|does ?n.t|doesn.t|not working|has ?n.t worked|no effect|nothing happen|did nothing|does nothing|won.t|can.t|unexplained|no instructions)/i;
+const MENTIONS_CONTROL = /\b(space|spacebar|arrow|up|key|press|tap|click|button|[a-z] key|control|refresh)\b/i;
+
+/** What the finding's ghosts said about controls that did nothing, or moments they flagged as confusing, during the whole run. */
+function controlTalk(f, tracesByPersona, max = 6) {
+  const candidates = [];
+  for (const p of f.ghosts) {
+    for (const s of tracesByPersona[p]?.steps ?? []) {
+      const nothing = NOTHING_HAPPENED.test(s.thought);
+      const control = MENTIONS_CONTROL.test(s.thought);
+      const score = (nothing && control ? 3 : 0) + (s.confused ? 2 : 0) + (nothing ? 1 : 0);
+      if (score >= 2) candidates.push({ p, thought: s.thought, score });
+    }
+  }
+  const seen = new Set();
+  const perGhost = {};
+  return candidates
+    .sort((a, b) => b.score - a.score)
+    .filter((c) => {
+      if (seen.has(c.thought) || (perGhost[c.p] ?? 0) >= 2) return false;
+      seen.add(c.thought);
+      perGhost[c.p] = (perGhost[c.p] ?? 0) + 1;
+      return true;
+    })
+    .slice(0, max)
+    .map((c) => `${c.p}: "${c.thought}"`);
+}
+
+function factsFor(f, report, tracesByPersona = {}) {
   const who = `${f.ghosts.length} of ${report.ghostsTotal} ghosts (${f.ghosts.join(', ')})`;
   const lines = [];
   if (f.type === 'blocker' || f.type === 'friction') {
@@ -51,6 +92,12 @@ function factsFor(f, report) {
   // A human review (docs/ai-review-log.md, R3) found these are the ghosts' plans right before acting, not
   // descriptions of what happened, so label them that way for the analyst too.
   lines.push(`What the ghosts were planning right before (plans, not a description of the outcome): ${f.quotes.map((q) => `"${q}"`).join(' ')}`);
+  if (f.type !== 'blocker' && f.type !== 'friction') {
+    const talk = controlTalk(f, tracesByPersona);
+    if (talk.length) lines.push(`What these ghosts said about controls or confusion during the whole run: ${talk.join(' ')}`);
+  }
+  if (report.positionSource === 'ghosts')
+    lines.push('This game has no Ghost Players SDK: positions and deaths are what the ghosts reported seeing on screen, not events from the game.');
   return lines.join('\n');
 }
 
@@ -76,7 +123,7 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
           {
             role: 'user',
             content: [
-              { type: 'text', text: `${factsFor(f, report)}\n\nThe image shows the game at the key moment for this finding. Write the finding card.` },
+              { type: 'text', text: `${factsFor(f, report, byPersona)}\n\nThe image shows the game at the key moment for this finding. Write the finding card.` },
               { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${img.toString('base64')}` } },
             ],
           },
