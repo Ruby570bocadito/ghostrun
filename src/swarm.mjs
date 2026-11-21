@@ -29,10 +29,19 @@ export async function runSwarm({
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
+  // The same persona can be summoned more than once (clones, for the diversity experiment).
+  const seen = {};
+  const roster = personas.map((p) => {
+    seen[p] = (seen[p] ?? 0) + 1;
+    const base = PERSONAS[p];
+    if (!base) throw new Error(`Unknown persona "${p}"`);
+    return seen[p] === 1 ? base : { ...base, id: `${p}-${seen[p]}`, name: `${base.name} #${seen[p]}` };
+  });
+
   try {
     const traces = await Promise.all(
-      personas.map(async (id) => {
-        const persona = PERSONAS[id];
+      roster.map(async (persona) => {
+        const id = persona.id;
         const make = (m) => createMetaBrain({ model: m, reasoning, persona, controlsHint });
         const ghostBrain =
           brain === 'scripted'
