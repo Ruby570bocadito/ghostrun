@@ -19,7 +19,7 @@ function loadImage(src) {
  * The whole level rebuilt from the ghosts' own frames (no game integration needed beyond positions),
  * with where they spent time (heat), where they died (✕) and the hotspots on top.
  */
-export function Heatmap({ runId, report, traces, personas, selected, onSelect }) {
+export function Heatmap({ runId, report, traces, personas, selected, onSelect, resolved = [] }) {
   const baseRef = useRef(null);
   const heatRef = useRef(null);
   const [stitched, setStitched] = useState(false);
@@ -129,6 +129,15 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect })
           </button>
         );
       })}
+      {resolved.map((f) => (
+        <div
+          key={`was-${f.id}`}
+          className="hot-band was"
+          style={{ left: `${(f.region.x0 / W) * 100}%`, width: `${((f.region.x1 - f.region.x0) / W) * 100}%`, top: `${(f.region.y0 / H) * 100}%`, height: `${((f.region.y1 - f.region.y0) / H) * 100}%` }}
+        >
+          <span className="hot-tag">Before: {TYPE_LABEL[f.type] ?? f.type} · now resolved</span>
+        </div>
+      ))}
       {!stitched && <div className="heatmap-loading">Rebuilding the level from the ghosts' frames…</div>}
     </div>
   );

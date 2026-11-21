@@ -328,6 +328,8 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90 } = {}) 
     hotspots: findings, // backwards-compatible name used by older reports
     milestones,
     deaths: deaths.map(({ persona, x, y, step }) => ({ persona, x, y, step })),
+    // Failures handled during the run (e.g. a model outage and the switch to the backup model).
+    notices: rawTraces.flatMap((t) => (t.notices ?? []).map((n) => ({ persona: t.persona, ...n }))),
     quits,
     heat: traces.flatMap((t) => t.frames.filter((f) => f.state && Number.isFinite(f.state.x)).map((f) => ({ ...posOf(f), persona: t.persona }))),
   };

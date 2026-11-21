@@ -6,7 +6,7 @@ import { runGhost } from './ghost.mjs';
 import { PERSONAS } from './personas.mjs';
 import { createMetaBrain } from './brains/meta.mjs';
 import { createScriptedBrain } from './brains/scripted.mjs';
-import { withFallback } from './brains/fallback.mjs';
+import { withFallback, withSimulatedOutage } from './brains/fallback.mjs';
 
 export async function runSwarm({
   url,
@@ -21,12 +21,15 @@ export async function runSwarm({
   onEvent = () => {},
   bulletTime = true,
   viewport = { width: 640, height: 360 },
+  // Test option: make one ghost's model fail from its Nth move, to show the fallback. Labelled everywhere.
+  simulateOutage = null, // e.g. { ghost: 'newbie', fromCall: 6 }
+  compareTo = null,
   signal,
 }) {
   await mkdir(outDir, { recursive: true });
   const browser = await chromium.launch();
   const started = Date.now();
-  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, viewport };
+  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, viewport, simulateOutage, compareTo };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
@@ -43,12 +46,20 @@ export async function runSwarm({
     const traces = await Promise.all(
       roster.map(async (persona) => {
         const id = persona.id;
+        const notices = []; // things that went wrong and how they were handled, kept in the trace
         const make = (m) => createMetaBrain({ model: m, reasoning, persona, controlsHint, viewport });
+        let primary = brain === 'scripted' ? createScriptedBrain() : make(model);
+        if (simulateOutage && (simulateOutage.ghost === id || simulateOutage.ghost === 'all')) {
+          primary = withSimulatedOutage(primary, { fromCall: simulateOutage.fromCall ?? 6 });
+        }
         const ghostBrain =
           brain === 'scripted'
-            ? createScriptedBrain()
-            : withFallback(make(model), () => make(fallbackModel), {
-                onSwitch: (info) => onEvent({ type: 'model_fallback', ghost: id, ...info }),
+            ? primary
+            : withFallback(primary, () => make(fallbackModel), {
+                onSwitch: (info) => {
+                  notices.push({ type: 'model_fallback', ...info });
+                  onEvent({ type: 'model_fallback', ghost: id, ...info });
+                },
               });
         onEvent({ type: 'ghost_started', ghost: id });
         const trace = await runGhost({
@@ -60,6 +71,7 @@ export async function runSwarm({
           outDir: join(outDir, id),
           bulletTime,
           viewport,
+          notices,
           signal,
           onFrame: (f) => onEvent({ type: 'frame', ghost: id, t: f.t, file: `${id}/${f.file}`, state: f.state }),
           onStep: (s) => onEvent({ type: 'step', ghost: id, step: s }),

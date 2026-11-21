@@ -12,6 +12,8 @@ export function Summon({ config, onStarted }) {
   const [url, setUrl] = useState('');
   const [selected, setSelected] = useState([]);
   const [steps, setSteps] = useState(40);
+  const [viewport, setViewport] = useState('640x360');
+  const [simulateOutage, setSimulateOutage] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
 
@@ -29,7 +31,7 @@ export function Summon({ config, onStarted }) {
       const res = await fetch('/api/runs', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), personas: selected, steps }),
+        body: JSON.stringify({ url: url.trim(), personas: selected, steps, viewport, simulateOutage }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -136,6 +138,20 @@ export function Summon({ config, onStarted }) {
           </label>
           <p className="muted small">The game is paused while each ghost thinks, so they can play real-time games too.</p>
         </div>
+        <details className="advanced">
+          <summary>Advanced options</summary>
+          <label className="adv-row">
+            <span>Game window size</span>
+            <select value={viewport} onChange={(e) => setViewport(e.target.value)}>
+              <option value="640x360">640×360 (fast, small games)</option>
+              <option value="960x540">960×540 (games made for bigger screens)</option>
+            </select>
+          </label>
+          <label className="adv-row">
+            <input type="checkbox" checked={simulateOutage} onChange={(e) => setSimulateOutage(e.target.checked)} />
+            <span>Test: simulate an AI outage for the first ghost from its 6th move (to see the backup model take over)</span>
+          </label>
+        </details>
         {error && (
           <p className="form-error" role="alert">
             {error}

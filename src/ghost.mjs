@@ -61,6 +61,7 @@ export async function runGhost({
   onFrame = () => {},
   stopOnWin = true,
   bulletTime = true, // false = the game keeps running while the brain thinks (baseline for the A2 experiment)
+  notices = [], // failures handled during the run (e.g. model fallback), shared with the caller
   signal,
 }) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -77,7 +78,7 @@ export async function runGhost({
     steps: [],
     frames: [],
     events: [],
-    notices: [],
+    notices,
     startedAt: new Date().toISOString(),
   };
   let gameMs = 0;

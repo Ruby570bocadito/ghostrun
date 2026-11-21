@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { GhostIcon, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
+import { Compare, useBefore, diffFindings } from './Compare.jsx';
 
 const CRITICAL = ['blocker', 'missed', 'stuck'];
 
@@ -137,6 +138,13 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   const [selected, setSelected] = useState(findings[0]?.id ?? null);
   const [rerunError, setRerunError] = useState(null);
   const url = report.config?.url ?? '';
+  const [rerunUrl, setRerunUrl] = useState(url);
+  const [showRerun, setShowRerun] = useState(false);
+  const before = useBefore(report.config?.compareTo);
+  const resolved = useMemo(
+    () => (before && before.worldW === report.worldW ? diffFindings(before, report).filter((r) => r.status === 'resolved').map((r) => r.before) : []),
+    [before, report],
+  );
   const target = url ? new URL(url) : null;
   const host = target ? target.host + target.pathname + target.search : '';
 
@@ -149,12 +157,20 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
     document.getElementById(`f-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  const rerun = async () => {
+  const rerun = async (e) => {
+    e?.preventDefault();
     setRerunError(null);
+    const vp = report.config?.viewport;
     const res = await fetch('/api/runs', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ url, personas: report.config.personas, steps: report.config.steps }),
+      body: JSON.stringify({
+        url: rerunUrl.trim() || url,
+        personas: report.config.personas,
+        steps: report.config.steps,
+        viewport: vp ? `${vp.width}x${vp.height}` : undefined,
+        compareTo: runId, // the new report shows what changed since this one
+      }),
     });
     const body = await res.json();
     if (res.ok) onRerun(body.id);
@@ -185,12 +201,40 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           <button className="btn-ghost" onClick={onHome}>
             New game
           </button>
-          <button className="btn-primary" onClick={rerun}>
-            Re-run ghosts
+          <button className="btn-primary" onClick={() => setShowRerun((v) => !v)} aria-expanded={showRerun}>
+            Re-run after a fix
           </button>
         </div>
       </div>
+      {showRerun && (
+        <form className="rerun-form" onSubmit={rerun}>
+          <label htmlFor="rerun-url">Fixed your game? Re-run the same ghosts and see what changed. Change the link if the fixed build lives somewhere else.</label>
+          <div className="url-row">
+            <input id="rerun-url" className="url-input mono" value={rerunUrl} onChange={(e) => setRerunUrl(e.target.value)} />
+            <button className="btn-primary" type="submit">
+              Re-run and compare
+            </button>
+          </div>
+        </form>
+      )}
       {rerunError && <p className="form-error">{rerunError}</p>}
+      {report.config?.simulateOutage && (
+        <p className="sim-banner">Test run: an AI outage was simulated for {personas[report.config.simulateOutage.ghost]?.name ?? report.config.simulateOutage.ghost} from its move {report.config.simulateOutage.fromCall}.</p>
+      )}
+      {before && <Compare before={before} after={report} beforeId={report.config.compareTo} />}
+      {report.notices?.length > 0 && (
+        <div className="notices" role="status">
+          <h3>What went wrong during the run, and how it was handled</h3>
+          <ul>
+            {report.notices.map((n, i) => (
+              <li key={i}>
+                <b>{personas[n.persona]?.name ?? n.persona}</b>: {n.from} failed at move {n.step} ({n.simulated ? 'simulated outage, ' : ''}
+                {n.reason}). It switched to <b>{n.to}</b> and kept playing; no moves were lost.
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="summary">
         <div className={`stat ${critical ? 'bad' : 'good'}`}>
@@ -242,7 +286,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
 
       {report.hasPositions ? (
         <div className="heat-wrap">
-          <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} onSelect={select} />
+          <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} onSelect={select} resolved={resolved} />
           <p className="legend small muted">
             {report.positionSource === 'ghosts'
               ? "This game has no Ghost Players SDK: positions and deaths are what each ghost reported seeing on screen · red glow = where they were · ✕ = deaths · click a box to see its replay"

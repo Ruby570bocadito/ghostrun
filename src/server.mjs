@@ -79,16 +79,16 @@ function emit(run, event) {
   for (const res of run.clients) res.write(line);
 }
 
-async function startRun({ url, personas, steps, model }) {
+async function startRun({ url, personas, steps, model, viewport, simulateOutage, compareTo }) {
   const id = new Date().toISOString().replace(/[:.]/g, '-') + '-' + randomUUID().slice(0, 6);
   const outDir = join(runsDir, id);
-  const run = { id, status: 'running', config: { url, personas, steps, model }, events: [], clients: new Set(), report: null, controller: new AbortController() };
+  const run = { id, status: 'running', config: { url, personas, steps, model, viewport, simulateOutage, compareTo }, events: [], clients: new Set(), report: null, controller: new AbortController() };
   runs.set(id, run);
   activeRun = run;
 
   (async () => {
     try {
-      const { traces, ms } = await runSwarm({ url, personas, steps, model, outDir, signal: run.controller.signal, onEvent: (e) => emit(run, e) });
+      const { traces, ms } = await runSwarm({ url, personas, steps, model, viewport, simulateOutage, compareTo, outDir, signal: run.controller.signal, onEvent: (e) => emit(run, e) });
       run.status = 'analyzing';
       emit(run, { type: 'analyzing' });
 
@@ -108,7 +108,8 @@ async function startRun({ url, personas, steps, model }) {
           report.analystError = err.message;
         }
       }
-      const ghostCost = report.ghosts.reduce((a, g) => a + costOf(g.model, { input: g.tokensIn, output: g.tokensOut }), 0);
+      // Per move, because a ghost can switch to the backup model mid-run.
+      const ghostCost = traces.reduce((a, t) => a + t.steps.reduce((b, st) => b + costOf(st.model ?? t.model, st.usage ?? { input: 0, output: 0 }), 0), 0);
       const analystCost = report.analystUsage ? costOf('muse-spark-1.3', report.analystUsage) : 0;
       report.cost = { ghosts: ghostCost, analyst: analystCost, total: ghostCost + analystCost };
       report.realMs = ms;
@@ -212,7 +213,12 @@ const server = createServer(async (req, res) => {
       if (spend.totalUsd >= BUDGET_USD) return send(res, 402, { error: 'budget', message: `Spending cap of $${BUDGET_USD} reached.` });
       const personas = (Array.isArray(body.personas) && body.personas.length ? body.personas : DEFAULT_PERSONAS).filter((p) => PERSONAS[p]).slice(0, 8);
       const steps = Math.max(5, Math.min(80, Number(body.steps) || 40));
-      const run = await startRun({ url: target.href, personas, steps, model: body.model });
+      const [vw, vh] = String(body.viewport ?? '640x360').split('x').map(Number);
+      const viewport = vw >= 320 && vw <= 1600 && vh >= 180 && vh <= 1000 ? { width: vw, height: vh } : { width: 640, height: 360 };
+      // Test option (labelled in the UI and the report): the first ghost's model fails from its 6th move.
+      const simulateOutage = body.simulateOutage ? { ghost: personas[0], fromCall: 6 } : null;
+      const compareTo = SAFE_ID.test(String(body.compareTo ?? '')) && existsSync(join(runsDir, body.compareTo, 'report.json')) ? body.compareTo : null;
+      const run = await startRun({ url: target.href, personas, steps, model: body.model, viewport, simulateOutage, compareTo });
       return send(res, 202, { id: run.id });
     }
 
