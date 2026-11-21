@@ -103,6 +103,41 @@ test('an objective no ghost reaches is reported as missed', () => {
   assert.equal(r.milestones[0].reachedBy.length, 0);
 });
 
+test('an objective drawn with too little contrast is "hard to see", even if the ghosts reached it', () => {
+  const traces = ['a', 'b', 'c', 'd'].map((p) => {
+    const t = walker(p, { upTo: 600 });
+    t.frames[0].state.milestones = [{ name: 'key', x: 500, y: 280, kind: 'object' }, { name: 'door', x: 580, y: 280, kind: 'object' }];
+    t.events.push({ type: 'milestone', name: 'key', x: 500, y: 280, t: 1000, step: 1 }, { type: 'milestone', name: 'door', x: 580, y: 280, t: 1200, step: 1 });
+    return t;
+  });
+  const objectives = [
+    { name: 'key', x: 500, y: 280, ratio: 1.09, persona: 'a', frame: 0 },
+    { name: 'door', x: 580, y: 280, ratio: 12.4, persona: 'a', frame: 0 },
+  ];
+  const r = analyze(traces, { objectives });
+  const f = r.findings.find((x) => x.type === 'hard_to_see');
+  assert.ok(f, 'expected a hard_to_see finding');
+  assert.equal(f.milestone, 'key');
+  assert.equal(f.severity, 'high'); // below 1.5:1, practically invisible
+  assert.equal(f.reachedBy.length, 4); // AI ghosts found it anyway: that is the point
+  assert.equal(r.findings.filter((x) => x.type === 'hard_to_see').length, 1); // the door is fine
+  assert.deepEqual(r.objectives.map((o) => o.ok), [false, true]);
+  const medium = analyze(traces, { objectives: [{ ...objectives[0], ratio: 2.4 }] }).findings.find((x) => x.type === 'hard_to_see');
+  assert.equal(medium.severity, 'medium');
+});
+
+test('when nobody found a faint objective, its contrast is attached to the missed finding (no duplicate)', () => {
+  const traces = ['a', 'b', 'c'].map((p) => {
+    const t = walker(p, { upTo: 400 });
+    t.frames[0].state.milestones = [{ name: 'key', x: 500, y: 100, kind: 'object' }];
+    return t;
+  });
+  const r = analyze(traces, { objectives: [{ name: 'key', x: 500, y: 100, ratio: 1.1, persona: 'a', frame: 0 }] });
+  assert.equal(r.findings.filter((x) => x.milestone === 'key').length, 1);
+  const f = r.findings.find((x) => x.type === 'missed');
+  assert.equal(f.contrast, 1.1);
+});
+
 test('stuck needs at least two ghosts circling the same area', () => {
   const circler = (p) => {
     const frames = [];

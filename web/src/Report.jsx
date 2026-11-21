@@ -4,7 +4,7 @@ import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
 import { Compare, useBefore, diffFindings } from './Compare.jsx';
 
-const CRITICAL = ['blocker', 'missed', 'stuck'];
+const CRITICAL = ['blocker', 'missed', 'stuck', 'hard_to_see'];
 
 function useTraces(runId, personaIds) {
   const [traces, setTraces] = useState([]);
@@ -38,6 +38,8 @@ function statLine(f, report) {
       return `${n} spent their last moves circling here`;
     case 'confusion':
       return `${n} said they were confused here (${f.count} times)`;
+    case 'hard_to_see':
+      return `“${f.milestone}” has a contrast of ${f.contrast}:1 against its background (WCAG asks 3:1) · ${f.reachedBy.length}/${report.ghostsTotal} AI ghosts found it anyway`;
     default:
       return n;
   }
@@ -66,6 +68,7 @@ function Finding({ f, card, report, runId, byPersona, personas, selected }) {
   const extra = [
     f.stuckGhosts?.length ? `${f.stuckGhosts.length} ended their run stuck here` : null,
     f.confusedGhosts?.length ? `${f.confusedGhosts.length} said they were confused here` : null,
+    f.type !== 'hard_to_see' && f.contrast ? `measured contrast ${f.contrast}:1 (WCAG asks 3:1)` : null,
   ].filter(Boolean);
   return (
     <article id={`f-${f.id}`} className={`finding ${f.type} ${selected ? 'selected' : ''}`}>
@@ -342,7 +345,18 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
               <GhostIcon color={p.color} size={26} mood={moodFor(g.outcome)} />
               <div className="roster-name">
                 <b>{p.name}</b>
-                <span className={`pill pill-${g.outcome}`}>{OUTCOME_LABEL[g.outcome] ?? g.outcome}</span>
+                <span
+                  className={`pill pill-${g.outcome}`}
+                  title={
+                    g.stopReason?.kind === 'deaths'
+                      ? `Stopped after dying ${g.stopReason.count} times at the same spot: more moves would not change the finding.`
+                      : g.stopReason?.kind === 'idle'
+                        ? `Stopped after ${g.stopReason.moves} moves without reaching anywhere new.`
+                        : undefined
+                  }
+                >
+                  {OUTCOME_LABEL[g.outcome] ?? g.outcome}
+                </span>
               </div>
               <span className="progress wide" aria-label={`Progress ${Math.round((g.progress ?? 0) * 100)}%`}>
                 <span style={{ width: `${(g.progress ?? 0) * 100}%` }} />
@@ -358,7 +372,8 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
 
       <p className="method small muted">
         How this was made: each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). Deaths, objectives and positions
-        come from the game; findings are grouped by position without AI. A blocker is a spot no ghost that reached it got past. The AI only writes the explanation of each
+        come from the game; findings are grouped by position without AI. A blocker is a spot no ghost that reached it got past. Objectives the game marks as things to see
+        are also measured for contrast on the screen (WCAG asks 3:1), because AI eyes spot faint shapes that people miss. The AI only writes the explanation of each
         finding.
       </p>
     </section>

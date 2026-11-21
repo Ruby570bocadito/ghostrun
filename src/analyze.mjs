@@ -3,12 +3,15 @@
 //  - milestones nobody (or few) reached  → missed  (e.g. nobody found the key)
 //  - where non-finishers ended up        → stuck   (circling the same area until they ran out of moves)
 //  - the ghosts' own "confused" flags    → confusion
+//  - objectives drawn with too little contrast (measured on the screen, contrast.mjs) → hard_to_see
 // The AI only explains findings afterwards (explain.mjs) and can only talk about the ones found here.
+import { costOf } from './brains/prices.mjs';
+import { CONTRAST_INVISIBLE, CONTRAST_MIN } from './contrast.mjs';
 
 const mean = (a) => a.reduce((s, v) => s + v, 0) / Math.max(1, a.length);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const SEVERITY_RANK = { high: 0, medium: 1, low: 2 };
-const TYPE_RANK = { blocker: 0, missed: 1, stuck: 2, confusion: 3, friction: 4 };
+const TYPE_RANK = { blocker: 0, missed: 1, hard_to_see: 1.5, stuck: 2, confusion: 3, friction: 4 };
 
 function frameAt(frames, pageT) {
   // Last frame recorded at or before pageT (frames are in time order).
@@ -91,7 +94,8 @@ export function withEstimatedPositions(traces) {
   });
 }
 
-export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90 } = {}) {
+/** objectives: contrast measurements from contrast.mjs (optional). */
+export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objectives = [] } = {}) {
   const positionSource = rawTraces.some((t) => t.frames.some((f) => f.state)) ? 'game' : 'ghosts';
   const traces = withEstimatedPositions(rawTraces);
   const ghostsTotal = traces.length;
@@ -124,7 +128,13 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90 } = {}) 
               : null,
       gameMs: t.gameMs,
       tokensIn: t.steps.reduce((a, s) => a + (s.usage?.input ?? 0), 0),
+      tokensCached: t.steps.reduce((a, s) => a + (s.usage?.cached ?? 0), 0),
       tokensOut: t.steps.reduce((a, s) => a + (s.usage?.output ?? 0), 0),
+      tokensReasoning: t.steps.reduce((a, s) => a + (s.usage?.reasoning ?? 0), 0),
+      // Priced per move: a ghost can switch to the backup model mid-run.
+      costUsd: t.steps.reduce((a, s) => a + costOf(s.model ?? t.model, s.usage), 0),
+      listCostUsd: t.steps.reduce((a, s) => a + costOf(s.model ?? t.model, s.usage, { listPrice: true }), 0),
+      stopReason: t.stopReason ?? null,
       avgLatencyMs: Math.round(mean(t.steps.map((s) => s.latencyMs))),
       confusedSteps: t.steps.filter((s) => s.confused).length,
     };
@@ -229,10 +239,41 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90 } = {}) 
     break;
   }
 
+  // 2b) Objectives too faint for people to see → hard_to_see. AI ghosts can spot shapes people miss,
+  // so this does not depend on whether the ghosts reached the objective.
+  for (const o of objectives.filter((x) => x.ratio < CONTRAST_MIN)) {
+    const missed = findings.find((f) => f.type === 'missed' && f.milestone === o.name);
+    if (missed) {
+      missed.contrast = o.ratio; // the same objective: one finding, with the measured cause attached
+      continue;
+    }
+    const reachedBy = ghosts.filter((g) => g.milestones.includes(o.name)).map((g) => g.persona);
+    const notReached = active.filter((g) => !reachedBy.includes(g.persona)).map((g) => g.persona);
+    const t = traces.find((tr) => tr.persona === o.persona) ?? traces[0];
+    const s = t ? stepAt(t, o.frame) : null;
+    const near = traces.flatMap((tr) =>
+      tr.steps.filter((st) => st.before && Number.isFinite(st.before.x) && dist(st.before, o) < 120 && st.thought).map((st) => st.thought),
+    );
+    findings.push({
+      type: 'hard_to_see',
+      severity: o.ratio < CONTRAST_INVISIBLE ? 'high' : 'medium',
+      milestone: o.name,
+      contrast: o.ratio,
+      center: { x: Math.round(o.x), y: Math.round(o.y) },
+      region: { x0: Math.max(0, Math.round(o.x - 40)), y0: Math.max(0, Math.round(o.y - 40)), x1: Math.min(worldW, Math.round(o.x + 40)), y1: Math.min(worldH, Math.round(o.y + 40)) },
+      count: notReached.length,
+      ghosts: notReached,
+      share: notReached.length / ghostsTotal,
+      reachedBy,
+      evidence: t ? [{ persona: t.persona, step: s?.step ?? null, clip: [o.frame, Math.min(t.frames.length - 1, o.frame + 20)], thought: s?.thought ?? '' }] : [],
+      quotes: [...new Set(near)].slice(0, 6),
+    });
+  }
+
   // 3) Where ghosts that did not finish ended up circling → stuck
   const zones = [];
   for (const t of traces) {
-    if (!['out_of_steps', 'quit', 'stopped'].includes(t.outcome)) continue;
+    if (!['out_of_steps', 'quit', 'stopped', 'saturated'].includes(t.outcome)) continue;
     const withPos = t.frames.map((f, i) => ({ f, i })).filter(({ f }) => f.state && Number.isFinite(f.state.x));
     const tail = withPos.slice(-Math.max(20, Math.floor(withPos.length * 0.4)));
     if (tail.length < 10) continue;
@@ -327,6 +368,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90 } = {}) 
     findings,
     hotspots: findings, // backwards-compatible name used by older reports
     milestones,
+    objectives: objectives.map((o) => ({ ...o, ok: o.ratio >= CONTRAST_MIN })), // contrast of each objective players must see
     deaths: deaths.map(({ persona, x, y, step }) => ({ persona, x, y, step })),
     // Failures handled during the run (e.g. a model outage and the switch to the backup model).
     notices: rawTraces.flatMap((t) => (t.notices ?? []).map((n) => ({ persona: t.persona, ...n }))),

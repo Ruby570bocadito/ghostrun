@@ -1,5 +1,5 @@
 // Runs several ghosts in parallel on the same game, each in its own browser context.
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { runGhost } from './ghost.mjs';
@@ -7,6 +7,7 @@ import { PERSONAS } from './personas.mjs';
 import { createMetaBrain } from './brains/meta.mjs';
 import { createScriptedBrain } from './brains/scripted.mjs';
 import { withFallback, withSimulatedOutage } from './brains/fallback.mjs';
+import { measureObjectives } from './contrast.mjs';
 
 export async function runSwarm({
   url,
@@ -20,6 +21,7 @@ export async function runSwarm({
   outDir,
   onEvent = () => {},
   bulletTime = true,
+  stopWhenSaturated = true,
   viewport = { width: 640, height: 360 },
   // Test option: make one ghost's model fail from its Nth move, to show the fallback. Labelled everywhere.
   simulateOutage = null, // e.g. { ghost: 'newbie', fromCall: 6 }
@@ -29,7 +31,7 @@ export async function runSwarm({
   await mkdir(outDir, { recursive: true });
   const browser = await chromium.launch();
   const started = Date.now();
-  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, viewport, simulateOutage, compareTo };
+  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, simulateOutage, compareTo };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
@@ -70,6 +72,7 @@ export async function runSwarm({
           maxSteps: steps,
           outDir: join(outDir, id),
           bulletTime,
+          stopWhenSaturated,
           viewport,
           notices,
           signal,
@@ -80,7 +83,14 @@ export async function runSwarm({
         return trace;
       }),
     );
-    return { traces, ms: Date.now() - started };
+    // Can people see the objectives? Measured on the recorded screens (no AI); optional, never fails the run.
+    let objectives = [];
+    try {
+      objectives = await measureObjectives({ browser, traces, readFrame: (persona, file) => readFile(join(outDir, persona, file)) });
+    } catch (err) {
+      onEvent({ type: 'notice', message: `Contrast check skipped: ${err.message}` });
+    }
+    return { traces, objectives, ms: Date.now() - started };
   } finally {
     await browser.close();
   }

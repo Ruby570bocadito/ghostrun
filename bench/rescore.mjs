@@ -6,6 +6,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { analyze } from '../src/analyze.mjs';
 import { score } from './score.mjs';
+import { chromium } from 'playwright';
+import { measureObjectives } from '../src/contrast.mjs';
+
+const browser = await chromium.launch();
 
 const [label = 'baseline', newLabel = `${label}-rescored`] = process.argv.slice(2);
 const old = JSON.parse(await readFile(join('bench', 'results', `${label}.json`), 'utf8'));
@@ -24,10 +28,12 @@ for (const r of old.results) {
   }
   const traces = await Promise.all(ids.map(async (id) => JSON.parse(await readFile(join(r.dir, id, 'trace.json'), 'utf8'))));
   const faults = JSON.parse(await readFile(join('games', r.game, 'faults.json'), 'utf8'));
-  const report = analyze(traces);
+  const objectives = await measureObjectives({ browser, traces, readFrame: (persona, file) => readFile(join(r.dir, persona, file)) });
+  const report = analyze(traces, { objectives });
   const s = score(report, r.variant === 'clean' ? null : faults[r.variant]);
   results.push({ ...r, ...s, findings: report.findings.map((f) => ({ id: f.id, type: f.type, severity: f.severity, center: f.center, ghosts: f.ghosts.length })) });
 }
+await browser.close();
 const faultRows = results.filter((r) => r.kind === 'fault');
 const cleanRows = results.filter((r) => r.kind === 'clean');
 const summary = {

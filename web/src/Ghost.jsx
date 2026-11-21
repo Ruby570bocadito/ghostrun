@@ -26,8 +26,9 @@ export const OUTCOME_LABEL = {
   quit: 'Quit',
   out_of_steps: 'Out of moves',
   stopped: 'Stopped',
+  saturated: 'Seen enough',
   error: 'Error',
   waiting: 'Waiting',
 };
 
-export const moodFor = (outcome) => (outcome === 'won' ? 'happy' : outcome === 'quit' ? 'angry' : outcome === 'error' ? 'dead' : 'calm');
+export const moodFor = (outcome) => (outcome === 'won' ? 'happy' : outcome === 'quit' || outcome === 'saturated' ? 'angry' : outcome === 'error' ? 'dead' : 'calm');

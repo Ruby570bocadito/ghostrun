@@ -115,7 +115,7 @@
       ghost.state({
         game: 'spike-maze',
         fault: FAULT || 'none',
-        milestones: [{ name: 'checkpoint', x: CHECKPOINT.x, y: CHECKPOINT.y }],
+        milestones: [{ name: 'checkpoint', x: CHECKPOINT.x, y: CHECKPOINT.y, kind: 'object' }],
       });
     }
 

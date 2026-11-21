@@ -37,6 +37,7 @@ const SYSTEM = [
   'MISSED: most ghosts never reached an objective (for example they never found an item); focus on why it was not noticed or understood.',
   'STUCK: several ghosts spent their last moves circling the same area; focus on what they could not figure out.',
   'CONFUSION: several ghosts said they did not understand something here; focus on what is unclear.',
+  'HARD TO SEE: an objective players must notice is drawn with too little contrast against its background (measured, WCAG asks at least 3:1). AI ghosts can spot faint shapes that people miss, so ghosts reaching it does not mean people will see it; focus on how to make it stand out.',
 ].join('\n');
 
 // A control or mechanic that "did nothing" is the strongest sign of something the game does not explain.
@@ -82,8 +83,13 @@ function factsFor(f, report, tracesByPersona = {}) {
     lines.push(`MISSED: the objective "${f.milestone}" was reached by ${f.reachedBy.length} of ${report.ghostsTotal} ghosts. ${who} never reached it.`);
     const closest = f.evidence.filter((e) => e.closest != null).map((e) => `${e.persona} came within ${e.closest}px`);
     if (closest.length) lines.push(`Closest approach: ${closest.join(', ')}.`);
+    if (f.contrast) lines.push(`Measured contrast of "${f.milestone}" against its background: ${f.contrast}:1 (WCAG 2.1 asks at least 3:1 for objects people need to notice).`);
   } else if (f.type === 'stuck') {
     lines.push(`STUCK: ${who} spent most of their last moves around (${f.center.x}, ${f.center.y}) and did not finish.`);
+  } else if (f.type === 'hard_to_see') {
+    lines.push(
+      `HARD TO SEE: the objective "${f.milestone}" has a contrast ratio of ${f.contrast}:1 against the background around it (measured on the screenshot; WCAG 2.1 asks at least 3:1 for graphical objects people need to notice). ${f.reachedBy.length} of ${report.ghostsTotal} ghosts reached it.`,
+    );
   } else if (f.type === 'confusion') {
     lines.push(`CONFUSION: ${who} flagged confusion ${f.count} times around (${f.center.x}, ${f.center.y}).`);
   }
@@ -101,10 +107,12 @@ function factsFor(f, report, tracesByPersona = {}) {
   return lines.join('\n');
 }
 
-export async function explainHotspots(report, { runDir, traces, model = 'muse-spark-1.3', reasoning = 'low', client, max = 5 } = {}) {
+// reasoning 'minimal' instead of 'low': on the same 3 runs the cards were as good (one 'low' card even
+// blamed the arrow keys for hidden spikes), for 47% less cost and 45% less time (bench/results/analyst-effort.md).
+export async function explainHotspots(report, { runDir, traces, model = 'muse-spark-1.3', reasoning = 'minimal', client, max = 5 } = {}) {
   const api = client ?? new OpenAI({ baseURL: 'https://api.meta.ai/v1', apiKey: process.env.MODEL_API_KEY, maxRetries: 2, timeout: 60_000 });
   const byPersona = Object.fromEntries(traces.map((t) => [t.persona, t]));
-  const usage = { input: 0, output: 0 };
+  const usage = { input: 0, cached: 0, output: 0, reasoning: 0 };
   const findings = (report.findings ?? report.hotspots).filter((f) => f.severity !== 'low').slice(0, max);
 
   const cards = await Promise.all(
@@ -118,6 +126,7 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
         model,
         reasoning_effort: reasoning,
         max_tokens: 3000,
+        prompt_cache_key: 'ghostrun-analyst-v1', // the instructions and the card schema repeat on every card
         messages: [
           { role: 'system', content: SYSTEM },
           {
@@ -131,7 +140,9 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
         response_format: { type: 'json_schema', json_schema: { name: 'finding_card', schema: CARD_SCHEMA } },
       });
       usage.input += res.usage?.prompt_tokens ?? 0;
+      usage.cached += res.usage?.prompt_tokens_details?.cached_tokens ?? 0;
       usage.output += res.usage?.completion_tokens ?? 0;
+      usage.reasoning += res.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
       let card = null;
       try {
         card = JSON.parse(res.choices?.[0]?.message?.content ?? '');

@@ -88,11 +88,11 @@ async function startRun({ url, personas, steps, model, viewport, simulateOutage,
 
   (async () => {
     try {
-      const { traces, ms } = await runSwarm({ url, personas, steps, model, viewport, simulateOutage, compareTo, outDir, signal: run.controller.signal, onEvent: (e) => emit(run, e) });
+      const { traces, objectives, ms } = await runSwarm({ url, personas, steps, model, viewport, simulateOutage, compareTo, outDir, signal: run.controller.signal, onEvent: (e) => emit(run, e) });
       run.status = 'analyzing';
       emit(run, { type: 'analyzing' });
 
-      const report = analyze(traces);
+      const report = analyze(traces, { objectives });
       const failed = report.ghosts.filter((g) => g.outcome === 'error');
       if (failed.length === report.ghosts.length) {
         const err = failed[0].error;

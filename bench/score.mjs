@@ -4,11 +4,12 @@ import { intersects } from '../src/analyze.mjs';
 // Which detected finding types count as "the right kind" for each kind of injected fault.
 export const COMPATIBLE = {
   blocker: ['blocker', 'stuck', 'missed'],
-  missed: ['missed', 'stuck'],
+  // A planted 'missed' objective is an object players cannot find; its measured low contrast names the cause.
+  missed: ['missed', 'stuck', 'hard_to_see'],
   deaths: ['blocker', 'friction'],
   confusion: ['confusion', 'blocker', 'friction', 'stuck', 'missed'],
 };
-export const ALARM_TYPES = ['blocker', 'missed', 'stuck'];
+export const ALARM_TYPES = ['blocker', 'missed', 'stuck', 'hard_to_see'];
 
 /**
  * @param {object} report  output of analyze()

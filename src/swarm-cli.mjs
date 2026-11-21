@@ -29,7 +29,7 @@ const slug = args.url ? new URL(args.url).pathname.replace(/[^a-z0-9]+/gi, '-').
 const runDir = join('runs', `${new Date().toISOString().replace(/[:.]/g, '-')}-swarm-${slug}`);
 
 console.log(`Summoning ${personas.length} ghosts on ${url}`);
-const { traces, ms } = await runSwarm({
+const { traces, objectives, ms } = await runSwarm({
   url,
   personas,
   steps: Number(args.steps ?? 40),
@@ -47,12 +47,12 @@ const { traces, ms } = await runSwarm({
 });
 server.close();
 
-const report = analyze(traces);
+const report = analyze(traces, { objectives });
 let explain = { cards: [], usage: { input: 0, output: 0 } };
 if (brain === 'meta' && report.hotspots.length) explain = await explainHotspots(report, { runDir, traces });
 report.cards = explain.cards;
 
-const ghostCost = report.ghosts.reduce((a, g) => a + costOf(g.model, { input: g.tokensIn, output: g.tokensOut }), 0);
+const ghostCost = report.ghosts.reduce((a, g) => a + g.costUsd, 0);
 const analystCost = costOf('muse-spark-1.3', explain.usage);
 report.cost = { ghosts: ghostCost, analyst: analystCost, total: ghostCost + analystCost };
 report.realMs = ms;

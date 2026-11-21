@@ -3,7 +3,7 @@
 //
 // node bench/run.mjs [--label baseline] [--games gap-run,key-hunt] [--reps 1] [--steps 40]
 //   [--personas newbie,speedrunner,reader,impatient] [--model muse-ember-1.0] [--no-bullet-time]
-//   [--concurrency 2] [--clean-only | --faults-only]
+//   [--concurrency 2] [--clean-only | --faults-only] [--reasoning minimal] [--no-stop]
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -11,7 +11,6 @@ import { ensureGamesServer } from '../scripts/serve.mjs';
 import { runSwarm } from '../src/swarm.mjs';
 import { analyze } from '../src/analyze.mjs';
 import { score } from './score.mjs';
-import { costOf } from '../src/brains/meta.mjs';
 import { DEFAULT_PERSONAS } from '../src/personas.mjs';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -25,6 +24,8 @@ const personas = (args.personas ?? DEFAULT_PERSONAS.join(',')).split(',');
 const model = args.model ?? process.env.GHOST_MODEL ?? 'muse-ember-1.0';
 const bulletTime = args['no-bullet-time'] !== 'true';
 const concurrency = Number(args.concurrency ?? 2);
+const reasoning = args.reasoning ?? process.env.GHOST_REASONING ?? 'minimal';
+const stopWhenSaturated = args['no-stop'] !== 'true';
 if (!process.env.MODEL_API_KEY) {
   console.error('MODEL_API_KEY is missing.');
   process.exit(1);
@@ -58,10 +59,14 @@ async function worker() {
     const dir = join(runRoot, `${job.game}-${job.variant}-${job.rep}`);
     const t0 = Date.now();
     try {
-      const { traces } = await runSwarm({ url, personas, steps, model, bulletTime, outDir: dir });
-      const report = analyze(traces);
+      const { traces, objectives } = await runSwarm({ url, personas, steps, model, reasoning, bulletTime, stopWhenSaturated, outDir: dir });
+      const report = analyze(traces, { objectives });
       const s = score(report, job.fault);
-      const cost = report.ghosts.reduce((a, g) => a + costOf(g.model, { input: g.tokensIn, output: g.tokensOut }), 0);
+      // What Meta bills (cached input at the cached rate) and the list price (every input token at full
+      // price, the way runs were priced before cached tokens were recorded).
+      const cost = report.ghosts.reduce((a, g) => a + g.costUsd, 0);
+      const listCost = report.ghosts.reduce((a, g) => a + g.listCostUsd, 0);
+      const allSteps = traces.flatMap((t) => t.steps);
       const row = {
         ...job,
         fault: job.fault ? { type: job.fault.type, label: job.fault.label } : null,
@@ -69,9 +74,20 @@ async function worker() {
         findings: report.findings.map((f) => ({ id: f.id, type: f.type, severity: f.severity, center: f.center, ghosts: f.ghosts.length })),
         deaths: report.ghosts.reduce((a, g) => a + g.deaths, 0),
         deathsWhileThinking: traces.reduce((a, t) => a + t.events.filter((e) => e.type === 'death' && e.duringThink).length, 0),
-        steps: traces.reduce((a, t) => a + t.steps.length, 0),
+        steps: allSteps.length,
+        tokens: {
+          input: report.ghosts.reduce((a, g) => a + g.tokensIn, 0),
+          cached: report.ghosts.reduce((a, g) => a + g.tokensCached, 0),
+          output: report.ghosts.reduce((a, g) => a + g.tokensOut, 0),
+          reasoning: report.ghosts.reduce((a, g) => a + g.tokensReasoning, 0),
+        },
+        latencies: allSteps.map((st) => st.latencyMs),
+        saturated: traces.filter((t) => t.outcome === 'saturated').map((t) => ({ persona: t.persona, ...t.stopReason })),
+        badOutputs: traces.reduce((a, t) => a + (t.notices ?? []).filter((n) => n.type === 'bad_output').length, 0),
+        retries: allSteps.filter((st) => st.attempts > 1).length,
         errors: report.ghosts.filter((g) => g.outcome === 'error').map((g) => g.error?.message),
         costUsd: cost,
+        listCostUsd: listCost,
         seconds: Math.round((Date.now() - t0) / 1000),
         dir,
       };
@@ -89,6 +105,23 @@ await Promise.all(Array.from({ length: Math.min(concurrency, jobs.length) }, wor
 server.close();
 
 // Summary
+function perMove(rows) {
+  const moves = rows.reduce((a, r) => a + r.steps, 0);
+  const t = (k) => rows.reduce((a, r) => a + r.tokens[k], 0);
+  const lat = rows.flatMap((r) => r.latencies).sort((a, b) => a - b);
+  const q = (p) => lat[Math.min(lat.length - 1, Math.floor(p * lat.length))] ?? null;
+  return {
+    movesPerRun: moves / Math.max(1, rows.length),
+    deathsPerRun: rows.reduce((a, r) => a + r.deaths, 0) / Math.max(1, rows.length),
+    tokensPerMove: { input: t('input') / Math.max(1, moves), cached: t('cached') / Math.max(1, moves), output: t('output') / Math.max(1, moves), reasoning: t('reasoning') / Math.max(1, moves) },
+    cachedShare: t('cached') / Math.max(1, t('input')),
+    latencyP50: q(0.5),
+    latencyP90: q(0.9),
+    saturatedGhosts: rows.reduce((a, r) => a + r.saturated.length, 0),
+    badOutputs: rows.reduce((a, r) => a + r.badOutputs, 0),
+    retries: rows.reduce((a, r) => a + r.retries, 0),
+  };
+}
 const faultRows = results.filter((r) => r.kind === 'fault');
 const cleanRows = results.filter((r) => r.kind === 'clean');
 const pct = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : 'n/a');
@@ -104,7 +137,11 @@ const summary = {
   cleanRunsWithFalseAlarm: cleanRows.filter((r) => r.falseAlarms > 0).length / Math.max(1, cleanRows.length),
   cleanFinishRate: cleanRows.reduce((a, r) => a + r.finished, 0) / Math.max(1, cleanRows.length * personas.length),
   avgCostUsd: results.reduce((a, r) => a + (r.costUsd ?? 0), 0) / Math.max(1, results.length),
+  avgListCostUsd: results.reduce((a, r) => a + (r.listCostUsd ?? 0), 0) / Math.max(1, results.length),
   totalCostUsd: results.reduce((a, r) => a + (r.costUsd ?? 0), 0),
+  ...perMove(results.filter((r) => r.tokens)),
+  reasoning,
+  stopWhenSaturated,
   avgSeconds: results.reduce((a, r) => a + (r.seconds ?? 0), 0) / Math.max(1, results.length),
   finishedAt: new Date().toISOString(),
 };
@@ -125,7 +162,9 @@ const lines = [
   `- **Faults found (right type, in the right place): ${faultRows.filter((r) => r.detectedStrict).length}/${faultRows.length} (${pct(faultRows.filter((r) => r.detectedStrict).length, faultRows.length)})**; any finding in the right place: ${pct(faultRows.filter((r) => r.detected).length, faultRows.length)}`,
   `- **Clean games with a false alarm** (a high-severity blocker, missed or stuck finding where there is no fault): ${cleanRows.filter((r) => r.falseAlarms > 0).length}/${cleanRows.length}`,
   `- Ghosts that finished the clean games: ${pct(cleanRows.reduce((a, r) => a + r.finished, 0), cleanRows.length * personas.length)}`,
-  `- Average cost per run (${personas.length} ghosts): $${summary.avgCostUsd.toFixed(3)} · average time: ${Math.round(summary.avgSeconds)} s · total: $${summary.totalCostUsd.toFixed(2)}`,
+  `- Average cost per run (${personas.length} ghosts): ${summary.avgCostUsd.toFixed(4)} billed (${summary.avgListCostUsd.toFixed(4)} at list price, no cache discount) · average time: ${Math.round(summary.avgSeconds)} s · total: ${summary.totalCostUsd.toFixed(2)}`,
+  `- Per run: ${summary.movesPerRun.toFixed(0)} moves, ${summary.deathsPerRun.toFixed(1)} deaths · per move: ${summary.tokensPerMove.input.toFixed(0)} input tokens (${Math.round(summary.cachedShare * 100)}% from cache), ${summary.tokensPerMove.output.toFixed(0)} output (${summary.tokensPerMove.reasoning.toFixed(0)} reasoning) · latency p50 ${summary.latencyP50} ms, p90 ${summary.latencyP90} ms`,
+  `- Ghosts stopped early because they had shown enough: ${summary.saturatedGhosts} · unusable answers handled: ${summary.badOutputs} (retried: ${summary.retries}) · reasoning effort: ${reasoning}`,
   '',
   '| Game | Variant | Expected | Result | Findings | Finished | Deaths | Cost |',
   '|---|---|---|---|---|---|---|---|',
@@ -140,5 +179,5 @@ const lines = [
   '`!` = high severity. A fault counts as found when a finding of a compatible type overlaps the region where the fault is (games/<id>/faults.json).',
 ];
 await writeFile(join(outRoot, `${label}.md`), lines.join('\n') + '\n');
-console.log('\n' + lines.slice(0, 8).join('\n'));
+console.log('\n' + lines.slice(0, 10).join('\n'));
 console.log(`\nSaved bench/results/${label}.md`);

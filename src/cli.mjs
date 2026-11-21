@@ -7,6 +7,7 @@ import { ensureGamesServer } from '../scripts/serve.mjs';
 import { runGhost } from './ghost.mjs';
 import { PERSONAS } from './personas.mjs';
 import { createMetaBrain, costOf } from './brains/meta.mjs';
+import { sumUsage } from './brains/prices.mjs';
 import { createScriptedBrain } from './brains/scripted.mjs';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -34,8 +35,7 @@ const brain =
 const outDir = join('runs', `${new Date().toISOString().replace(/[:.]/g, '-')}-${game}${args.fault ? '-' + args.fault : ''}-${persona.id}-${brain.model}`);
 
 const browser = await chromium.launch();
-let tokensIn = 0;
-let tokensOut = 0;
+const usages = [];
 const t0 = performance.now();
 const trace = await runGhost({
   browser,
@@ -45,8 +45,7 @@ const trace = await runGhost({
   maxSteps: steps,
   outDir,
   onStep: (s) => {
-    tokensIn += s.usage.input;
-    tokensOut += s.usage.output;
+    usages.push(s.usage);
     const pos = s.after ? `x=${Math.round(s.after.x)} deaths=${s.after.deaths}` : '';
     console.log(`${persona.emoji} ${String(s.step).padStart(2)} ${s.move.hold.join('+') || '-'}${s.move.tap.length ? ' tap ' + s.move.tap.join('+') : ''} ${s.move.duration_ms}ms  ${pos}  ${s.latencyMs}ms  "${s.thought}"${s.events.length ? '  [' + s.events.join(',') + ']' : ''}`);
   },
@@ -63,6 +62,7 @@ console.log(`steps: ${trace.steps.length}, game time: ${(trace.gameMs / 1000).to
 console.log(`furthest x: ${Math.round(maxX)}, deaths: ${deaths.length} ${deaths.length ? '(at x≈' + deaths.map((d) => Math.round(d.x)).join(', ') + ')' : ''}, won: ${Boolean(last?.after?.won)}`);
 if (brain.model !== 'none') {
   const avgLat = trace.steps.reduce((a, s) => a + s.latencyMs, 0) / Math.max(1, trace.steps.length);
-  console.log(`tokens in/out: ${tokensIn}/${tokensOut}, cost: $${costOf(brain.model, { input: tokensIn, output: tokensOut }).toFixed(4)}, avg latency: ${Math.round(avgLat)} ms`);
+  const u = sumUsage(usages);
+  console.log(`tokens in/out: ${u.input}/${u.output} (${u.cached} input from cache, ${u.reasoning} reasoning), cost: ${costOf(brain.model, u).toFixed(4)}, avg latency: ${Math.round(avgLat)} ms`);
 }
 console.log(`trace: ${join(outDir, 'trace.json')}`);

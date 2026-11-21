@@ -29,8 +29,8 @@
   const LEVER_COLOR = HINTS ? 0xf6d55c : 0x2a2f4a; // the fault paints it like the background dots
   const HELP = HINTS ? '← → move     SPACE jump     E use' : '← → move     SPACE jump';
   const MILESTONES = [
-    { name: 'lever', x: LEVER_X, y: LEDGE.top - 14 },
-    { name: 'door', x: DOOR.x, y: DOOR.top + DOOR_H / 2 },
+    { name: 'lever', x: LEVER_X, y: LEDGE.top - 14, kind: 'object' },
+    { name: 'door', x: DOOR.x, y: DOOR.top + DOOR_H / 2, kind: 'object' },
   ];
 
   class Play extends Phaser.Scene {

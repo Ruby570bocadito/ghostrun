@@ -9,7 +9,11 @@
     pos(x, y, extra) {
       store.state = Object.assign(store.state, { x, y }, extra || {});
     },
-    /** Merge any extra state you want in the report (deaths, level, score…). */
+    /**
+     * Merge any extra state you want in the report (deaths, level, score…). Objectives go in
+     * `milestones: [{ name, x, y, kind }]` (world coordinates); `kind: 'object'` marks something the
+     * player has to see (a key, a lever, a door), so Ghostrun also checks that it has enough contrast.
+     */
     state(obj) {
       Object.assign(store.state, obj);
     },

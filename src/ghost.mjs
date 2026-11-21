@@ -2,10 +2,24 @@
 // while the brain thinks ("bullet time").
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { DeathSpots, historyLine, outcomeOf, turnNotes, walkSpeed } from './feedback.mjs';
+import { sumUsage } from './brains/prices.mjs';
 
 export const DEFAULT_VIEWPORT = { width: 640, height: 360 };
 const SAW = ['playing', 'menu', 'died', 'level_complete', 'other'];
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// When a ghost has proved its point, more moves only cost money (bench/simulate-stop.mjs replays the
+// recorded benchmark: stopping at 8 deaths in one spot or 20 moves without exploring anything new
+// found the same 20/20 faults with no new false alarm). Only for games with the SDK: without it,
+// positions are what the ghost reports on screen, too rough to tell one spot from another.
+export const STOP_AFTER_DEATHS_AT_SPOT = 8;
+export const STOP_AFTER_IDLE_MOVES = 20;
+const IDLE_CELL_PX = 80;
+
+// What a ghost does when the model's answer is unusable twice in a row: wait a moment, keep playing.
+export const SAFE_MOVE = { thought: '', saw: 'other', player: null, click: [], hold: [], tap: [], duration_ms: 300, confused: false, quit: false };
+const MAX_SAFE_MOVES_IN_A_ROW = 3;
 
 const readEvents = (page, from) => page.evaluate((n) => (window.__ghost ? window.__ghost.events.slice(n) : []), from);
 const readState = (page) =>
@@ -34,13 +48,24 @@ export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
   };
 }
 
-function describe(move) {
-  const parts = [];
-  if (move.click.length) parts.push(`clicked at ${move.click.map((c) => `(${c.x},${c.y})`).join(' and ')}`);
-  if (move.hold.length) parts.push(`held ${move.hold.join('+')}`);
-  if (move.tap.length) parts.push(`tapped ${move.tap.join('+')}`);
-  if (!parts.length) parts.push('waited');
-  return `${parts.join(' and ')} for ${move.duration_ms} ms`;
+/**
+ * Asks the brain for a move. An unusable answer (broken or cut JSON) is retried once; if the retry
+ * fails too, the ghost waits a moment (SAFE_MOVE) instead of being lost. Failed attempts still cost
+ * tokens, so their usage is added to the move's.
+ */
+export async function decideRobustly(brain, input, { onBadOutput = () => {} } = {}) {
+  const failed = [];
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const d = await brain.decide(input);
+      return { ...d, usage: sumUsage([...failed.map((f) => f.usage), d.usage]), attempts: attempt, latencyMs: d.latencyMs + failed.reduce((a, f) => a + (f.latencyMs ?? 0), 0) };
+    } catch (err) {
+      if (err.kind !== 'bad_output') throw err;
+      failed.push(err);
+    }
+  }
+  await onBadOutput(failed.at(-1));
+  return { move: SAFE_MOVE, usage: sumUsage(failed.map((f) => f.usage)), attempts: failed.length, latencyMs: failed.reduce((a, f) => a + (f.latencyMs ?? 0), 0), safe: true };
 }
 
 /**
@@ -60,6 +85,7 @@ export async function runGhost({
   onStep = () => {},
   onFrame = () => {},
   stopOnWin = true,
+  stopWhenSaturated = true, // stop a ghost once more moves cannot change what it has shown
   bulletTime = true, // false = the game keeps running while the brain thinks (baseline for the A2 experiment)
   notices = [], // failures handled during the run (e.g. model fallback), shared with the caller
   signal,
@@ -84,6 +110,7 @@ export async function runGhost({
   let gameMs = 0;
   let frameNo = 0;
   let eventCount = 0;
+  let lastBuf = null;
 
   const capture = async () => {
     const file = `frames/${String(frameNo++).padStart(5, '0')}.jpg`;
@@ -92,6 +119,7 @@ export async function runGhost({
     const { now, state } = await readState(page);
     const frame = { i: trace.frames.length, t: gameMs, pageT: now, file, state };
     trace.frames.push(frame);
+    lastBuf = buf;
     await onFrame(frame);
     return buf;
   };
@@ -159,9 +187,18 @@ export async function runGhost({
     // Games with the SDK report positions and events; for the others the ghosts' own eyes are all we have.
     trace.sdk = trace.frames[0].state !== null;
 
-    const history = [];
+    const history = []; // one finished line per move: what the ghost did and what happened (append-only)
+    const spots = new DeathSpots();
+    const recent = []; // per move: did it achieve nothing?
+    const speedSamples = [];
+    const seenCells = new Set();
+    let lastFreshStep = 0;
+    let safeInARow = 0;
+    let recentDeathSteps = [];
     let lastSaw = null;
     let lastPlayer = null;
+    const cellOf = (s) => `${Math.floor(s.x / IDLE_CELL_PX)},${Math.floor(s.y / IDLE_CELL_PX)}`;
+
     for (let step = 1; step <= maxSteps; step++) {
       if (signal?.aborted) {
         trace.outcome = 'stopped';
@@ -169,24 +206,45 @@ export async function runGhost({
       }
       const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
       const { now: shotT, state: before } = await readState(page);
+      const notes = trace.sdk
+        ? turnNotes({ spots, step, recent, speed: walkSpeed(speedSamples) })
+        : turnNotes({ step, recent }).concat(
+            recentDeathSteps.filter((s) => step - s <= 8).length >= 3 ? ['You have died 3 or more times in your last 8 moves. Try something different.'] : [],
+          );
       const thinkStart = performance.now();
       const pageThinkStart = bulletTime ? null : await page.evaluate(() => performance.now());
-      const decision = await brain.decide({ screenshot: shot, history, step });
+      const decision = await decideRobustly(
+        brain,
+        { screenshot: shot, history, notes, step },
+        {
+          onBadOutput: (err) => {
+            notices.push({ type: 'bad_output', step, reason: err.message, handled: 'waited 300 ms and kept playing' });
+          },
+        },
+      );
       const pageThinkEnd = bulletTime ? null : await page.evaluate(() => performance.now());
       if (!bulletTime) gameMs += Math.round(performance.now() - thinkStart); // the game kept running meanwhile
+      if (decision.safe) {
+        if (++safeInARow >= MAX_SAFE_MOVES_IN_A_ROW) {
+          throw Object.assign(new Error(`The model gave ${MAX_SAFE_MOVES_IN_A_ROW} unusable answers in a row.`), { kind: 'bad_output' });
+        }
+      } else safeInARow = 0;
       const move = sanitizeMove(decision.move, viewport);
       const t0 = gameMs;
       const frameFrom = trace.frames.length;
 
-      if (!trace.sdk) {
+      if (!trace.sdk && !decision.safe) {
         // No SDK: turn what the ghost saw into events. The screenshot it judged was taken at shotT.
         const at = lastPlayer ?? move.player ?? { x: viewport.width / 2, y: viewport.height / 2 };
-        if (move.saw === 'died' && lastSaw !== 'died') trace.events.push({ type: 'death', source: 'ghost', x: at.x, y: at.y, t: shotT, step, persona: persona.id });
+        if (move.saw === 'died' && lastSaw !== 'died') {
+          trace.events.push({ type: 'death', source: 'ghost', x: at.x, y: at.y, t: shotT, step, persona: persona.id });
+          recentDeathSteps.push(step);
+        }
         if (move.saw === 'level_complete' && lastSaw !== 'level_complete')
           trace.events.push({ type: 'milestone', name: 'level_complete', source: 'ghost', x: at.x, y: at.y, t: shotT, step, persona: persona.id });
         if (move.saw === 'playing' && move.player) lastPlayer = move.player;
       }
-      lastSaw = move.saw;
+      if (!decision.safe) lastSaw = move.saw;
 
       for (const c of move.click) await page.mouse.click(c.x, c.y);
       for (const k of move.hold) await page.keyboard.down(k);
@@ -208,6 +266,34 @@ export async function runGhost({
         trace.events.push({ ...e, source: 'game', step, persona: persona.id, ...(duringThink ? { duringThink: true } : {}) });
       }
 
+      // What happened, told to the ghost on its next turn (and kept in the trace).
+      const screenChanged = trace.sdk ? null : !(lastBuf && lastBuf.equals(shot));
+      const outcome = decision.safe ? 'no answer from the model, you waited' : outcomeOf({ before, after, events, sdk: trace.sdk, screenChanged });
+      const acted = move.hold.length + move.tap.length + move.click.length > 0;
+      const moved = before && after && Number.isFinite(before.x) && Number.isFinite(after.x) && Math.hypot(after.x - before.x, after.y - before.y) >= 4;
+      recent.push({ stuck: acted && !events.length && (trace.sdk ? !moved : screenChanged === false) });
+      if (trace.sdk && before && after && Number.isFinite(before.x) && Number.isFinite(after.x)) {
+        const horizontal = move.hold.filter((k) => k === 'ArrowLeft' || k === 'ArrowRight');
+        if (horizontal.length === 1 && !move.tap.length && !events.some((e) => e.type === 'death')) {
+          speedSamples.push({ dx: after.x - before.x, dy: after.y - before.y, ms: move.duration_ms });
+        }
+      }
+      let deathsHere = 0;
+      for (const e of events) if (e.type === 'death') deathsHere = Math.max(deathsHere, spots.add({ x: e.x, y: e.y, step }));
+      if (trace.sdk) {
+        let fresh = events.some((e) => e.type === 'milestone');
+        for (let i = frameFrom; i < trace.frames.length; i++) {
+          const st = trace.frames[i].state;
+          if (!st || !Number.isFinite(st.x)) continue;
+          const c = cellOf(st);
+          if (!seenCells.has(c)) {
+            seenCells.add(c);
+            fresh = true;
+          }
+        }
+        if (fresh) lastFreshStep = step;
+      }
+
       const record = {
         step,
         t0,
@@ -222,12 +308,16 @@ export async function runGhost({
         before: before && { x: before.x, y: before.y },
         after: after && { x: after.x, y: after.y, deaths: after.deaths, won: after.won },
         events: [...events.map((e) => e.type), ...trace.events.filter((e) => e.source === 'ghost' && e.step === step).map((e) => e.type)],
+        outcome,
+        ...(notes.length ? { notes } : {}),
+        ...(decision.attempts > 1 ? { attempts: decision.attempts } : {}),
+        ...(decision.safe ? { safeMove: true } : {}),
         usage: decision.usage,
         latencyMs: Math.round(decision.latencyMs),
         frames: [frameFrom, trace.frames.length - 1],
       };
       trace.steps.push(record);
-      history.push({ step, summary: `you ${describe(move)}. You thought: "${move.thought}"` });
+      history.push(historyLine(step, move, outcome));
       await onStep(record);
       if (move.quit) {
         trace.outcome = 'quit';
@@ -236,6 +326,18 @@ export async function runGhost({
       if (stopOnWin && after?.won) {
         trace.outcome = 'won';
         break;
+      }
+      if (stopWhenSaturated && trace.sdk && step < maxSteps) {
+        if (deathsHere >= STOP_AFTER_DEATHS_AT_SPOT) {
+          trace.outcome = 'saturated';
+          trace.stopReason = { kind: 'deaths', count: deathsHere, x: Math.round(spots.last.x), y: Math.round(spots.last.y) };
+          break;
+        }
+        if (step - lastFreshStep >= STOP_AFTER_IDLE_MOVES) {
+          trace.outcome = 'saturated';
+          trace.stopReason = { kind: 'idle', moves: step - lastFreshStep };
+          break;
+        }
       }
     }
     trace.outcome ??= 'out_of_steps';

@@ -93,7 +93,7 @@
         game: 'read-me',
         fault: FAULT || 'none',
         // Finishing is reported with the 'win' event, so it is not a milestone.
-        milestones: [{ name: 'dash', x: PIT_X0, y: GROUND_Y - 14 }],
+        milestones: [{ name: 'dash', x: PIT_X0, y: GROUND_Y - 14, kind: 'place' }], // where to dash: a place, not an object
       });
     }
 

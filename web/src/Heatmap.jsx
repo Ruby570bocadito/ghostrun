@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export const TYPE_LABEL = { blocker: 'Blocker', friction: 'Friction', missed: 'Missed objective', stuck: 'Stuck', confusion: 'Confusing' };
+export const TYPE_LABEL = { blocker: 'Blocker', friction: 'Friction', missed: 'Missed objective', stuck: 'Stuck', confusion: 'Confusing', hard_to_see: 'Hard to see' };
 
 const SCREEN_W = 640;
 const SCREEN_H = 360;
@@ -121,10 +121,14 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect, r
             className={`hot-band ${h.type} ${selected === h.id ? 'selected' : ''}`}
             style={{ left: `${(r.x0 / W) * 100}%`, width: `${((r.x1 - r.x0) / W) * 100}%`, top: `${(r.y0 / H) * 100}%`, height: `${((r.y1 - r.y0) / H) * 100}%` }}
             onClick={() => onSelect(h.id)}
-            aria-label={`${TYPE_LABEL[h.type] ?? h.type}: ${h.ghosts.length} of ${report.ghostsTotal} ghosts`}
+            aria-label={
+              h.type === 'hard_to_see'
+                ? `${TYPE_LABEL[h.type]}: "${h.milestone}" contrast ${h.contrast} to 1`
+                : `${TYPE_LABEL[h.type] ?? h.type}: ${h.ghosts.length} of ${report.ghostsTotal} ghosts`
+            }
           >
             <span className="hot-tag">
-              {TYPE_LABEL[h.type] ?? h.type} · {h.ghosts.length}/{report.ghostsTotal}
+              {TYPE_LABEL[h.type] ?? h.type} · {h.type === 'hard_to_see' ? `${h.contrast}:1` : `${h.ghosts.length}/${report.ghostsTotal}`}
             </span>
           </button>
         );

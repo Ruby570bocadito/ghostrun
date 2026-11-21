@@ -180,10 +180,10 @@ export function Summon({ config, onStarted }) {
           <b>20/20</b> planted design flaws found in our benchmark
         </span>
         <span>
-          <b>1</b> false alarm in <b>20</b> runs on clean games
+          <b>0</b> false alarms in <b>20</b> runs on clean games
         </span>
         <span>
-          about <b>$0.03</b> and <b>1 min</b> per playtest
+          about <b>$0.02</b> and <b>1 min</b> per playtest
         </span>
         <a href={`${REPO}/blob/main/bench/README.md`} target="_blank" rel="noreferrer">
           See the evidence

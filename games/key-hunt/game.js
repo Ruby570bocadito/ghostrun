@@ -105,8 +105,8 @@
         game: 'key-hunt',
         fault: FAULT || 'none',
         milestones: [
-          { name: 'key', x: KEY.x, y: KEY.y },
-          { name: 'door', x: DOOR.x, y: DOOR.y },
+          { name: 'key', x: KEY.x, y: KEY.y, kind: 'object' },
+          { name: 'door', x: DOOR.x, y: DOOR.y, kind: 'object' },
         ],
       });
     }
