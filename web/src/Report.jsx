@@ -85,6 +85,7 @@ function Finding({ f, card, report, runId, byPersona, personas, selected }) {
             <dd>{card.suggested_fix}</dd>
           </dl>
         )}
+        {f.evidence.some((e) => e.thought) && <p className="quotes-label">What they were planning right before (the replay shows what actually happened)</p>}
         <ul className="quotes">
           {f.evidence
             .filter((e) => e.thought)

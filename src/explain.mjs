@@ -48,7 +48,9 @@ function factsFor(f, report) {
   }
   if (f.stuckGhosts?.length) lines.push(`Ghosts that ended their run stuck here: ${f.stuckGhosts.join(', ')}.`);
   if (f.confusedGhosts?.length) lines.push(`Ghosts that said they were confused here: ${f.confusedGhosts.join(', ')}.`);
-  lines.push(`What the ghosts said: ${f.quotes.map((q) => `"${q}"`).join(' ')}`);
+  // A human review (docs/ai-review-log.md, R3) found these are the ghosts' plans right before acting, not
+  // descriptions of what happened, so label them that way for the analyst too.
+  lines.push(`What the ghosts were planning right before (plans, not a description of the outcome): ${f.quotes.map((q) => `"${q}"`).join(' ')}`);
   return lines.join('\n');
 }
 
