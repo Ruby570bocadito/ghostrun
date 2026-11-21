@@ -157,8 +157,8 @@
       ghost.event('death', { segment: this.checkpoint, deaths: this.deaths });
       this.deathText.setText('Deaths: ' + this.deaths);
       const s = SEGMENTS[this.checkpoint];
-      this.player.setPosition(s.x + 40, GROUND_Y - 20);
-      this.player.setVelocity(0, 0);
+      // body.reset moves the physics body and the sprite together (setPosition alone leaves the body below the pit).
+      this.player.body.reset(s.x + 40, GROUND_Y - 20);
       this.cameras.main.flash(120, 255, 80, 100);
     }
 

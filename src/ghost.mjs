@@ -1,0 +1,140 @@
+// One ghost playing one game in its own browser context, with the game clock frozen
+// while the brain thinks ("bullet time").
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const VIEWPORT = { width: 640, height: 360 };
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+const readState = (page) => page.evaluate(() => (window.__ghost ? { ...window.__ghost.state } : null));
+const readEvents = (page, from) => page.evaluate((n) => (window.__ghost ? window.__ghost.events.slice(n) : []), from);
+
+/** Validates and normalises a move coming from any brain. */
+export function sanitizeMove(m) {
+  const hold = [...new Set((m?.hold ?? []).filter((k) => typeof k === 'string'))].slice(0, 2);
+  const tap = [...new Set((m?.tap ?? []).filter((k) => typeof k === 'string' && !hold.includes(k)))].slice(0, 2);
+  return {
+    thought: String(m?.thought ?? '').slice(0, 160),
+    player: m?.player && Number.isFinite(m.player.x) && Number.isFinite(m.player.y) ? { x: clamp(m.player.x, 0, 1000), y: clamp(m.player.y, 0, 1000) } : null,
+    hold,
+    tap,
+    duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, 1500),
+    confused: Boolean(m?.confused),
+  };
+}
+
+function describe(move) {
+  const parts = [];
+  if (move.hold.length) parts.push(`held ${move.hold.join('+')}`);
+  if (move.tap.length) parts.push(`tapped ${move.tap.join('+')}`);
+  if (!parts.length) parts.push('waited');
+  return `${parts.join(' and ')} for ${move.duration_ms} ms`;
+}
+
+/**
+ * Plays the game. Returns a full trace: steps (decisions), frames (positions every frameEveryMs) and events.
+ * @param {object} o
+ * @param {import('playwright').Browser} o.browser
+ */
+export async function runGhost({ browser, url, brain, persona, maxSteps = 40, outDir, frameEveryMs = 100, onStep = () => {}, stopOnWin = true }) {
+  await mkdir(join(outDir, 'frames'), { recursive: true });
+  const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
+  const page = await context.newPage();
+  const trace = { persona: persona.id, url, brain: brain.id, model: brain.model, steps: [], frames: [], events: [], startedAt: new Date().toISOString() };
+  let gameMs = 0;
+  let frameNo = 0;
+  let eventCount = 0;
+
+  const capture = async () => {
+    const file = `frames/${String(frameNo++).padStart(5, '0')}.jpg`;
+    const buf = await page.screenshot({ type: 'jpeg', quality: 70 });
+    await writeFile(join(outDir, file), buf);
+    const state = await readState(page);
+    trace.frames.push({ t: gameMs, file, state });
+    return buf;
+  };
+
+  const advance = async (ms) => {
+    // Step the frozen clock in small slices so we can record frames for clips and heatmaps.
+    let left = ms;
+    while (left > 0) {
+      const slice = Math.min(frameEveryMs, left);
+      await page.clock.runFor(slice);
+      gameMs += slice;
+      left -= slice;
+      await capture();
+    }
+  };
+
+  try {
+    await page.clock.install();
+    const res = await page.goto(url, { waitUntil: 'load', timeout: 20_000 });
+    if (res && !res.ok()) throw Object.assign(new Error(`The game URL answered HTTP ${res.status()}`), { kind: 'game_unreachable' });
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.pauseAt(now + 10);
+    await page.clock.runFor(1500); // let the game boot inside game time
+
+    const canvas = await page.evaluate(() => {
+      const c = document.querySelector('canvas');
+      return c ? { w: c.width, h: c.height } : null;
+    });
+    const first = await capture();
+    if (!canvas || first.length < 4000) {
+      throw Object.assign(new Error(canvas ? 'The game screen looks blank (no visible content after boot).' : 'No game canvas found on the page.'), { kind: 'game_not_playable' });
+    }
+
+    const history = [];
+    for (let step = 1; step <= maxSteps; step++) {
+      const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
+      const before = await readState(page);
+      const decision = await brain.decide({ screenshot: shot, history, step });
+      const move = sanitizeMove(decision.move);
+      const t0 = gameMs;
+
+      for (const k of move.hold) await page.keyboard.down(k);
+      for (const k of move.tap) await page.keyboard.down(k);
+      const tapMs = move.tap.length ? Math.min(120, move.duration_ms) : 0;
+      if (tapMs) {
+        await advance(tapMs);
+        for (const k of move.tap) await page.keyboard.up(k);
+      }
+      await advance(move.duration_ms - tapMs);
+      for (const k of move.hold) await page.keyboard.up(k);
+
+      const after = await readState(page);
+      const events = await readEvents(page, eventCount);
+      eventCount += events.length;
+      events.forEach((e) => trace.events.push({ ...e, step, gameMs, persona: persona.id }));
+
+      const record = {
+        step,
+        t0,
+        t1: gameMs,
+        thought: move.thought,
+        confused: move.confused,
+        player: move.player,
+        move: { hold: move.hold, tap: move.tap, duration_ms: move.duration_ms },
+        before: before && { x: before.x, y: before.y },
+        after: after && { x: after.x, y: after.y, deaths: after.deaths, won: after.won },
+        events: events.map((e) => e.type),
+        usage: decision.usage,
+        latencyMs: Math.round(decision.latencyMs),
+        frame: trace.frames.length - 1,
+      };
+      trace.steps.push(record);
+      history.push({ step, summary: `you ${describe(move)}. You thought: "${move.thought}"` });
+      await onStep(record);
+      if (stopOnWin && after?.won) break;
+    }
+    trace.outcome = trace.steps.at(-1)?.after?.won ? 'won' : 'out_of_steps';
+  } catch (err) {
+    trace.outcome = 'error';
+    trace.error = { kind: err.kind ?? err.constructor?.name ?? 'error', message: err.message };
+  } finally {
+    trace.endedAt = new Date().toISOString();
+    trace.gameMs = gameMs;
+    await writeFile(join(outDir, 'trace.json'), JSON.stringify(trace, null, 2));
+    await context.close();
+  }
+  return trace;
+}
