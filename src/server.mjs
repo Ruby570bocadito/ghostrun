@@ -1,9 +1,13 @@
 // App server: starts swarms, streams them live (Server-Sent Events) and serves the web UI.
 // npm run build && npm start  →  http://localhost:5180
+//
+// GHOSTRUN_PUBLIC=1 turns on the protections for a public demo (src/guard.mjs): links to private or
+// local network addresses are refused (and blocked inside the game page), each visitor gets a few
+// playtests per hour, the model and run size are fixed, and other people's runs are not listed.
 import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { extname, join, normalize, resolve } from 'node:path';
+import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { extname, join, normalize, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { startServer as startGames } from '../scripts/serve.mjs';
 import { runSwarm } from './swarm.mjs';
@@ -11,12 +15,18 @@ import { analyze } from './analyze.mjs';
 import { explainHotspots } from './explain.mjs';
 import { PERSONAS, DEFAULT_PERSONAS } from './personas.mjs';
 import { costOf } from './brains/meta.mjs';
+import { RateLimiter, checkTarget, clientIp, createRequestGuard } from './guard.mjs';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
 const PORT = Number(process.env.PORT) || 5180;
 const GAMES_PORT = Number(process.env.GAMES_PORT) || 5174;
 const BUDGET_USD = Number(process.env.GHOST_BUDGET_USD) || 35; // hard stop below Rafa's $40 cap
+const PUBLIC = process.env.GHOSTRUN_PUBLIC === '1';
+const TRUST_PROXY = process.env.TRUST_PROXY === '1'; // behind a reverse proxy: read X-Forwarded-For
+const RUN_TIMEOUT_MS = Number(process.env.RUN_TIMEOUT_MS) || 8 * 60_000; // a stuck run must not keep the ghosts busy forever
+const RUNS_IN_MEMORY = 30; // older finished runs are served from disk
+const HEARTBEAT_MS = 20_000; // keeps live streams open through proxies that close idle connections
 const runsDir = resolve('runs');
 const distDir = resolve('web', 'dist');
 const spendFile = join(runsDir, '_spend.json');
@@ -45,6 +55,14 @@ for (const g of TEST_GAMES) {
   g.faults = Object.entries(faults).map(([id, f]) => ({ id, label: f.label, type: f.type }));
 }
 
+// Our own test games are served on this machine, so they are the one local address ghosts may open.
+const ALLOW_HOSTS = [`localhost:${GAMES_PORT}`, `127.0.0.1:${GAMES_PORT}`];
+const PUBLIC_VIEWPORTS = ['640x360', '960x540'];
+const runLimiter = new RateLimiter({ limit: Number(process.env.RUNS_PER_HOUR) || 6, windowMs: 60 * 60_000 });
+// The SDK's recorder posts a session every 3 s (20 a minute), so this allows a few people per address.
+const humanLimiter = new RateLimiter({ limit: 120, windowMs: 60_000 });
+const MAX_HUMAN_SESSIONS = 1000;
+
 const runs = new Map();
 let activeRun = null;
 
@@ -56,18 +74,50 @@ async function readSpend() {
   }
 }
 
+// One update at a time, written to a temporary file and renamed, so a crash never leaves broken JSON.
+let spendQueue = Promise.resolve();
+function addSpend(usd) {
+  spendQueue = spendQueue.then(async () => {
+    const spend = await readSpend();
+    spend.totalUsd += usd;
+    spend.runs = (spend.runs ?? 0) + 1;
+    spend.appUsd = (spend.appUsd ?? 0) + usd;
+    const tmp = `${spendFile}.${process.pid}.tmp`;
+    await writeFile(tmp, JSON.stringify(spend, null, 2));
+    await rename(tmp, spendFile);
+  });
+  return spendQueue.catch(() => {});
+}
+
 function send(res, status, body, headers = {}) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', ...headers });
   res.end(JSON.stringify(body));
 }
 
+const httpError = (status, error, message) => Object.assign(new Error(message), { status, error });
+
 async function readBody(req, limit = 100_000) {
   let raw = '';
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > limit) throw Object.assign(new Error('Body too large'), { status: 413 });
+    if (raw.length > limit) throw httpError(413, 'too_large', 'Body too large');
   }
-  return raw ? JSON.parse(raw) : {};
+  try {
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    throw httpError(400, 'bad_json', 'The request body is not valid JSON.');
+  }
+}
+
+/** Is `file` inside `dir`? (A plain prefix test would also accept a sibling such as "runs-old".) */
+const inside = (dir, file) => file === dir || file.startsWith(dir + sep);
+
+function decodePath(p) {
+  try {
+    return decodeURIComponent(p);
+  } catch {
+    throw httpError(400, 'bad_path', 'Malformed address.');
+  }
 }
 
 const SAFE_ID = /^[a-z0-9-]{1,64}$/i;
@@ -79,16 +129,27 @@ function emit(run, event) {
   for (const res of run.clients) res.write(line);
 }
 
-async function startRun({ url, personas, steps, model, viewport, simulateOutage, compareTo }) {
-  const id = new Date().toISOString().replace(/[:.]/g, '-') + '-' + randomUUID().slice(0, 6);
+/** After a run, keep only what a late visitor needs (the report, not every frame) and forget old runs. */
+function settle(run) {
+  run.events = run.events.filter((e) => e.type !== 'frame' && e.type !== 'step');
+  const finished = [...runs.values()].filter((r) => r.status === 'done' || r.status === 'failed');
+  for (const old of finished.slice(0, Math.max(0, finished.length - RUNS_IN_MEMORY))) runs.delete(old.id);
+}
+
+async function startRun({ url, personas, steps, model, viewport, simulateOutage, compareTo, owner, guard }) {
+  const id = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().replace(/-/g, '').slice(0, 10)}`;
   const outDir = join(runsDir, id);
-  const run = { id, status: 'running', config: { url, personas, steps, model, viewport, simulateOutage, compareTo }, events: [], clients: new Set(), report: null, controller: new AbortController() };
+  const run = { id, owner, status: 'running', config: { url, personas, steps, model, viewport, simulateOutage, compareTo }, events: [], clients: new Set(), report: null, controller: new AbortController() };
   runs.set(id, run);
   activeRun = run;
+  const timer = setTimeout(() => {
+    emit(run, { type: 'notice', message: `Time limit of ${Math.round(RUN_TIMEOUT_MS / 60_000)} minutes reached: the ghosts were stopped.` });
+    run.controller.abort();
+  }, RUN_TIMEOUT_MS);
 
   (async () => {
     try {
-      const { traces, objectives, ms } = await runSwarm({ url, personas, steps, model, viewport, simulateOutage, compareTo, outDir, signal: run.controller.signal, onEvent: (e) => emit(run, e) });
+      const { traces, objectives, ms } = await runSwarm({ url, personas, steps, model, viewport, simulateOutage, compareTo, outDir, guard, signal: run.controller.signal, onEvent: (e) => emit(run, e) });
       run.status = 'analyzing';
       emit(run, { type: 'analyzing' });
 
@@ -116,11 +177,7 @@ async function startRun({ url, personas, steps, model, viewport, simulateOutage,
       report.id = id;
       report.config = run.config;
       await writeFile(join(outDir, 'report.json'), JSON.stringify(report, null, 2));
-
-      const spend = await readSpend();
-      spend.totalUsd += report.cost.total;
-      spend.runs += 1;
-      await writeFile(spendFile, JSON.stringify(spend, null, 2));
+      await addSpend(report.cost.total);
 
       run.report = report;
       run.status = report.failure ? 'failed' : 'done';
@@ -129,9 +186,11 @@ async function startRun({ url, personas, steps, model, viewport, simulateOutage,
       run.status = 'failed';
       emit(run, { type: 'failed', message: err.message });
     } finally {
+      clearTimeout(timer);
       if (activeRun === run) activeRun = null;
       for (const res of run.clients) res.end();
       run.clients.clear();
+      settle(run);
     }
   })();
   return run;
@@ -142,7 +201,7 @@ async function serveFile(res, file, fallback) {
     const info = await stat(file);
     if (info.isDirectory()) return serveFile(res, join(file, 'index.html'), fallback);
     const body = await readFile(file);
-    res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': file.includes(`${normalize('/assets/')}`) ? 'public, max-age=31536000' : 'no-store' });
+    res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': file.includes(`${sep}assets${sep}`) ? 'public, max-age=31536000' : 'no-store' });
     res.end(body);
   } catch {
     if (fallback) return serveFile(res, fallback);
@@ -151,10 +210,43 @@ async function serveFile(res, file, fallback) {
   }
 }
 
-const server = createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost');
-  const path = url.pathname;
+/** Reads and checks the options of a new run. Returns { error } or the run options. */
+async function runOptions(body, ip) {
+  let target;
   try {
+    target = new URL(String(body.url ?? ''));
+    if (!/^https?:$/.test(target.protocol)) throw new Error();
+  } catch {
+    return { status: 400, error: 'invalid_url', message: 'Paste a full game link that starts with http:// or https://' };
+  }
+  let guard = null;
+  if (PUBLIC) {
+    const check = await checkTarget(target.href, { allowHosts: ALLOW_HOSTS });
+    if (!check.ok && check.reason === 'unresolvable') return { status: 400, error: 'unresolvable', message: 'We could not find that website. Check the link.' };
+    if (!check.ok) return { status: 400, error: 'private_url', message: 'This link points to a private or local network address. The public demo only opens games on the internet, or our test games.' };
+    guard = createRequestGuard({ allowHosts: ALLOW_HOSTS });
+  }
+  const maxPersonas = PUBLIC ? 5 : 8;
+  const personas = (Array.isArray(body.personas) && body.personas.length ? body.personas : DEFAULT_PERSONAS).filter((p) => PERSONAS[p]).slice(0, maxPersonas);
+  const steps = Math.max(5, Math.min(PUBLIC ? 60 : 80, Number(body.steps) || 40));
+  const vp = String(body.viewport ?? '640x360');
+  const [vw, vh] = vp.split('x').map(Number);
+  const okViewport = PUBLIC ? PUBLIC_VIEWPORTS.includes(vp) : vw >= 320 && vw <= 1600 && vh >= 180 && vh <= 1000;
+  const viewport = okViewport ? { width: vw, height: vh } : { width: 640, height: 360 };
+  // Test option (labelled in the UI and the report): the first ghost's model fails from its 6th move.
+  // Not in the public demo: the backup model costs about 10 times more per move.
+  const simulateOutage = body.simulateOutage && !PUBLIC ? { ghost: personas[0], fromCall: 6 } : null;
+  const compareTo = SAFE_ID.test(String(body.compareTo ?? '')) && existsSync(join(runsDir, body.compareTo, 'report.json')) ? body.compareTo : null;
+  const model = PUBLIC ? undefined : body.model; // the public demo always uses the default model
+  return { url: target.href, personas, steps, model, viewport, simulateOutage, compareTo, guard, owner: ip };
+}
+
+const server = createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    const path = url.pathname;
+    const ip = clientIp(req, TRUST_PROXY);
+
     // Human playtests recorded by the SDK (games opened with ?human=1). Sent as a CORS "simple request"
     // from the games origin, so the response is opaque to the page; it only needs to be stored.
     if (path === '/api/human') {
@@ -164,17 +256,22 @@ const server = createServer(async (req, res) => {
         return res.end();
       }
       if (req.method === 'POST') {
+        if (PUBLIC && !humanLimiter.take(ip).ok) return send(res, 429, { error: 'rate_limited' }, cors);
         const data = await readBody(req, 400_000);
         if (!SAFE_ID.test(String(data.id)) || !SAFE_ID.test(String(data.game)) || !SAFE_ID.test(String(data.variant))) {
           return send(res, 400, { error: 'invalid_session' }, cors);
         }
-        await mkdir(join(runsDir, 'humans'), { recursive: true });
-        await writeFile(join(runsDir, 'humans', `${data.id}.json`), JSON.stringify({ ...data, receivedAt: new Date().toISOString() }, null, 2));
+        const dir = join(runsDir, 'humans');
+        await mkdir(dir, { recursive: true });
+        const file = join(dir, `${data.id}.json`);
+        if (PUBLIC && !existsSync(file) && (await readdir(dir)).length >= MAX_HUMAN_SESSIONS) return send(res, 507, { error: 'full' }, cors);
+        await writeFile(file, JSON.stringify({ ...data, receivedAt: new Date().toISOString() }, null, 2));
         res.writeHead(204, cors);
         return res.end();
       }
     }
     if (path === '/api/humans' && req.method === 'GET') {
+      if (PUBLIC) return send(res, 404, { error: 'not_found' }); // people's sessions are not public
       const dir = join(runsDir, 'humans');
       const files = (await readdir(dir).catch(() => [])).filter((f) => f.endsWith('.json'));
       const list = [];
@@ -193,6 +290,7 @@ const server = createServer(async (req, res) => {
         games: TEST_GAMES.map((g) => ({ ...g, url: `http://localhost:${GAMES_PORT}/${g.id}/` })),
         model: process.env.GHOST_MODEL || 'muse-ember-1.0',
         hasKey: Boolean(process.env.MODEL_API_KEY),
+        public: PUBLIC,
         budget: { capUsd: BUDGET_USD, spentUsd: spend.totalUsd },
         busy: activeRun ? activeRun.id : null,
       });
@@ -200,25 +298,20 @@ const server = createServer(async (req, res) => {
 
     if (path === '/api/runs' && req.method === 'POST') {
       const body = await readBody(req);
-      let target;
-      try {
-        target = new URL(String(body.url ?? ''));
-        if (!/^https?:$/.test(target.protocol)) throw new Error();
-      } catch {
-        return send(res, 400, { error: 'invalid_url', message: 'Paste a full game link that starts with http:// or https://' });
-      }
+      const opts = await runOptions(body, ip);
+      if (opts.error) return send(res, opts.status, { error: opts.error, message: opts.message });
       if (!process.env.MODEL_API_KEY) return send(res, 503, { error: 'no_key', message: 'The server has no MODEL_API_KEY.' });
       if (activeRun) return send(res, 409, { error: 'busy', message: 'Ghosts are already playing another game. Wait for that run to finish.', runId: activeRun.id });
       const spend = await readSpend();
       if (spend.totalUsd >= BUDGET_USD) return send(res, 402, { error: 'budget', message: `Spending cap of $${BUDGET_USD} reached.` });
-      const personas = (Array.isArray(body.personas) && body.personas.length ? body.personas : DEFAULT_PERSONAS).filter((p) => PERSONAS[p]).slice(0, 8);
-      const steps = Math.max(5, Math.min(80, Number(body.steps) || 40));
-      const [vw, vh] = String(body.viewport ?? '640x360').split('x').map(Number);
-      const viewport = vw >= 320 && vw <= 1600 && vh >= 180 && vh <= 1000 ? { width: vw, height: vh } : { width: 640, height: 360 };
-      // Test option (labelled in the UI and the report): the first ghost's model fails from its 6th move.
-      const simulateOutage = body.simulateOutage ? { ghost: personas[0], fromCall: 6 } : null;
-      const compareTo = SAFE_ID.test(String(body.compareTo ?? '')) && existsSync(join(runsDir, body.compareTo, 'report.json')) ? body.compareTo : null;
-      const run = await startRun({ url: target.href, personas, steps, model: body.model, viewport, simulateOutage, compareTo });
+      if (PUBLIC) {
+        const limit = runLimiter.take(ip);
+        if (!limit.ok) {
+          const minutes = Math.ceil(limit.retryAfterMs / 60_000);
+          return send(res, 429, { error: 'rate_limited', message: `You have started several playtests in a short time. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.` });
+        }
+      }
+      const run = await startRun(opts);
       return send(res, 202, { id: run.id });
     }
 
@@ -228,14 +321,14 @@ const server = createServer(async (req, res) => {
       const run = runs.get(id);
       if (sub === '/stream') {
         if (!run) {
-          // Finished run from a previous server session: replay only the report.
-          const report = JSON.parse(await readFile(join(runsDir, id, 'report.json'), 'utf8').catch(() => 'null'));
+          // Finished run from a previous server session (or forgotten from memory): replay only the report.
+          const report = SAFE_ID.test(id) ? JSON.parse(await readFile(join(runsDir, id, 'report.json'), 'utf8').catch(() => 'null')) : null;
           if (!report) return send(res, 404, { error: 'not_found' });
           res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
           res.end(`data: ${JSON.stringify({ type: 'report', report })}\n\n`);
           return;
         }
-        res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
+        res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive', 'x-accel-buffering': 'no' });
         for (const e of run.events) res.write(`data: ${JSON.stringify(e)}\n\n`);
         if (run.status === 'done' || run.status === 'failed') return res.end();
         run.clients.add(res);
@@ -243,15 +336,17 @@ const server = createServer(async (req, res) => {
         return;
       }
       if (sub === '/stop' && req.method === 'POST') {
+        if (PUBLIC && run && run.owner !== ip) return send(res, 403, { error: 'forbidden', message: 'Only whoever started this run can stop it.' });
         run?.controller.abort();
         return send(res, 200, { ok: true });
       }
       if (run) return send(res, 200, { id, status: run.status, config: run.config, report: run.report });
-      const report = JSON.parse(await readFile(join(runsDir, id, 'report.json'), 'utf8').catch(() => 'null'));
+      const report = SAFE_ID.test(id) ? JSON.parse(await readFile(join(runsDir, id, 'report.json'), 'utf8').catch(() => 'null')) : null;
       return report ? send(res, 200, { id, status: 'done', config: report.config, report }) : send(res, 404, { error: 'not_found' });
     }
 
     if (path === '/api/runs' && req.method === 'GET') {
+      if (PUBLIC) return send(res, 404, { error: 'not_found' }); // other visitors' game links are private
       const dirs = (await readdir(runsDir).catch(() => [])).filter((d) => !d.startsWith('_')).sort().reverse();
       const list = [];
       for (const d of dirs.slice(0, 30)) {
@@ -262,18 +357,37 @@ const server = createServer(async (req, res) => {
     }
 
     if (path.startsWith('/runs/')) {
-      const file = normalize(join(runsDir, decodeURIComponent(path.slice('/runs/'.length))));
-      if (!file.startsWith(runsDir)) return send(res, 403, { error: 'forbidden' });
+      const rel = decodePath(path.slice('/runs/'.length));
+      const file = normalize(join(runsDir, rel));
+      if (!inside(runsDir, file)) return send(res, 403, { error: 'forbidden' });
+      // Bookkeeping files and people's recorded sessions are not served in the public demo.
+      const first = normalize(rel).split(/[\\/]/)[0];
+      if (PUBLIC && (first.startsWith('_') || first === 'humans')) return send(res, 404, { error: 'not_found' });
       return serveFile(res, file);
     }
 
-    const file = normalize(join(distDir, decodeURIComponent(path)));
-    if (!file.startsWith(distDir)) return send(res, 403, { error: 'forbidden' });
+    const file = normalize(join(distDir, decodePath(path)));
+    if (!inside(distDir, file)) return send(res, 403, { error: 'forbidden' });
     return serveFile(res, file, join(distDir, 'index.html'));
   } catch (err) {
-    send(res, err.status ?? 500, { error: 'server_error', message: err.message });
+    if (!res.headersSent) send(res, err.status ?? 500, { error: err.error ?? 'server_error', message: err.message });
+    else res.end();
   }
 });
+
+// Live streams: a comment line every 20 s so proxies do not close a quiet connection.
+setInterval(() => {
+  for (const run of runs.values()) for (const res of run.clients) res.write(': ping\n\n');
+}, HEARTBEAT_MS).unref();
+
+// Stop cleanly on restarts: the ghosts stop, the browsers close, the report of a finished run is kept.
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.once(signal, () => {
+    activeRun?.controller.abort();
+    server.close();
+    setTimeout(() => process.exit(0), activeRun ? 5000 : 0).unref();
+  });
+}
 
 await mkdir(runsDir, { recursive: true });
 try {
@@ -283,6 +397,6 @@ try {
   console.log(`Port ${GAMES_PORT} is busy: assuming the test games are already being served there.`);
 }
 server.listen(PORT, () => {
-  console.log(`Ghostrun on http://localhost:${PORT}  (test games on http://localhost:${GAMES_PORT}/)`);
+  console.log(`Ghostrun on http://localhost:${PORT}  (test games on http://localhost:${GAMES_PORT}/)${PUBLIC ? '  [public demo mode]' : ''}`);
   if (!process.env.MODEL_API_KEY) console.log('Warning: MODEL_API_KEY is not set; ghosts cannot play.');
 });

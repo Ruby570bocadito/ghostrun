@@ -17,7 +17,13 @@ export const CACHE_KEY = 'ghostrun-ghost-v2';
 // Per-model timeouts: Spark took over 30 s on 11% of its moves in the A1 comparison.
 const TIMEOUT_MS = { 'muse-ember-1.0': 20_000, 'muse-spark-1.3': 60_000, 'muse-wonder-1.0': 90_000 };
 
-/** The structured answer a ghost gives every move. Sizes are the screenshot's, in pixels. */
+/**
+ * The structured answer a ghost gives every move. Sizes are the screenshot's, in pixels.
+ * The position field stays even when the game reports positions itself: without it the answer was
+ * 13% cheaper, but ghosts died twice as often next to Spike Maze's spikes and 2 of 6 clean maze runs
+ * got a false alarm (0 of 8 with it). Asking where it is makes the model reason about where it is
+ * (bench/README.md, "Tried and rejected").
+ */
 export function moveSchema(w, h) {
   const point = {
     type: 'object',

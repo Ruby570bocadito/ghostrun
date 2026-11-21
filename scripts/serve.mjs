@@ -2,7 +2,7 @@
 // Serves games/ and maps /vendor/phaser.js to the installed Phaser build.
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { extname, join, normalize, resolve } from 'node:path';
+import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -28,7 +28,7 @@ export function startServer(port = Number(process.env.PORT) || 5174) {
       if (!file) {
         const rel = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
         file = join(gamesDir, rel);
-        if (!file.startsWith(gamesDir)) throw Object.assign(new Error('forbidden'), { code: 403 });
+        if (file !== gamesDir && !file.startsWith(gamesDir + sep)) throw Object.assign(new Error('forbidden'), { code: 403 });
         if ((await stat(file).catch(() => null))?.isDirectory()) file = join(file, 'index.html');
       }
       const body = await readFile(file);

@@ -26,6 +26,7 @@ export async function runSwarm({
   // Test option: make one ghost's model fail from its Nth move, to show the fallback. Labelled everywhere.
   simulateOutage = null, // e.g. { ghost: 'newbie', fromCall: 6 }
   compareTo = null,
+  guard = null, // public demo: which requests the game pages may make (src/guard.mjs)
   signal,
 }) {
   await mkdir(outDir, { recursive: true });
@@ -75,6 +76,7 @@ export async function runSwarm({
           stopWhenSaturated,
           viewport,
           notices,
+          guard,
           signal,
           onFrame: (f) => onEvent({ type: 'frame', ghost: id, t: f.t, file: `${id}/${f.file}`, state: f.state }),
           onStep: (s) => onEvent({ type: 'step', ghost: id, step: s }),

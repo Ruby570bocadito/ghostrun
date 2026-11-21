@@ -88,12 +88,26 @@ export async function runGhost({
   stopWhenSaturated = true, // stop a ghost once more moves cannot change what it has shown
   bulletTime = true, // false = the game keeps running while the brain thinks (baseline for the A2 experiment)
   notices = [], // failures handled during the run (e.g. model fallback), shared with the caller
+  guard = null, // async (url) => may the game page load it? Set by the public demo (src/guard.mjs)
   signal,
 }) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await mkdir(join(outDir, 'frames'), { recursive: true });
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
   const page = await context.newPage();
+  let blockedRequests = 0;
+  if (guard) {
+    // Every request the game makes (the page itself, redirects, scripts, images, fetch) is checked.
+    await context.route('**/*', async (route) => {
+      if (await guard(route.request().url())) return route.continue();
+      blockedRequests += 1;
+      return route.abort('blockedbyclient');
+    });
+  }
+  // A game must not open more windows (ads, external links): close them.
+  context.on('page', (p) => {
+    if (p !== page) p.close().catch(() => {});
+  });
   const trace = {
     persona: persona.id,
     url,
@@ -155,6 +169,9 @@ export async function runGhost({
     try {
       res = await page.goto(url, { waitUntil: 'load', timeout: 20_000 });
     } catch (err) {
+      if (/ERR_BLOCKED_BY_CLIENT/.test(err.message)) {
+        throw Object.assign(new Error('This link leads to a private or local network address, which the public demo does not open.'), { kind: 'game_blocked' });
+      }
       throw Object.assign(new Error(`Could not open the game: ${err.message.split('\n')[0]}`), { kind: 'game_unreachable' });
     }
     if (res && !res.ok()) throw Object.assign(new Error(`The game URL answered HTTP ${res.status()}`), { kind: 'game_unreachable' });
@@ -347,6 +364,7 @@ export async function runGhost({
   } finally {
     trace.endedAt = new Date().toISOString();
     trace.gameMs = gameMs;
+    if (blockedRequests) trace.blockedRequests = blockedRequests;
     await writeFile(join(outDir, 'trace.json'), JSON.stringify(trace, null, 2));
     await context.close().catch(() => {});
   }
