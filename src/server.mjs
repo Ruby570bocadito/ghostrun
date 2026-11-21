@@ -235,7 +235,12 @@ const server = createServer(async (req, res) => {
 });
 
 await mkdir(runsDir, { recursive: true });
-await startGames(GAMES_PORT);
+try {
+  await startGames(GAMES_PORT);
+} catch (err) {
+  if (err.code !== 'EADDRINUSE') throw err;
+  console.log(`Port ${GAMES_PORT} is busy: assuming the test games are already being served there.`);
+}
 server.listen(PORT, () => {
   console.log(`Ghost Players on http://localhost:${PORT}  (test games on http://localhost:${GAMES_PORT}/)`);
   if (!process.env.MODEL_API_KEY) console.log('Warning: MODEL_API_KEY is not set; ghosts cannot play.');

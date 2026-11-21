@@ -3,7 +3,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { startServer } from '../scripts/serve.mjs';
+import { ensureGamesServer } from '../scripts/serve.mjs';
 import { runGhost } from './ghost.mjs';
 import { PERSONAS } from './personas.mjs';
 import { createMetaBrain, costOf } from './brains/meta.mjs';
@@ -24,8 +24,8 @@ if (brainKind === 'meta' && !process.env.MODEL_API_KEY) {
   process.exit(1);
 }
 
-const server = await startServer(Number(args.port ?? 5174));
-const port = server.address().port;
+const server = await ensureGamesServer(Number(args.port ?? 5174));
+const port = server.port;
 const url = args.url ?? `http://localhost:${port}/${game}/${args.fault ? `?fault=${args.fault}` : ''}`;
 const brain =
   brainKind === 'scripted'

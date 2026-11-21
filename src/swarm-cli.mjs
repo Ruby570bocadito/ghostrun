@@ -3,7 +3,7 @@
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { startServer } from '../scripts/serve.mjs';
+import { ensureGamesServer } from '../scripts/serve.mjs';
 import { runSwarm } from './swarm.mjs';
 import { analyze } from './analyze.mjs';
 import { explainHotspots } from './explain.mjs';
@@ -22,8 +22,8 @@ if (brain === 'meta' && !process.env.MODEL_API_KEY) {
   process.exit(1);
 }
 
-const server = await startServer(Number(args.port ?? 5174));
-const url = args.url ?? `http://localhost:${server.address().port}/${game}/${args.fault ? `?fault=${args.fault}` : ''}`;
+const server = await ensureGamesServer(Number(args.port ?? 5174));
+const url = args.url ?? `http://localhost:${server.port}/${game}/${args.fault ? `?fault=${args.fault}` : ''}`;
 const runDir = join('runs', `${new Date().toISOString().replace(/[:.]/g, '-')}-swarm-${game}${args.fault ? '-' + args.fault : ''}`);
 
 console.log(`Summoning ${personas.length} ghosts on ${url}`);

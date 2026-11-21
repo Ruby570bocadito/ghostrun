@@ -39,7 +39,21 @@ export function startServer(port = Number(process.env.PORT) || 5174) {
       res.end(err.code === 403 ? 'Forbidden' : 'Not found');
     }
   });
-  return new Promise((ok) => server.listen(port, () => ok(server)));
+  return new Promise((ok, fail) => {
+    server.once('error', fail);
+    server.listen(port, () => ok(server));
+  });
+}
+
+/** Starts the games server unless one is already listening on that port. Returns a closable handle. */
+export async function ensureGamesServer(port = 5174) {
+  try {
+    const server = await startServer(port);
+    return { port, close: () => server.close() };
+  } catch (err) {
+    if (err.code !== 'EADDRINUSE') throw err;
+    return { port, close: () => {} };
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

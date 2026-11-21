@@ -7,7 +7,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { startServer } from '../scripts/serve.mjs';
+import { ensureGamesServer } from '../scripts/serve.mjs';
 import { runSwarm } from '../src/swarm.mjs';
 import { analyze } from '../src/analyze.mjs';
 import { score } from './score.mjs';
@@ -43,7 +43,7 @@ for (const game of gameIds) {
   for (const v of variants) for (let rep = 1; rep <= reps; rep++) jobs.push({ game, variant: v.id, fault: v.fault, rep });
 }
 
-const server = await startServer(5174);
+const server = await ensureGamesServer(5174);
 const outRoot = join('bench', 'results');
 await mkdir(outRoot, { recursive: true });
 const runRoot = join('runs', `bench-${label}-${new Date().toISOString().replace(/[:.]/g, '-')}`);
