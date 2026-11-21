@@ -35,12 +35,45 @@ Run it yourself: `npm run bench -- --label mine --reps 2` (needs `MODEL_API_KEY`
 
 **The one false alarm in the holdout** (clean Lever Room): two ghosts spent their moves trying to climb the closed door, which they read as a ladder (*"holding up never actually climbed me higher"*). We count it as a false alarm, but it may be a real readability issue in our own test game.
 
+| [baseline-v2](results/baseline-v2.md) | pixel prompt (below) + new blocker rule, fresh runs | **10/10** | **0/10** | $0.025 |
+
 ## Perception: does the model see its own character?
 
-Each move, the ghost reports where its character is on screen; the game reports where it really is ([results](results/perception-baseline.md)).
+Each move, the ghost reports where its character is on screen; the game reports where it really is.
 
-- The model locates its character precisely: **median error 5–7 px** on a 640×360 screen.
-- But in the first version **12–41% of answers came in pixels when we had asked for a 0–1000 grid**, because the prompt also said "640×360". We changed the prompt to ask for pixels only (`src/brains/meta.mjs`); the effect is measured in `baseline-v2`.
+| Prompt | Answers in the wrong units | Position within 40 px | Median error |
+|---|---|---|---|
+| v1: "0–1000 grid" (but the prompt also said 640×360) — [results](results/perception-baseline.md) | 12–41% depending on the game | 68% | 8 px |
+| **v2: "pixels of the 640×360 screenshot"** — [results](results/perception-baseline-v2.md) | **0–1%** | **98%** | **5 px** |
+
+Read in whichever units fit best, v1 answers were already precise (median 5–7 px): the model saw well, our prompt was ambiguous. Moves where the character could not be seen (off screen in a pit, or during the red flash after a death) are counted apart.
+
+## Experiments on our AI design decisions
+
+All on the same 10 variants × 2 repetitions, 4 ghosts, `muse-ember-1.0`.
+
+### Bullet time (the game clock freezes while the AI thinks)
+
+| | With bullet time ([baseline-v2](results/baseline-v2.md)) | Without ([realtime-v2](results/realtime-v2.md)) |
+|---|---|---|
+| Deaths that happened **while the AI was still deciding** | 0 (by design) | **291 of 467 (62%)** |
+| Ghosts that finished clean **Read Me** (jump, then dash in mid-air) | **6/8** | **0/8** |
+| Ghosts that finished all clean games | 60% | 48% |
+| Clean games with a false alarm | 0/10 | 2/10 (both Read Me: a solvable game looked broken) |
+| Flaws found | 10/10 | 10/10 |
+
+Bullet time matters where timing matters. In slow games (Gap Run, Key Hunt) we saw no difference, and we do not claim one.
+
+### Different personalities vs four copies of one
+
+| | 4 personalities ([baseline-v2](results/baseline-v2.md)) | 4 Newbies ([clones-v2](results/clones-v2.md)) |
+|---|---|---|
+| Flaws found / false alarms | 10/10 · 0/10 | 10/10 · 0/10 |
+| Ghosts that quit (churn signal in reports) | **9** | **0** |
+| Moves flagged "confused" | 59 | 201 |
+| Ghosts that finished clean games | 60% | 65% |
+
+On single-flaw test games, personalities did **not** find more flaws. What they changed is the kind of evidence: only the mix produced quits (the Impatient), and a mix of players cried "confused" 3.4× less often than four beginners, so a confusion finding from the mix carries more weight. We keep the personalities for that, not for recall.
 
 ## Limitations
 
