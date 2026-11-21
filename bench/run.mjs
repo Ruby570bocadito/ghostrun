@@ -110,6 +110,13 @@ const summary = {
 };
 await writeFile(join(outRoot, `${label}.json`), JSON.stringify({ summary, results }, null, 2));
 
+// Count benchmark spending against the same cap the app server enforces (runs/_spend.json).
+const spendFile = join('runs', '_spend.json');
+const spend = existsSync(spendFile) ? JSON.parse(await readFile(spendFile, 'utf8')) : { totalUsd: 0, runs: 0 };
+spend.totalUsd += summary.totalCostUsd;
+spend.benchUsd = (spend.benchUsd ?? 0) + summary.totalCostUsd;
+await writeFile(spendFile, JSON.stringify(spend, null, 2));
+
 const lines = [
   `# Benchmark — ${label}`,
   '',
