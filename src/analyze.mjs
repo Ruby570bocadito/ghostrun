@@ -115,6 +115,7 @@ export function analyze(traces, { deathRadius = 70, stuckRadius = 90 } = {}) {
       const approach = t.frames.filter((f) => f.state && f.pageT >= e.t - 600 && f.pageT <= e.t).map(posOf);
       deaths.push({
         persona: t.persona,
+        t: e.t,
         x: e.x,
         y: Math.min(worldH, e.y),
         approach,
@@ -124,18 +125,28 @@ export function analyze(traces, { deathRadius = 70, stuckRadius = 90 } = {}) {
       });
     }
   }
+  const sideScroller = worldW > 700;
   for (const g of cluster2d(deaths, deathRadius)) {
     const personas = [...new Set(g.map((d) => d.persona))];
     const region = bbox([...g, ...g.flatMap((d) => d.approach)], 24, worldW, worldH);
     const inside = (p) => p.x >= region.x0 - 20 && p.x <= region.x1 + 20 && p.y >= region.y0 - 20 && p.y <= region.y1 + 20;
-    const reached = traces
-      .filter((t) => t.outcome !== 'error' && t.frames.some((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f))))
+    const reachedTraces = traces.filter((t) => t.outcome !== 'error' && t.frames.some((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f))));
+    const reached = reachedTraces.map((t) => t.persona);
+    // "Got past" = after its last death here (or after first reaching the spot), the ghost made progress:
+    // reached an objective or finished, or (side-scrollers) was seen beyond the far edge of the spot.
+    const passed = reachedTraces
+      .filter((t) => {
+        const lastDeath = Math.max(-Infinity, ...g.filter((d) => d.persona === t.persona).map((d) => d.t));
+        const from = Number.isFinite(lastDeath) ? lastDeath : (t.frames.find((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f)))?.pageT ?? 0);
+        const progressed = t.events.some((e) => (e.type === 'milestone' || e.type === 'win') && e.t > from);
+        const beyond = sideScroller && t.frames.some((f) => f.pageT > from && f.state && f.state.x > region.x1 + 40);
+        return t.outcome === 'won' || progressed || beyond;
+      })
       .map((t) => t.persona);
-    // "Got past" = was later seen beyond the far edge of the danger zone (side-scrollers) or finished.
-    const passed = ghosts
-      .filter((gh) => gh.outcome === 'won' || (gh.maxX != null && worldW > 700 && gh.maxX > region.x1 + 40))
-      .map((gh) => gh.persona);
-    const type = reached.length > 0 && passed.length === 0 ? 'blocker' : 'friction';
+    // Blocker = repeated failure with no success: at least two ghosts died here three or more times,
+    // and none of the ghosts that reached the spot ever got past it. Anything less is friction.
+    const repeated = personas.filter((p) => g.filter((d) => d.persona === p).length >= 3).length;
+    const type = reached.length >= 2 && passed.length === 0 && repeated >= 2 ? 'blocker' : 'friction';
     findings.push({
       type,
       severity: type === 'blocker' ? 'high' : frictionSeverity(personas.length / ghostsTotal, g.length),

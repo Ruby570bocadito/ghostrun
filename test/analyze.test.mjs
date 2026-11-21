@@ -62,6 +62,33 @@ test('a spot where ghosts die but later get past is friction, not a blocker', ()
   assert.equal(f.passed.length, 2);
 });
 
+test('dying once or twice and running out of moves is friction, not a blocker', () => {
+  const traces = ['a', 'b', 'c'].map((p) => walker(p, { upTo: 940, deathX: 1020, deaths: 1 }));
+  const r = analyze(traces);
+  assert.equal(r.findings.filter((x) => x.type === 'blocker').length, 0);
+  assert.ok(r.findings.find((x) => x.type === 'friction'));
+});
+
+test('in a single-screen game, reaching an objective after dying counts as getting past', () => {
+  const traces = ['a', 'b'].map((p) => {
+    const frames = [];
+    const events = [];
+    let i = 0;
+    for (let k = 0; k < 4; k++) {
+      for (let x = 60; x <= 150; x += 30) frames.push(frame(i++, x, 312, { worldW: 640 }));
+      events.push({ type: 'death', x: 155, y: 312, t: frames.at(-1).pageT, step: 1 });
+    }
+    for (let y = 312; y >= 200; y -= 20) frames.push(frame(i++, 100, y, { worldW: 640 }));
+    events.push({ type: 'milestone', name: 'checkpoint', t: frames.at(-1).pageT, step: 2 });
+    frames[0].state.milestones = [{ name: 'checkpoint', x: 100, y: 200 }];
+    return trace(p, { frames, events, steps: [{ step: 1, thought: 'ouch', frames: [0, frames.length - 1], usage: { input: 0, output: 0 }, latencyMs: 0 }] });
+  });
+  const r = analyze(traces);
+  const f = r.findings.find((x) => x.type === 'friction');
+  assert.ok(f, 'expected friction, not a blocker');
+  assert.equal(f.passed.length, 2);
+});
+
 test('an objective no ghost reaches is reported as missed', () => {
   const traces = ['a', 'b', 'c'].map((p) => {
     const t = walker(p, { upTo: 400 });
