@@ -18,8 +18,19 @@ The known answer for each flaw (its type and the area of the level where it is) 
 
 For each run, 4 ghosts (Newbie, Speedrunner, Reader, Impatient) play up to 40 moves each with `muse-ember-1.0`, then the analysis (no AI) produces findings.
 
-- **Found** = a finding of a compatible type overlaps the area of the planted flaw.
-- **False alarm** = a high-severity blocker, missed-objective, stuck or hard-to-see finding on a clean game.
+- **Found** = a **critical** finding (high-severity blocker, missed objective, stuck or hard to see) of a compatible type overlaps the area of the planted flaw.
+- **False alarm** = the same kind of critical finding on a clean game.
+
+What this rule does and does not measure (several of these were pointed out by a skeptical-reviewer agent, 21 Nov):
+
+- **"Friction"** (ghosts died at a spot but got past) counts neither way. It also shows up on clean games, at hard but fair spots: in 18 of the 30 clean runs of the last three rounds. The report labels it as probably fair.
+- A missed-objective finding also counts when it names the planted objective (for example "lever"). It changes nothing here: all 17 critical objective findings on flawed games also overlap the flaw's area.
+- Read Me's flaw (the instructions name the wrong key) is found through its effect: a blocker or a missed objective at the pit that needs the dash. The "confusion" finding type itself is not scored, so this benchmark does not test it.
+- With 30 flawed and 30 clean runs the uncertainty is wide: 27/30 found means 74–97%, and 0/30 false alarms means at most 11% (95% Wilson intervals). The held-out third round alone: 9/10 means 60–98%, 0/10 at most 28%.
+- Costs are the token counts Meta returns, priced with Meta's published prices (read on 21 Nov, `src/brains/prices.mjs`), not an invoice.
+- All five games and their flaws were made by us (with AI help, checked by a person: [review log](../docs/ai-review-log.md)). NILO, [below](#hard-case-a-real-jam-game-we-did-not-make), is the one game made by someone else.
+
+One rule for both, since 21 November (night): before, a "friction" finding also counted as found, which was too lenient ([below](#the-scoring-rule-we-changed-after-a-review)). Older rows in the table keep the rule they were scored with; the "strict" rows re-score the same runs.
 
 Run it yourself: `npm run bench -- --label mine --reps 2` (needs `MODEL_API_KEY`), then `node bench/compare.mjs before-cache mine`. Add `--ask-position` to also measure how well the ghosts see their character (`node bench/perception.mjs mine`).
 
@@ -35,12 +46,27 @@ Run it yourself: `npm run bench -- --label mine --reps 2` (needs `MODEL_API_KEY`
 | [optimized-v3](results/optimized-v3.md) | cheaper, better-informed ghosts ([below](#cheaper-and-better-ghosts)) | 8/10 | 0/10 | $0.015 billed |
 | optimized-v3, re-scored | + contrast check of objectives ([below](#what-ai-eyes-see-that-people-do-not)), same runs | **10/10** | **0/10** | — |
 | [optimized-v3-holdout](results/optimized-v3-holdout.md) | same code, **fresh runs** (8/10 by the ghosts alone), re-scored with the contrast check | **10/10** | **0/10** | $0.016 billed |
+| optimized-v3 + holdout, **strict rule** | same 40 runs, critical findings only, plus the analysis fixes found by test agents | **18/20** | **0/20** | — |
+| [optimized-v5](results/optimized-v5.md) | the same version, **fresh runs** played after those fixes, strict rule | **9/10** | **0/10** | $0.015 billed |
 
 "Billed" counts cached input at Meta's cached rate; earlier rows are list price (cached tokens were not recorded yet), so compare them with care. Measured with the cache, the old ghosts cost $0.018 per run, not $0.025.
 
 **Why the rule changed.** In the baseline, both false alarms were in the clean Spike Maze: in single-screen games we only counted a ghost as "getting past" a deadly spot if it finished the level, and ghosts that ran out of moves near the end looked blocked. The new rule: a ghost gets past a spot if it later reaches an objective; a **blocker** needs at least two ghosts dying there three or more times with nobody getting past. Because the rule was changed after seeing those runs, we judged it on a fresh run (holdout).
 
 **The one false alarm in the holdout** (clean Lever Room): two ghosts spent their moves trying to climb the closed door, which they read as a ladder (*"holding up never actually climbed me higher"*). We count it as a false alarm, but it may be a real readability issue in our own test game.
+
+### The scoring rule we changed after a review
+
+On 21 November (night) we had the project reviewed by ten AI agents playing roles (a jam developer, a teenager in a hurry, a phone user, a teacher, an attacker, four judges, a skeptical engineer; Claude Haiku, each one using the real app or code). The skeptical engineer found that our "found" rule was too lenient: a **friction** finding (ghosts died but got past) counted as finding a flaw, and friction also appears at the same places in the **clean** versions of two games (Spike Maze's spikes, Read Me's pit). So for those two games, "found" did not tell the flawed version from the clean one. We checked it on the data and he was right:
+
+| Same 40 runs (optimized-v3 + holdout) | Flawed versions: flaw "found" | Clean versions: the same rule fires |
+|---|---|---|
+| Old rule: any compatible finding, friction included | 20/20 | 8/20 (Spike Maze and Read Me) |
+| **New rule: critical findings only** | **18/20** | **0/20** |
+
+Now one rule decides both "found" and "false alarm". The two misses are Spike Maze's invisible spikes, which the ghosts only reported as friction in one run of each round. The test agents also found three analysis bugs, fixed and covered by tests: a wide gap whose deaths split into two contradicting findings ("2/4 got past" next to "0/4 got past" for the same gap), ghosts that ended stuck attached to the wrong finding, and single deaths shown as findings. Re-scoring the 90 recorded runs with the fixes changed no result for the worse. A fresh round played after the fixes and not used to tune anything ([optimized-v5](results/optimized-v5.md)) found 9/10 flaws with 0/10 false alarms, like each earlier round, with the same miss. Across the three rounds: **27/30** found, **0/30** false alarms (`node bench/compare.mjs before-cache-v5 optimized-v3-gapfix+optimized-v3-holdout-gapfix+optimized-v5-gapfix`).
+
+Checking the new screenshots afterwards, we found that the merge for wide gaps also joined two neighbouring gaps into one finding: the run-up to the second gap starts where the first gap's area ends, so their areas touched. Now two areas are one place only if they overlap by at least a quarter of the smaller one (the two halves of one wide gap overlapped 54% and 89% in our runs; neighbouring gaps 1–10%). Re-scoring the three rounds with it ("-gapfix"): the same 27/30 and 0/30; in four Gap Run runs a finding that spanned two gaps became two findings.
 
 ## Perception: does the model see its own character?
 
@@ -100,7 +126,7 @@ A pass on the ghost loop (21 Nov), each change measured. 40 fresh runs of the ne
 
 | | Before (10 runs) | After (40 runs) |
 |---|---|---|
-| Flaws found | 5/5 | 16/20 by the ghosts, **20/20** with the contrast check ([below](#what-ai-eyes-see-that-people-do-not)) |
+| Flaws found (strict rule: critical findings only) | 5/5 | **18/20**: 14 by what the ghosts did, 4 by the contrast check ([below](#what-ai-eyes-see-that-people-do-not)) |
 | Clean runs with a false alarm | 0/5 | **0/20** |
 | Ghosts that finished the clean games | 60% | **74%** |
 | Moves per run | 113 | **90** (−20%) |
@@ -127,7 +153,7 @@ Tried and rejected:
 - **Fewer moves per ghost**: 30 instead of 40 saved 9% of the moves, but 3 fewer ghosts finished. Kept 40 (the app lets you choose 20, 40 or 60).
 - **Not asking for the ghost's position where the game already knows it.** Games with the SDK report positions themselves, so we dropped the ghost's own position estimate and "what I see" from its answer. On 120 recorded moves re-sent both ways, output fell from 263 to 229 tokens ([probe](results/probe-fields.md)), and a full round ([optimized-v4](results/optimized-v4.md)) cost **13% less** with the same flaws found. But 2 of its 10 clean runs got a false alarm, both at the visible spikes by Spike Maze's exit. A targeted test (Spike Maze clean, 4 runs each way: [maze-compact](results/maze-compact.md), [maze-full](results/maze-full.md)) pointed the same way: without the field, 4 of 16 ghosts died there 3 or more times, with it none. Pooling every round, ghosts died by those spikes 1.9 times each without the field and 1.1 with it, and clean maze runs got a false alarm in 2 of 6 without it, 0 of 8 with it. Asking the model where it is makes it reason about where it is, and that matters next to hazards. **Rejected**: the field stays.
 
-**Against our own target.** We aimed at −40% cost per run and got −17% for the ghosts and −47% for the analyst, about −30% for a full playtest. The ghosts now reason more per move (149 vs 109 tokens) because they have more to reason about: that is the price of better decisions, and a run is still cheaper because it needs fewer moves.
+**Against our own target.** We aimed at −40% cost per run and got −17% for the ghosts and −47% for the analyst, about −25% for a full playtest ($0.026 → $0.019). The ghosts now reason more per move (149 vs 109 tokens) because they have more to reason about: that is the price of better decisions, and a run is still cheaper because it needs fewer moves.
 
 Found on the way: Meta's structured output returns the fields in **alphabetical order** ([probe-output.mjs](probe-output.mjs)), so a ghost writes its "thought" after its keys. That matches review R3: the sentences are the ghost's plan for the move, not a description of what happened.
 
@@ -145,7 +171,7 @@ So Ghostrun now also **measures** it, without AI: for each objective the game ma
 | Lever Room | door | 12.9:1 | 12.9:1 |
 | Spike Maze | checkpoint | 3.6:1 | 3.6:1 |
 
-Measured on the recorded screens of 70 benchmark runs ([contrast.md](results/contrast.md)), it flags exactly the two planted invisible objects and nothing on any clean game. Re-scoring 90 recorded runs with it (45 of them clean) added no false alarm, and both rounds of the new version find **10/10** flaws with **0/10** false alarms. It was designed after the first round; the second round was played before it existed and was not used to tune it.
+Measured on the recorded screens of 70 benchmark runs ([contrast.md](results/contrast.md)), it flags exactly the two planted invisible objects and nothing on any clean game. Re-scoring 90 recorded runs with it (45 of them clean) added no false alarm, and the faint key went from missed to found in all 4 runs of the two rounds (with the strict rule, each round finds 9/10 flaws with 0/10 false alarms); a third round, played later, found the faint key in both of its runs and nothing on the clean games. It was designed after the first round; the second round was being played at the same time and was not used to tune it. All rounds use the same five games, so this is a check on fresh plays, not on new games.
 
 Limit: it only checks objects the game declares. An undeclared hazard (Spike Maze's invisible spikes) is still found only through what the ghosts do (deaths), which worked there because dying is visible to any player.
 
@@ -153,7 +179,7 @@ Limit: it only checks objects the game declares. An undeclared hazard (Spike Maz
 
 Rafael played all ten variants himself with the SDK's recorder on (`?human=1`, see `games/index.html`) — [results](results/people-vs-ghosts.md).
 
-**Every spot where he died or ended up stuck was also flagged by the ghosts: 4/4.**
+**Every spot where he died or ended up stuck was also flagged by the ghosts: 4/4.** Two of the four only as friction, which the strict benchmark rule does not count. It measures one direction only (what he hit, did the ghosts flag it?), with one person who already knew the flaws: a first check, not a blind test.
 
 - Gap Run with the flaw: he died 3 times at the third gap and left → the ghosts' **blocker**.
 - Spike Maze with the flaw: he died once at the visible spikes near the exit → a ghost **friction** finding.

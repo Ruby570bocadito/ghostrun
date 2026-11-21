@@ -12,7 +12,7 @@ Built by Rafael Gálvez (solo, student) for the [Global AI Builder's Challenge](
 
 In a game jam you build a game in 48–96 hours. Three hours before the deadline it works… for you: you know the level by heart, so you cannot see what a newcomer will not understand. Everyone else is busy with their own game, so nobody playtests yours. You ship blind, and the comments ("I didn't know what to do in level 2") arrive after the jam, when you can no longer fix anything.
 
-It is not a small group: the GMTK Game Jam 2025 alone received [9,515 games in four days](https://itch.io/jam/gmtk-2025/entries). Studios pay for AI playtesting ([nunu.ai raised about $6M](https://gamesbeat.com/nunu-ai-raises-6m-for-ai-agents-dubbed-unembodied-minds-for-game-testing/)); jam developers, mostly students and hobbyists, have nothing.
+It is not a small group: the GMTK Game Jam 2025 alone received [more than 9,500 games in four days](https://itch.io/jam/gmtk-2025/entries). Studios pay for AI playtesting ([nunu.ai raised about $6M](https://gamesbeat.com/nunu-ai-raises-6m-for-ai-agents-dubbed-unembodied-minds-for-game-testing/)); jam developers, mostly students and hobbyists, have nothing.
 
 ## What Ghostrun does
 
@@ -30,21 +30,25 @@ It is not a small group: the GMTK Game Jam 2025 alone received [9,515 games in f
 
 ## Does it work? (measured, not claimed)
 
-Five small web games, each with a clean version and a version with one planted design flaw whose type and place we know ([benchmark](bench/README.md)). The current version, on 40 fresh runs:
+Five small web games, each with a clean version and a version with one planted design flaw whose type and place we know ([benchmark](bench/README.md)), played in three rounds of 20 runs. We changed rules after looking at the first two rounds, so the honest test is the third: played afterwards, and not used to tune anything.
 
-| | Result |
-|---|---|
-| Planted flaws found (right type, right place) | **20/20** |
-| Clean games with a false alarm | **0/20** |
-| Ghosts that finished the clean games | **74%** |
-| Cost and time per playtest (4 ghosts and the analyst) | **about $0.02, under a minute** |
-| Spots where a person died or got stuck that the ghosts also flagged | **4/4** ([people vs ghosts](bench/README.md#people-vs-ghosts)) |
+| | Third round (held out) | All three rounds |
+|---|---|---|
+| Planted flaws found: a critical finding of the right type in the right place | **9/10** | 27/30 (21 from what the ghosts did, 6 from the contrast measurement) |
+| Clean games with a false alarm: the same kind of finding where there is no flaw | **0/10** | 0/30 |
+| Clean games where the report still shows a hard spot ("friction": ghosts died there but got past; counted neither way) | 6/10 | 18/30 |
+| Ghosts that finished the clean games | 78% | 75% |
+
+- **Cost and time per playtest** (4 ghosts and the analyst): about $0.02 and under a minute on these games (41 s on average; the maze takes about a minute).
+- **People vs ghosts:** every spot where a person died or got stuck was also flagged by the ghosts, 4/4 (2 of them only as friction). One person, the developer, not blind ([details](bench/README.md#people-vs-ghosts)).
+
+One rule decides "found" and "false alarm", so neither can be bought with the other: only critical findings count. "Friction" counts neither way, because it also shows up on clean games at hard but fair spots, and the report labels it as probably fair. The miss of each round is Spike Maze's invisible spikes, which the ghosts reported only as friction. Decided after looking at the first two rounds: counting only critical findings ([why](bench/README.md#the-scoring-rule-we-changed-after-a-review)), the contrast check with our own 1.5:1 line for "practically invisible" (the faint key measures 1.09:1), and treating the deaths at both edges of one wide gap as one spot. With so few runs the uncertainty is wide: 27/30 means 74–97% and 0/30 false alarms means at most 11% (95% intervals).
 
 | Case | What happened |
 |---|---|
-| Normal: Gap Run, one gap too wide to jump | Blocker at that gap in 4/4 runs |
-| Normal: Key Hunt, key drawn in the floor colour | "Hard to see" (contrast 1.09:1) in 4/4 runs |
-| Repeat: the same 10 variants, a second fresh round | 10/10 flaws and 0/10 false alarms again |
+| Normal: Gap Run, one gap too wide to jump | Blocker at that gap in 6/6 runs (three rounds) |
+| Normal: Key Hunt, key drawn in the floor colour | "Hard to see" (contrast 1.09:1) in 6/6 runs |
+| Repeat: the same 10 variants, played in three separate rounds | 9/10 flaws and 0/10 false alarms in each round (the same miss) |
 | Hard: [NILO](games/third-party/nilo/README.md), a real jam game we did not make, unmodified, no SDK | The ghosts got through its mouse-only menu by themselves, and all four got stuck at the start of level 1. A person confirmed half the diagnosis: the controls are confusing, but the jump was not too hard ([partial success](bench/README.md#hard-case-a-real-jam-game-we-did-not-make)) |
 
 ![A finding card: the key is too faint against the background, with the measured contrast and a replay](docs/img/report-hard-to-see.jpg)
@@ -68,7 +72,7 @@ Five small web games, each with a clean version and a version with one planted d
 | **Prompt built for Meta's prompt cache**: stable part first, append-only move log, a shared `prompt_cache_key` | 48% of the input served from cache | 70% (cached input costs 25× less) |
 | **Stop a ghost once it has shown enough** (8 deaths at one spot, or 20 moves without new ground) | — | 15% fewer moves on replayed runs, same flaws found |
 
-Together, these made a run 17% cheaper for the ghosts and the analyst's cards 47% cheaper, about 30% less per playtest. We also report what we rejected: smaller screenshots (8% cheaper, worse perception), not asking the ghost for its position (13% cheaper, but twice the deaths next to hazards), shorter memory, stricter stops ([tried and rejected](bench/README.md#cheaper-and-better-ghosts)).
+Together, these made a run 17% cheaper for the ghosts and the analyst's cards 47% cheaper, about 25% less per playtest. We also report what we rejected: smaller screenshots (8% cheaper, worse perception), not asking the ghost for its position (13% cheaper, but twice the deaths next to hazards), shorter memory, stricter stops ([tried and rejected](bench/README.md#cheaper-and-better-ghosts)).
 
 **In development.** Ghostrun was built with heavy AI assistance: Claude Code wrote most of the code and documentation under Rafael's direction, and Claude subagents built four of the five test games. Where a person checked AI-made work, what was found and what changed is logged in the [AI review log](docs/ai-review-log.md). For example, a person's review of a real game (R5) showed that a card blamed a platform that was easy to reach, so every card now states its confidence and whether ghost skill could explain it.
 
@@ -133,6 +137,7 @@ Then pick "No game handy? Try ours" on the home page, or paste any web game's li
 - Ghosts **see faint shapes better than people**. Objectives the game declares are measured for contrast instead; undeclared ones are not.
 - They cannot tell intended difficulty from bad design. They show where players struggle; you decide.
 - Without the SDK, positions are what the ghosts report on screen, so in scrolling games the map is approximate.
+- **The written cause on a card is the least reliable part.** On recorded runs the analyst explained the too-wide gap correctly in 14 of 14 cards, but named the wrong key behind Read Me's flaw in only 6 of 12 ([every card](bench/results/analyst-blockers.md)). Trust the place, the numbers and the replay; read the cause as a guess to check.
 
 More in [the benchmark's limitations](bench/README.md#limitations).
 
