@@ -8,7 +8,7 @@
 import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { extname, join, normalize, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { GAME_TYPES, gameFile, startServer as startGames } from '../scripts/serve.mjs';
 import { runSwarm } from './swarm.mjs';
@@ -24,14 +24,17 @@ const PORT = Number(process.env.PORT) || 5180;
 const GAMES_PORT = Number(process.env.GAMES_PORT) || 5174;
 const BUDGET_USD = Number(process.env.GHOST_BUDGET_USD) || 35; // hard stop below Rafa's $40 cap
 const PUBLIC = process.env.GHOSTRUN_PUBLIC === '1';
-const TRUST_PROXY = process.env.TRUST_PROXY === '1'; // behind a reverse proxy: read X-Forwarded-For/-Host
+const TRUST_PROXY = Number(process.env.TRUST_PROXY) || 0; // reverse proxies in front (1 on most hosts): read X-Forwarded-For/-Host
 const RUN_TIMEOUT_MS = Number(process.env.RUN_TIMEOUT_MS) || 8 * 60_000; // a stuck run must not hold the queue forever
 const QUEUE_MAX = Number(process.env.QUEUE_MAX) || 5; // playtests that may wait for their turn
+// The demo's public address (for example my-space.hf.space). Links to its /play/ pages are opened from the local
+// games server. Without it, the request's own Host header is used (it can only point to our games server anyway).
+const PUBLIC_HOST = process.env.PUBLIC_HOST || null;
 // Saved runs to keep on disk (oldest deleted first). Unlimited locally; 300 in the public demo.
 const RUNS_KEEP = Number(process.env.RUNS_KEEP ?? (PUBLIC ? 300 : 0));
 const RUNS_IN_MEMORY = 30; // older finished runs are served from disk
 const HEARTBEAT_MS = 20_000; // keeps live streams open through proxies that close idle connections
-const runsDir = resolve('runs');
+const runsDir = resolve(process.env.RUNS_DIR || 'runs'); // RUNS_DIR: the tests use a folder of their own
 const distDir = resolve('web', 'dist');
 const spendFile = join(runsDir, '_spend.json');
 
@@ -63,6 +66,12 @@ const runLimiter = new RateLimiter({ limit: Number(process.env.RUNS_PER_HOUR) ||
 // The SDK's recorder posts a session every 3 s (20 a minute), so this allows a few people per address.
 const humanLimiter = new RateLimiter({ limit: 120, windowMs: 60_000 });
 const MAX_HUMAN_SESSIONS = 1000;
+// Who started each recorded session (public demo): only that visitor may update it. In memory, so after a
+// restart the saved sessions are final.
+const humanOwners = new Map();
+// The only folders of runs/ the public demo serves: one per run, named by createRun. An allowlist, because
+// the disk may ignore case (Windows): "/runs/HUMANS/…" read people's sessions past a check for "humans".
+const RUN_DIR_NAME = /^d{4}-d{2}-d{2}Td{2}-d{2}-d{2}-d{3}Z-[0-9a-f]{10}$/;
 
 const runs = new Map();
 const queue = []; // runs waiting for their turn, oldest first
@@ -258,7 +267,10 @@ async function play(run) {
   } catch (err) {
     run.status = 'failed';
     emit(run, { type: 'failed', message: err.message });
-    log({ event: 'run_failed', id: run.id, message: err.message });
+    // The moves already played were paid for: count them against the spending cap anyway.
+    const spent = run.events.filter((e) => e.type === 'step').reduce((a, e) => a + costOf(e.step?.model, e.step?.usage), 0);
+    if (spent > 0) await addSpend(spent);
+    log({ event: 'run_failed', id: run.id, message: err.message, costUsd: Number(spent.toFixed(4)) });
   } finally {
     clearTimeout(timer);
     activeRun = null;
@@ -293,7 +305,7 @@ async function runOptions(body, req, ip) {
   }
   // Our test games at this app's own address (/play/…) are opened by the ghosts from the local games
   // server: same files, no round trip through the internet.
-  const ownHost = (TRUST_PROXY && String(req.headers['x-forwarded-host'] ?? '').split(',')[0].trim()) || req.headers.host;
+  const ownHost = PUBLIC_HOST || (TRUST_PROXY && String(req.headers['x-forwarded-host'] ?? '').split(',').at(-1).trim()) || req.headers.host;
   let url = target.href;
   if (target.pathname.startsWith('/play/') && ownHost && target.host === ownHost) {
     url = `http://localhost:${GAMES_PORT}${target.pathname.slice('/play'.length)}${target.search}`;
@@ -306,7 +318,7 @@ async function runOptions(body, req, ip) {
     guard = createRequestGuard({ allowHosts: ALLOW_HOSTS });
   }
   const maxPersonas = PUBLIC ? 5 : 8;
-  const personas = (Array.isArray(body.personas) && body.personas.length ? body.personas : DEFAULT_PERSONAS).filter((p) => PERSONAS[p]).slice(0, maxPersonas);
+  const personas = (Array.isArray(body.personas) && body.personas.length ? body.personas : DEFAULT_PERSONAS).filter((p) => typeof p === 'string' && Object.hasOwn(PERSONAS, p)).slice(0, maxPersonas);
   const steps = Math.max(5, Math.min(PUBLIC ? 60 : 80, Number(body.steps) || 40));
   const vp = String(body.viewport ?? '640x360');
   const [vw, vh] = vp.split('x').map(Number);
@@ -339,13 +351,19 @@ const server = createServer(async (req, res) => {
       if (req.method === 'POST') {
         if (PUBLIC && !humanLimiter.take(ip).ok) return send(res, 429, { error: 'rate_limited' }, cors);
         const data = await readBody(req, 400_000);
-        if (!SAFE_ID.test(String(data.id)) || !SAFE_ID.test(String(data.game)) || !SAFE_ID.test(String(data.variant))) {
+        const ok = (v) => typeof v === 'string' && SAFE_ID.test(v);
+        if (!data || typeof data !== 'object' || Array.isArray(data) || !ok(data.id) || !ok(data.game) || !ok(data.variant)) {
           return send(res, 400, { error: 'invalid_session' }, cors);
         }
         const dir = join(runsDir, 'humans');
         await mkdir(dir, { recursive: true });
         const file = join(dir, `${data.id}.json`);
         if (PUBLIC && !existsSync(file) && (await readdir(dir)).length >= MAX_HUMAN_SESSIONS) return send(res, 507, { error: 'full' }, cors);
+        // A session is updated every few seconds while the person plays; nobody else may overwrite it (any site
+        // could, knowing its id: CORS is open for games hosted elsewhere; found by a test agent).
+        const owner = humanOwners.get(data.id);
+        if (PUBLIC && (owner ? owner !== ip : existsSync(file))) return send(res, 409, { error: 'session_exists' }, cors);
+        if (PUBLIC && !owner) humanOwners.set(data.id, ip);
         await writeFile(file, JSON.stringify({ ...data, receivedAt: new Date().toISOString() }, null, 2));
         res.writeHead(204, cors);
         return res.end();
@@ -374,7 +392,8 @@ const server = createServer(async (req, res) => {
         hasKey: Boolean(process.env.MODEL_API_KEY),
         public: PUBLIC,
         budget: { capUsd: BUDGET_USD, spentUsd: spend.totalUsd },
-        busy: activeRun ? activeRun.id : null,
+        // In the public demo, other visitors' runs stay private: say that one is playing, not which.
+        busy: activeRun ? (PUBLIC ? true : activeRun.id) : null,
         queued: queue.length,
       });
     }
@@ -386,7 +405,7 @@ const server = createServer(async (req, res) => {
       if (!process.env.MODEL_API_KEY) return send(res, 503, { error: 'no_key', message: 'The server has no MODEL_API_KEY.' });
       const spend = await readSpend();
       if (spend.totalUsd >= BUDGET_USD) return send(res, 402, { error: 'budget', message: `Spending cap of $${BUDGET_USD} reached.` });
-      if (queue.length >= QUEUE_MAX) return send(res, 409, { error: 'queue_full', message: 'Several playtests are already waiting for their turn. Try again in a few minutes.', runId: activeRun?.id });
+      if (queue.length >= QUEUE_MAX) return send(res, 409, { error: 'queue_full', message: 'Several playtests are already waiting for their turn. Try again in a few minutes.', ...(PUBLIC ? {} : { runId: activeRun?.id }) });
       if (PUBLIC) {
         const limit = runLimiter.take(ip);
         if (!limit.ok) {
@@ -447,11 +466,14 @@ const server = createServer(async (req, res) => {
       const rel = decodePath(path.slice('/runs/'.length));
       const file = normalize(join(runsDir, rel));
       if (!inside(runsDir, file)) return send(res, 403, { error: 'forbidden' });
-      // Bookkeeping files and people's recorded sessions are not served in the public demo.
-      const first = normalize(rel).split(/[\\/]/)[0];
-      if (PUBLIC && (first.startsWith('_') || first === 'humans')) return send(res, 404, { error: 'not_found' });
+      // Bookkeeping files and people's recorded sessions are not served in the public demo. Judged on the
+      // resolved file, not on the raw path: "/runs//humans/…" once slipped past a check on the first segment.
+      const first = relative(runsDir, file).split(sep)[0];
+      if (PUBLIC && !RUN_DIR_NAME.test(first)) return send(res, 404, { error: 'not_found' });
       return serveFile(res, file);
     }
+
+    if (path.startsWith('/api/')) return send(res, 404, { error: 'not_found' }); // never the web app's page
 
     // The test games, playable at this address: /play/ lists them, /play/<game>/ plays one. Their pages
     // load /vendor/phaser.js and /sdk/ghost-sdk.js from the site root, so those are served too.

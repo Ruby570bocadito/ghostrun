@@ -93,15 +93,30 @@ export async function runGhost({
 }) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await mkdir(join(outDir, 'frames'), { recursive: true });
-  const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+  // In the public demo the game may not install a service worker: its requests would not pass the check below.
+  const context = await browser.newContext({ viewport, deviceScaleFactor: 1, ...(guard ? { serviceWorkers: 'block' } : {}) });
   const page = await context.newPage();
   let blockedRequests = 0;
   if (guard) {
     // Every request the game makes (the page itself, redirects, scripts, images, fetch) is checked.
     await context.route('**/*', async (route) => {
-      if (await guard(route.request().url())) return route.continue();
-      blockedRequests += 1;
-      return route.abort('blockedbyclient');
+      try {
+        if (await guard(route.request().url())) return await route.continue();
+        blockedRequests += 1;
+        return await route.abort('blockedbyclient');
+      } catch {
+        // The page or the browser closed while the request was being checked: nothing left to do.
+      }
+    });
+    // WebSockets do not pass through context.route: check them too (found by a test agent).
+    await context.routeWebSocket(/.*/, async (ws) => {
+      try {
+        if (await guard(ws.url())) return ws.connectToServer();
+        blockedRequests += 1;
+        await ws.close({ code: 1008, reason: 'blocked' });
+      } catch {
+        // closed meanwhile
+      }
     });
   }
   // A game must not open more windows (ads, external links): close them.

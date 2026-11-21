@@ -5,10 +5,10 @@ import assert from 'node:assert/strict';
 import { RateLimiter, checkTarget, clientIp, createRequestGuard, isPrivateAddress } from '../src/guard.mjs';
 
 test('private, local and special addresses are recognised; public ones are not', () => {
-  for (const ip of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '224.0.0.1', '::1', '::', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '64:ff9b::a00:1']) {
+  for (const ip of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '224.0.0.1', '::1', '::', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '64:ff9b::a00:1', '::7f00:1', '::127.0.0.1', '::a9fe:a9fe', '2002:7f00:1::', '2002:a9fe:a9fe::1', 'fec0::1', '2001:0:4136:e378::1', '64:ff9b:1::a9fe:a9fe', '64:ff9b:1:7f00:0:100::']) {
     assert.equal(isPrivateAddress(ip), true, ip);
   }
-  for (const ip of ['8.8.8.8', '93.184.216.34', '172.32.0.1', '2606:4700:4700::1111', '::ffff:8.8.8.8']) {
+  for (const ip of ['8.8.8.8', '93.184.216.34', '172.32.0.1', '2606:4700:4700::1111', '::ffff:8.8.8.8', '2002:808:808::1', '2001:4860:4860::8888']) {
     assert.equal(isPrivateAddress(ip), false, ip);
   }
   assert.equal(isPrivateAddress('not-an-ip'), true);
@@ -44,6 +44,9 @@ test('the in-page guard caches its answer per host', async () => {
   assert.equal(lookups, 1);
   assert.equal(await guard('data:image/png;base64,AAAA'), true);
   assert.equal(await guard('http://127.0.0.1:9999/secret'), false);
+  // WebSockets are judged like http(s) to the same host (found by a test agent, second round).
+  assert.equal(await guard('ws://127.0.0.1:9999/socket'), false);
+  assert.equal(await guard('wss://cdn.example/socket'), true);
 });
 
 test('rate limits count per visitor within the window', () => {
@@ -57,8 +60,11 @@ test('rate limits count per visitor within the window', () => {
   assert.equal(limiter.take('a', 1001).ok, true); // the first hit left the window
 });
 
-test('the visitor address comes from the proxy header only when the proxy is trusted', () => {
-  const req = { headers: { 'x-forwarded-for': '203.0.113.7, 10.0.0.1' }, socket: { remoteAddress: '10.0.0.1' } };
-  assert.equal(clientIp(req, false), '10.0.0.1');
-  assert.equal(clientIp(req, true), '203.0.113.7');
+test('the visitor address comes from the trusted proxy, and a forged header cannot change it', () => {
+  // The visitor sent "X-Forwarded-For: 1.2.3.4"; our one proxy appended the address it really saw.
+  const req = { headers: { 'x-forwarded-for': '1.2.3.4, 203.0.113.7' }, socket: { remoteAddress: '10.0.0.1' } };
+  assert.equal(clientIp(req, 0), '10.0.0.1'); // no proxy trusted: the socket
+  assert.equal(clientIp(req, 1), '203.0.113.7'); // one proxy: its entry, not the forged one
+  assert.equal(clientIp(req, 2), '1.2.3.4'); // two proxies in front
+  assert.equal(clientIp({ headers: {}, socket: { remoteAddress: '10.0.0.1' } }, 1), '10.0.0.1');
 });

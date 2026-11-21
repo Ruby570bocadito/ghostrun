@@ -29,21 +29,20 @@ export async function runSwarm({
   guard = null, // public demo: which requests the game pages may make (src/guard.mjs)
   signal,
 }) {
+  // Check the personas before starting a browser, so a wrong name cannot leave Chromium running.
+  const seen = {};
+  const roster = personas.map((p) => {
+    seen[p] = (seen[p] ?? 0) + 1;
+    if (!Object.hasOwn(PERSONAS, p)) throw new Error(`Unknown persona "${p}"`);
+    const base = PERSONAS[p];
+    return seen[p] === 1 ? base : { ...base, id: `${p}-${seen[p]}`, name: `${base.name} #${seen[p]}` };
+  });
   await mkdir(outDir, { recursive: true });
   const browser = await chromium.launch();
   const started = Date.now();
   const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, simulateOutage, compareTo };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
-
-  // The same persona can be summoned more than once (clones, for the diversity experiment).
-  const seen = {};
-  const roster = personas.map((p) => {
-    seen[p] = (seen[p] ?? 0) + 1;
-    const base = PERSONAS[p];
-    if (!base) throw new Error(`Unknown persona "${p}"`);
-    return seen[p] === 1 ? base : { ...base, id: `${p}-${seen[p]}`, name: `${base.name} #${seen[p]}` };
-  });
 
   try {
     const traces = await Promise.all(

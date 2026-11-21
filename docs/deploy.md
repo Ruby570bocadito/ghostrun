@@ -9,7 +9,8 @@ The app, the test games and the ghosts' headless Chromium run in one container (
 | `MODEL_API_KEY` | — (secret, set on the platform) | Meta Model API key. Use a key made for the demo, with a spending limit at Meta if available |
 | `GHOST_BUDGET_USD` | 5 | Spending cap of this server. The spending file lives in the container, so it starts again from 0 after a restart: the key's own limit is the real cap |
 | `GHOSTRUN_PUBLIC` | 1 | Protections for strangers: no private addresses, per-visitor limits, fixed model, private runs |
-| `TRUST_PROXY` | 1 | Read the visitor's address from the platform's proxy (`X-Forwarded-For`) |
+| `TRUST_PROXY` | 1 | How many reverse proxies sit in front of the app; the visitor's address is read from `X-Forwarded-For` counting that many entries from the right (the left part can be forged by the visitor) |
+| `PUBLIC_HOST` | — | The demo's public address (for example `my-space.hf.space`). Links to its `/play/` pages are opened from the local games server |
 | `RUNS_PER_HOUR` | 6 | Playtests per visitor per hour |
 | `QUEUE_MAX` | 5 | Playtests that can wait for their turn (the ghosts play one game at a time) |
 | `RUNS_KEEP` | 300 | Saved runs kept on disk; the oldest are deleted first |

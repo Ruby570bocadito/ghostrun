@@ -34,15 +34,28 @@ export function isPrivateAddress(ip) {
   if (version === 6) {
     const x = address.toLowerCase();
     if (x === '::' || x === '::1') return true;
-    for (const prefix of ['::ffff:', '64:ff9b::']) {
-      // IPv4 inside IPv6 (mapped, or NAT64): judge the IPv4 part
+    // NAT64 for local use (RFC 8215, 64:ff9b:1::/48): the IPv4 part can sit in several places, so refuse it all
+    // (found by a test agent).
+    if (x.startsWith('64:ff9b:1:')) return true;
+    // IPv4 inside IPv6 (mapped ::ffff:, NAT64 64:ff9b::, or the old IPv4-compatible ::a.b.c.d): judge the IPv4 part.
+    for (const prefix of ['::ffff:', '64:ff9b::', '::']) {
       if (x.startsWith(prefix)) {
         const rest = x.slice(prefix.length);
         const v4 = rest.includes('.') ? rest : v4FromHex(rest);
         return v4 ? isPrivateAddress(v4) : true;
       }
     }
-    return /^f[cd]/.test(x) || /^fe[89ab]/.test(x) || x.startsWith('ff'); // unique local, link-local, multicast
+    // 6to4 (2002:AABB:CCDD::) carries an IPv4 address in its next 32 bits: judge it (found by a test agent).
+    const sixToFour = x.match(/^2002:([0-9a-f]{1,4}):([0-9a-f]{1,4})(?::|$)/);
+    if (sixToFour) return isPrivateAddress(v4FromHex(`${sixToFour[1]}:${sixToFour[2]}`) ?? '0.0.0.0');
+    return (
+      /^f[cd]/.test(x) || // unique local
+      /^fe[89ab]/.test(x) || // link-local
+      /^fe[c-f]/.test(x) || // site-local (deprecated, still routed inside some networks)
+      x.startsWith('ff') || // multicast
+      /^2001:0?:/.test(x) || // Teredo: hides an IPv4 address
+      /^100::/.test(x) // discard-only
+    );
   }
   return true;
 }
@@ -88,6 +101,8 @@ export function createRequestGuard({ allowHosts = [], resolve = lookup, ttlMs = 
       return false;
     }
     if (u.protocol === 'data:' || u.protocol === 'blob:') return true; // no network involved
+    // WebSockets go to a host like any request: judge them as http(s) to the same address.
+    if (u.protocol === 'ws:' || u.protocol === 'wss:') return checkTarget(href.replace(/^ws/i, 'http'), { allowHosts, resolve }).then((r) => r.ok);
     const key = u.host;
     const hit = cache.get(key);
     if (hit && Date.now() - hit.at < ttlMs) return hit.ok;
@@ -118,8 +133,14 @@ export class RateLimiter {
   }
 }
 
-/** The visitor's IP. Behind a reverse proxy (TRUST_PROXY=1), the first X-Forwarded-For address. */
-export function clientIp(req, trustProxy = false) {
-  const forwarded = trustProxy ? String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() : '';
-  return forwarded || req.socket?.remoteAddress || 'unknown';
+/**
+ * The visitor's IP. Behind reverse proxies (trustedHops = how many), the address the outermost trusted proxy
+ * saw. Each proxy appends to X-Forwarded-For, so it is counted from the right: the left part is whatever the
+ * visitor sent and must not be trusted (taking the first entry let a visitor pick a new IP for every request
+ * and skip the per-visitor limit; found by a review agent).
+ */
+export function clientIp(req, trustedHops = 0) {
+  const hops = Number(trustedHops) || 0;
+  const list = hops ? String(req.headers['x-forwarded-for'] ?? '').split(',').map((s) => s.trim()).filter(Boolean) : [];
+  return (list.length ? list[Math.max(0, list.length - hops)] : null) || req.socket?.remoteAddress || 'unknown';
 }
