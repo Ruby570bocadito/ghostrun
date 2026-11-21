@@ -21,7 +21,7 @@ For each run, 4 ghosts (Newbie, Speedrunner, Reader, Impatient) play up to 40 mo
 - **Found** = a finding of a compatible type overlaps the area of the planted flaw.
 - **False alarm** = a high-severity blocker, missed-objective, stuck or hard-to-see finding on a clean game.
 
-Run it yourself: `npm run bench -- --label mine --reps 2` (needs `MODEL_API_KEY`), then `node bench/perception.mjs mine`.
+Run it yourself: `npm run bench -- --label mine --reps 2` (needs `MODEL_API_KEY`), then `node bench/compare.mjs before-cache mine`. Add `--ask-position` to also measure how well the ghosts see their character (`node bench/perception.mjs mine`).
 
 ## Results
 
@@ -122,7 +122,10 @@ What changed and what each measurement said:
 Tried and rejected:
 
 - **Smaller screenshots** (480×270 instead of 640×360): 8% cheaper per move, but positions within 40 px fell from 100% to 95% and the median error went from 4 to 11 px ([probe](results/probe-image-480x270.md)).
-- **A shorter memory to cut reasoning**: re-sending 50 recorded moves with a 6-move log instead of 24 cut reasoning by about 30 tokens per move ([probe](results/probe-reasoning.md)), but the long log is what lets the ghosts navigate, and per move the cost is about even (more input, but cached). Removing the walking-speed hint or the "judge distances" instruction made no measurable difference.
+- **A shorter memory to cut reasoning**: re-sending 50 recorded moves with a 6-move log instead of 24 cut reasoning by about 30 tokens per move ([probe](results/probe-reasoning.md)), but the long log is what lets the ghosts navigate, and per move the cost is about even (more input, but cached). Removing the walking-speed hint or the "judge distances" instruction made no measurable difference. Keeping the ghosts' thoughts only in the last 6 lines of the log removed 210 input tokens (almost all cached anyway) and did not change the output ([probe](results/probe-trim.md)).
+- **Stricter stops**, re-simulated on the 40 new runs: 6 deaths or 15 idle moves saved 6–14% more moves, but 3–6 fewer ghosts finished the clean games and 2 clean runs got a false alarm. Kept 8 and 20.
+- **Fewer moves per ghost**: 30 instead of 40 saved 9% of the moves, but 3 fewer ghosts finished. Kept 40 (the app lets you choose 20, 40 or 60).
+- **Not asking for the ghost's position where the game already knows it.** Games with the SDK report positions themselves, so we dropped the ghost's own position estimate and "what I see" from its answer. On 120 recorded moves re-sent both ways, output fell from 263 to 229 tokens ([probe](results/probe-fields.md)), and a full round ([optimized-v4](results/optimized-v4.md)) cost **13% less** with the same flaws found. But 2 of its 10 clean runs got a false alarm, both at the visible spikes by Spike Maze's exit. A targeted test (Spike Maze clean, 4 runs each way: [maze-compact](results/maze-compact.md), [maze-full](results/maze-full.md)) pointed the same way: without the field, 4 of 16 ghosts died there 3 or more times, with it none. Pooling every round, ghosts died by those spikes 1.9 times each without the field and 1.1 with it, and clean maze runs got a false alarm in 2 of 6 without it, 0 of 8 with it. Asking the model where it is makes it reason about where it is, and that matters next to hazards. **Rejected**: the field stays.
 
 **Against our own target.** We aimed at −40% cost per run and got −17% for the ghosts and −47% for the analyst, about −30% for a full playtest. The ghosts now reason more per move (149 vs 109 tokens) because they have more to reason about: that is the price of better decisions, and a run is still cheaper because it needs fewer moves.
 

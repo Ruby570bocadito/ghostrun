@@ -15,11 +15,23 @@ const nIdx = args.indexOf('--n');
 const ns = nIdx >= 0 ? args[nIdx + 1].split(',').map(Number) : [6, 8, 10, 12];
 const iIdx = args.indexOf('--idle');
 const idle = iIdx >= 0 ? Number(args[iIdx + 1]) : Infinity;
-const valueAt = new Set([nIdx, iIdx].filter((i) => i >= 0).map((i) => i + 1));
-const labels = args.filter((a, i) => !a.startsWith("--") && !valueAt.has(i));
+const mIdx = args.indexOf('--max');
+const maxMoves = mIdx >= 0 ? Number(args[mIdx + 1]) : Infinity; // also cap every ghost at this many moves
+const valueAt = new Set([nIdx, iIdx, mIdx].filter((i) => i >= 0).map((i) => i + 1));
+const labels = args.filter((a, i) => !a.startsWith('--') && !valueAt.has(i));
 const CELL = 80;
 
-export function cutAtSaturation(trace, n, k = Infinity) {
+/** Cuts a trace after `max` moves, as if the ghost had been given fewer moves. */
+function capMoves(trace, max) {
+  if (trace.steps.length <= max) return trace;
+  const steps = trace.steps.slice(0, max);
+  const last = steps.at(-1);
+  const lastFrame = last.frames?.[1] ?? trace.frames.length - 1;
+  return { ...trace, steps, frames: trace.frames.slice(0, lastFrame + 1), events: trace.events.filter((ev) => ev.step <= last.step), outcome: 'out_of_steps' };
+}
+
+export function cutAtSaturation(rawTrace, n, k = Infinity) {
+  const trace = capMoves(rawTrace, maxMoves);
   if (!trace.frames.some((f) => f.state)) return trace; // no SDK: the live rule does not apply
   const spots = new DeathSpots();
   const seen = new Set();
@@ -77,7 +89,7 @@ for (const n of [...new Set([Infinity, ...ns])]) {
   let finished = 0;
   const changes = [];
   for (const run of runs) {
-    const traces = n === Infinity && idle === Infinity ? run.traces : run.traces.map((t) => cutAtSaturation(t, n, idle));
+    const traces = n === Infinity && idle === Infinity && maxMoves === Infinity ? run.traces : run.traces.map((t) => cutAtSaturation(t, n, idle));
     stopped += traces.filter((t) => t.outcome === 'saturated').length;
     const s = score(analyze(traces), run.fault);
     const m = traces.reduce((a, t) => a + t.steps.length, 0);

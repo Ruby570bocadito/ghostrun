@@ -30,6 +30,18 @@ Structured output makes broken JSON rare, but an answer can still be cut off by 
 - Three unusable answers in a row end that ghost with a clear error (something is wrong with the model, and waiting would only cost money).
 - Covered by tests with a fake model (`test/brain.test.mjs`). In the 20-run benchmark after this change, 6 answers needed the retry and none needed the wait.
 
+## 4. Someone uses the public demo to reach places it should not (a problem with trust)
+
+The ghosts' browser runs on our server, so a visitor's link could point it at the server's own network: a local admin page, the cloud metadata service at `169.254.169.254`, a router. The report would then show screenshots of it. With `GHOSTRUN_PUBLIC=1` (`src/guard.mjs`):
+
+- Links to private, local or special addresses are refused before anything starts ("This link points to a private or local network address…"), including disguised forms such as `http://2130706433/` (127.0.0.1 written as a number) or a name that resolves to a private address. Our own test games are the one local address allowed.
+- Inside the game page, **every request** (redirects, scripts, images, fetch) goes through the same check, so a public page cannot redirect the ghosts inward. Pop-up windows are closed.
+- Each visitor (by IP; behind a proxy set `TRUST_PROXY=1`) can start 6 playtests per hour (`RUNS_PER_HOUR`); the model is always Ember and runs are capped at 5 ghosts × 60 moves, so nobody can make a run cost 17× more by asking for Wonder; the simulated-outage test is off.
+- Other visitors' game links and runs are not listed, and recorded human playtests are not served; only the visitor who started a run can stop it.
+- Checked by `test/guard.test.mjs` and `test/server.test.mjs`, which starts the real server in this mode without an API key, and by a real run on a test game (no request blocked, the ghosts played normally).
+
+Also in any mode: a run that takes longer than 8 minutes is stopped (`RUN_TIMEOUT_MS`); paths outside the runs folder are refused; malformed requests get a 400, not a server error; live streams send a heartbeat every 20 s so proxies do not cut them; finished runs drop their frame-by-frame events from memory (the 30 most recent stay, older ones are read from disk); the spending file is written atomically; on restart the active run is stopped cleanly.
+
 ## Other safeguards
 
 - **One ghost fails completely:** the others keep playing and the report is built from the ghosts that played. If every ghost fails, the run ends with the first error message.

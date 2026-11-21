@@ -1,0 +1,1922 @@
+[
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1418,
+    "cached": 1396,
+    "output": 85,
+    "reasoning": 16
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1568,
+    "cached": 1524,
+    "output": 136,
+    "reasoning": 62
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1352,
+    "cached": 500,
+    "output": 192,
+    "reasoning": 124
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1773,
+    "cached": 1652,
+    "output": 228,
+    "reasoning": 140
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1502,
+    "cached": 756,
+    "output": 262,
+    "reasoning": 178
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1623,
+    "cached": 1524,
+    "output": 207,
+    "reasoning": 143
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1725,
+    "cached": 1652,
+    "output": 88,
+    "reasoning": 24
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1875,
+    "cached": 1780,
+    "output": 159,
+    "reasoning": 72
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1537,
+    "cached": 628,
+    "output": 205,
+    "reasoning": 132
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1387,
+    "cached": 500,
+    "output": 139,
+    "reasoning": 68
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1608,
+    "cached": 1524,
+    "output": 112,
+    "reasoning": 15
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1928,
+    "cached": 628,
+    "output": 121,
+    "reasoning": 49
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1597,
+    "cached": 628,
+    "output": 130,
+    "reasoning": 59
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1447,
+    "cached": 500,
+    "output": 203,
+    "reasoning": 134
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1458,
+    "cached": 1396,
+    "output": 137,
+    "reasoning": 70
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1778,
+    "cached": 500,
+    "output": 94,
+    "reasoning": 21
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1680,
+    "cached": 1652,
+    "output": 286,
+    "reasoning": 211
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1530,
+    "cached": 1524,
+    "output": 129,
+    "reasoning": 73
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1514,
+    "cached": 628,
+    "output": 150,
+    "reasoning": 57
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1364,
+    "cached": 500,
+    "output": 220,
+    "reasoning": 152
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1677,
+    "cached": 1652,
+    "output": 287,
+    "reasoning": 189
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1527,
+    "cached": 1524,
+    "output": 268,
+    "reasoning": 191
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1542,
+    "cached": 1524,
+    "output": 155,
+    "reasoning": 81
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1547,
+    "cached": 500,
+    "output": 250,
+    "reasoning": 185
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1697,
+    "cached": 628,
+    "output": 350,
+    "reasoning": 269
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1895,
+    "cached": 756,
+    "output": 107,
+    "reasoning": 24
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1392,
+    "cached": 1268,
+    "output": 123,
+    "reasoning": 53
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1896,
+    "cached": 1780,
+    "output": 218,
+    "reasoning": 128
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1745,
+    "cached": 500,
+    "output": 69,
+    "reasoning": 8
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1746,
+    "cached": 1652,
+    "output": 117,
+    "reasoning": 49
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1736,
+    "cached": 1652,
+    "output": 139,
+    "reasoning": 82
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1514,
+    "cached": 500,
+    "output": 229,
+    "reasoning": 165
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1886,
+    "cached": 1780,
+    "output": 274,
+    "reasoning": 185
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1664,
+    "cached": 628,
+    "output": 302,
+    "reasoning": 216
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1905,
+    "cached": 628,
+    "output": 79,
+    "reasoning": 14
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1755,
+    "cached": 500,
+    "output": 137,
+    "reasoning": 75
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1698,
+    "cached": 1652,
+    "output": 185,
+    "reasoning": 97
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1557,
+    "cached": 628,
+    "output": 118,
+    "reasoning": 30
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1548,
+    "cached": 1524,
+    "output": 216,
+    "reasoning": 150
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1407,
+    "cached": 500,
+    "output": 197,
+    "reasoning": 131
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1635,
+    "cached": 1524,
+    "output": 258,
+    "reasoning": 173
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1509,
+    "cached": 500,
+    "output": 161,
+    "reasoning": 98
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1485,
+    "cached": 1396,
+    "output": 445,
+    "reasoning": 374
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1659,
+    "cached": 628,
+    "output": 213,
+    "reasoning": 120
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1924,
+    "cached": 1908,
+    "output": 215,
+    "reasoning": 127
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1774,
+    "cached": 1652,
+    "output": 286,
+    "reasoning": 216
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1830,
+    "cached": 500,
+    "output": 208,
+    "reasoning": 138
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1391,
+    "cached": 1268,
+    "output": 76,
+    "reasoning": 23
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1541,
+    "cached": 1524,
+    "output": 243,
+    "reasoning": 152
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1846,
+    "cached": 628,
+    "output": 99,
+    "reasoning": 16
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1696,
+    "cached": 500,
+    "output": 152,
+    "reasoning": 95
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1582,
+    "cached": 1140,
+    "output": 263,
+    "reasoning": 186
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1432,
+    "cached": 1012,
+    "output": 185,
+    "reasoning": 114
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1980,
+    "cached": 628,
+    "output": 848,
+    "reasoning": 755
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1623,
+    "cached": 756,
+    "output": 128,
+    "reasoning": 61
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1534,
+    "cached": 1140,
+    "output": 132,
+    "reasoning": 62
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1684,
+    "cached": 1268,
+    "output": 227,
+    "reasoning": 135
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 2006,
+    "cached": 628,
+    "output": 180,
+    "reasoning": 102
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1473,
+    "cached": 500,
+    "output": 240,
+    "reasoning": 178
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1856,
+    "cached": 500,
+    "output": 259,
+    "reasoning": 184
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1918,
+    "cached": 628,
+    "output": 235,
+    "reasoning": 145
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 2032,
+    "cached": 628,
+    "output": 153,
+    "reasoning": 57
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1768,
+    "cached": 500,
+    "output": 198,
+    "reasoning": 134
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1535,
+    "cached": 1140,
+    "output": 192,
+    "reasoning": 117
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1882,
+    "cached": 500,
+    "output": 209,
+    "reasoning": 139
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1566,
+    "cached": 628,
+    "output": 175,
+    "reasoning": 83
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1385,
+    "cached": 1012,
+    "output": 243,
+    "reasoning": 173
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1416,
+    "cached": 500,
+    "output": 193,
+    "reasoning": 122
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1593,
+    "cached": 1140,
+    "output": 241,
+    "reasoning": 152
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1872,
+    "cached": 628,
+    "output": 216,
+    "reasoning": 125
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1443,
+    "cached": 1012,
+    "output": 388,
+    "reasoning": 320
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1722,
+    "cached": 500,
+    "output": 200,
+    "reasoning": 135
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1430,
+    "cached": 1012,
+    "output": 78,
+    "reasoning": 23
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1580,
+    "cached": 1140,
+    "output": 179,
+    "reasoning": 95
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1542,
+    "cached": 628,
+    "output": 163,
+    "reasoning": 70
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1392,
+    "cached": 500,
+    "output": 232,
+    "reasoning": 160
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1656,
+    "cached": 628,
+    "output": 205,
+    "reasoning": 116
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1506,
+    "cached": 500,
+    "output": 215,
+    "reasoning": 162
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1621,
+    "cached": 500,
+    "output": 218,
+    "reasoning": 143
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1767,
+    "cached": 500,
+    "output": 170,
+    "reasoning": 102
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1771,
+    "cached": 628,
+    "output": 221,
+    "reasoning": 128
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1722,
+    "cached": 628,
+    "output": 146,
+    "reasoning": 57
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1917,
+    "cached": 756,
+    "output": 385,
+    "reasoning": 311
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1618,
+    "cached": 500,
+    "output": 121,
+    "reasoning": 58
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1572,
+    "cached": 500,
+    "output": 112,
+    "reasoning": 57
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1849,
+    "cached": 628,
+    "output": 259,
+    "reasoning": 169
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1699,
+    "cached": 500,
+    "output": 112,
+    "reasoning": 44
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 2221,
+    "cached": 628,
+    "output": 199,
+    "reasoning": 106
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 2071,
+    "cached": 500,
+    "output": 111,
+    "reasoning": 51
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1768,
+    "cached": 628,
+    "output": 467,
+    "reasoning": 375
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 2056,
+    "cached": 1268,
+    "output": 176,
+    "reasoning": 88
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1906,
+    "cached": 1140,
+    "output": 153,
+    "reasoning": 88
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1947,
+    "cached": 628,
+    "output": 123,
+    "reasoning": 29
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1590,
+    "cached": 500,
+    "output": 113,
+    "reasoning": 38
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1740,
+    "cached": 628,
+    "output": 250,
+    "reasoning": 149
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1797,
+    "cached": 500,
+    "output": 142,
+    "reasoning": 78
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1647,
+    "cached": 628,
+    "output": 122,
+    "reasoning": 36
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1526,
+    "cached": 1524,
+    "output": 163,
+    "reasoning": 73
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1376,
+    "cached": 1268,
+    "output": 105,
+    "reasoning": 39
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1647,
+    "cached": 1524,
+    "output": 167,
+    "reasoning": 77
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1497,
+    "cached": 500,
+    "output": 140,
+    "reasoning": 86
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1368,
+    "cached": 500,
+    "output": 206,
+    "reasoning": 136
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1497,
+    "cached": 1396,
+    "output": 134,
+    "reasoning": 67
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1518,
+    "cached": 756,
+    "output": 283,
+    "reasoning": 192
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1459,
+    "cached": 1396,
+    "output": 201,
+    "reasoning": 137
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1609,
+    "cached": 1524,
+    "output": 288,
+    "reasoning": 193
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1626,
+    "cached": 500,
+    "output": 159,
+    "reasoning": 83
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1776,
+    "cached": 628,
+    "output": 349,
+    "reasoning": 257
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1872,
+    "cached": 1780,
+    "output": 318,
+    "reasoning": 222
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 2029,
+    "cached": 756,
+    "output": 328,
+    "reasoning": 239
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1573,
+    "cached": 1524,
+    "output": 72,
+    "reasoning": 5
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1723,
+    "cached": 1652,
+    "output": 164,
+    "reasoning": 90
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1722,
+    "cached": 1652,
+    "output": 610,
+    "reasoning": 540
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1879,
+    "cached": 500,
+    "output": 339,
+    "reasoning": 269
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1461,
+    "cached": 500,
+    "output": 243,
+    "reasoning": 185
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1611,
+    "cached": 628,
+    "output": 398,
+    "reasoning": 311
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1844,
+    "cached": 628,
+    "output": 225,
+    "reasoning": 135
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1512,
+    "cached": 1396,
+    "output": 433,
+    "reasoning": 368
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1662,
+    "cached": 1652,
+    "output": 464,
+    "reasoning": 387
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1694,
+    "cached": 500,
+    "output": 328,
+    "reasoning": 258
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1739,
+    "cached": 1652,
+    "output": 373,
+    "reasoning": 300
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1589,
+    "cached": 1524,
+    "output": 391,
+    "reasoning": 333
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1660,
+    "cached": 628,
+    "output": 297,
+    "reasoning": 212
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1784,
+    "cached": 1780,
+    "output": 256,
+    "reasoning": 187
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1510,
+    "cached": 500,
+    "output": 300,
+    "reasoning": 244
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1707,
+    "cached": 628,
+    "output": 244,
+    "reasoning": 154
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1634,
+    "cached": 1524,
+    "output": 260,
+    "reasoning": 191
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1557,
+    "cached": 500,
+    "output": 181,
+    "reasoning": 113
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1650,
+    "cached": 1524,
+    "output": 118,
+    "reasoning": 47
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1500,
+    "cached": 1396,
+    "output": 116,
+    "reasoning": 45
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1460,
+    "cached": 1396,
+    "output": 90,
+    "reasoning": 27
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1610,
+    "cached": 1524,
+    "output": 134,
+    "reasoning": 47
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1295,
+    "cached": 500,
+    "output": 187,
+    "reasoning": 126
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1445,
+    "cached": 628,
+    "output": 220,
+    "reasoning": 153
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1498,
+    "cached": 1396,
+    "output": 88,
+    "reasoning": 24
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1595,
+    "cached": 628,
+    "output": 250,
+    "reasoning": 173
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1648,
+    "cached": 1524,
+    "output": 230,
+    "reasoning": 138
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1445,
+    "cached": 500,
+    "output": 279,
+    "reasoning": 205
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1744,
+    "cached": 756,
+    "output": 445,
+    "reasoning": 372
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1594,
+    "cached": 500,
+    "output": 188,
+    "reasoning": 120
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1514,
+    "cached": 628,
+    "output": 186,
+    "reasoning": 95
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1795,
+    "cached": 1780,
+    "output": 248,
+    "reasoning": 162
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1364,
+    "cached": 500,
+    "output": 142,
+    "reasoning": 71
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1645,
+    "cached": 1524,
+    "output": 480,
+    "reasoning": 412
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1381,
+    "cached": 1268,
+    "output": 112,
+    "reasoning": 61
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1531,
+    "cached": 1524,
+    "output": 192,
+    "reasoning": 105
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1870,
+    "cached": 1140,
+    "output": 221,
+    "reasoning": 132
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1720,
+    "cached": 1012,
+    "output": 131,
+    "reasoning": 65
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1691,
+    "cached": 1268,
+    "output": 183,
+    "reasoning": 116
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1674,
+    "cached": 756,
+    "output": 117,
+    "reasoning": 24
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1541,
+    "cached": 1140,
+    "output": 265,
+    "reasoning": 202
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 2067,
+    "cached": 1268,
+    "output": 166,
+    "reasoning": 72
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1524,
+    "cached": 500,
+    "output": 332,
+    "reasoning": 261
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1758,
+    "cached": 1140,
+    "output": 136,
+    "reasoning": 52
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1917,
+    "cached": 1140,
+    "output": 228,
+    "reasoning": 168
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1608,
+    "cached": 1012,
+    "output": 262,
+    "reasoning": 199
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1731,
+    "cached": 628,
+    "output": 241,
+    "reasoning": 148
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1797,
+    "cached": 1140,
+    "output": 205,
+    "reasoning": 115
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1581,
+    "cached": 500,
+    "output": 328,
+    "reasoning": 267
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 2188,
+    "cached": 1396,
+    "output": 135,
+    "reasoning": 62
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1647,
+    "cached": 1012,
+    "output": 315,
+    "reasoning": 242
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1597,
+    "cached": 1012,
+    "output": 95,
+    "reasoning": 29
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 2038,
+    "cached": 1268,
+    "output": 207,
+    "reasoning": 138
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1688,
+    "cached": 1268,
+    "output": 146,
+    "reasoning": 55
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1747,
+    "cached": 1140,
+    "output": 164,
+    "reasoning": 93
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1538,
+    "cached": 1140,
+    "output": 107,
+    "reasoning": 38
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1463,
+    "cached": 500,
+    "output": 113,
+    "reasoning": 46
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1613,
+    "cached": 756,
+    "output": 181,
+    "reasoning": 88
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1402,
+    "cached": 1012,
+    "output": 176,
+    "reasoning": 109
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1552,
+    "cached": 1140,
+    "output": 278,
+    "reasoning": 189
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1854,
+    "cached": 1396,
+    "output": 189,
+    "reasoning": 97
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1489,
+    "cached": 500,
+    "output": 118,
+    "reasoning": 70
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1704,
+    "cached": 1268,
+    "output": 205,
+    "reasoning": 145
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1639,
+    "cached": 756,
+    "output": 314,
+    "reasoning": 225
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1488,
+    "cached": 1012,
+    "output": 126,
+    "reasoning": 70
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1638,
+    "cached": 1140,
+    "output": 193,
+    "reasoning": 98
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1768,
+    "cached": 1396,
+    "output": 153,
+    "reasoning": 83
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1618,
+    "cached": 1268,
+    "output": 265,
+    "reasoning": 198
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1957,
+    "cached": 1908,
+    "output": 82,
+    "reasoning": 18
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 2107,
+    "cached": 2036,
+    "output": 238,
+    "reasoning": 151
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1515,
+    "cached": 1140,
+    "output": 232,
+    "reasoning": 146
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1365,
+    "cached": 1012,
+    "output": 125,
+    "reasoning": 70
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1860,
+    "cached": 1396,
+    "output": 220,
+    "reasoning": 129
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1710,
+    "cached": 1268,
+    "output": 188,
+    "reasoning": 133
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1552,
+    "cached": 500,
+    "output": 153,
+    "reasoning": 95
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1552,
+    "cached": 1140,
+    "output": 174,
+    "reasoning": 85
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1938,
+    "cached": 1268,
+    "output": 93,
+    "reasoning": 23
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1702,
+    "cached": 628,
+    "output": 362,
+    "reasoning": 273
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1788,
+    "cached": 1140,
+    "output": 93,
+    "reasoning": 38
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1784,
+    "cached": 1396,
+    "output": 107,
+    "reasoning": 15
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1402,
+    "cached": 1012,
+    "output": 306,
+    "reasoning": 238
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1634,
+    "cached": 1140,
+    "output": 240,
+    "reasoning": 170
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1395,
+    "cached": 1268,
+    "output": 67,
+    "reasoning": 15
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1545,
+    "cached": 1524,
+    "output": 143,
+    "reasoning": 55
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1737,
+    "cached": 500,
+    "output": 481,
+    "reasoning": 410
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1694,
+    "cached": 1268,
+    "output": 460,
+    "reasoning": 362
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1544,
+    "cached": 1140,
+    "output": 313,
+    "reasoning": 252
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1887,
+    "cached": 628,
+    "output": 650,
+    "reasoning": 575
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1790,
+    "cached": 756,
+    "output": 267,
+    "reasoning": 173
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1906,
+    "cached": 500,
+    "output": 576,
+    "reasoning": 507
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 2056,
+    "cached": 628,
+    "output": 1104,
+    "reasoning": 1007
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1668,
+    "cached": 500,
+    "output": 180,
+    "reasoning": 117
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1640,
+    "cached": 500,
+    "output": 542,
+    "reasoning": 471
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1818,
+    "cached": 628,
+    "output": 385,
+    "reasoning": 293
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1818,
+    "cached": 1396,
+    "output": 215,
+    "reasoning": 123
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1668,
+    "cached": 1268,
+    "output": 228,
+    "reasoning": 171
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1497,
+    "cached": 500,
+    "output": 968,
+    "reasoning": 884
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1695,
+    "cached": 628,
+    "output": 858,
+    "reasoning": 791
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1545,
+    "cached": 500,
+    "output": 917,
+    "reasoning": 848
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 2196,
+    "cached": 628,
+    "output": 349,
+    "reasoning": 273
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1547,
+    "cached": 1140,
+    "output": 195,
+    "reasoning": 124
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1697,
+    "cached": 1268,
+    "output": 227,
+    "reasoning": 136
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1647,
+    "cached": 628,
+    "output": 1200,
+    "reasoning": 1198
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 2046,
+    "cached": 500,
+    "output": 459,
+    "reasoning": 382
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1653,
+    "cached": 628,
+    "output": 208,
+    "reasoning": 110
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1844,
+    "cached": 500,
+    "output": 345,
+    "reasoning": 273
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1994,
+    "cached": 628,
+    "output": 444,
+    "reasoning": 347
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1375,
+    "cached": 500,
+    "output": 356,
+    "reasoning": 300
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1503,
+    "cached": 500,
+    "output": 436,
+    "reasoning": 365
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1525,
+    "cached": 756,
+    "output": 474,
+    "reasoning": 402
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1853,
+    "cached": 628,
+    "output": 164,
+    "reasoning": 71
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1708,
+    "cached": 628,
+    "output": 132,
+    "reasoning": 42
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1703,
+    "cached": 500,
+    "output": 421,
+    "reasoning": 353
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1558,
+    "cached": 500,
+    "output": 183,
+    "reasoning": 115
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1771,
+    "cached": 500,
+    "output": 553,
+    "reasoning": 484
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1921,
+    "cached": 628,
+    "output": 600,
+    "reasoning": 511
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1700,
+    "cached": 500,
+    "output": 170,
+    "reasoning": 110
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1389,
+    "cached": 1012,
+    "output": 169,
+    "reasoning": 113
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1539,
+    "cached": 1140,
+    "output": 151,
+    "reasoning": 63
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1831,
+    "cached": 756,
+    "output": 206,
+    "reasoning": 113
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1850,
+    "cached": 628,
+    "output": 710,
+    "reasoning": 615
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1681,
+    "cached": 500,
+    "output": 348,
+    "reasoning": 278
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1728,
+    "cached": 500,
+    "output": 100,
+    "reasoning": 33
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1878,
+    "cached": 628,
+    "output": 110,
+    "reasoning": 25
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1550,
+    "cached": 500,
+    "output": 109,
+    "reasoning": 44
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1814,
+    "cached": 628,
+    "output": 296,
+    "reasoning": 226
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1664,
+    "cached": 500,
+    "output": 219,
+    "reasoning": 163
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1700,
+    "cached": 628,
+    "output": 460,
+    "reasoning": 370
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1655,
+    "cached": 756,
+    "output": 338,
+    "reasoning": 245
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1505,
+    "cached": 500,
+    "output": 363,
+    "reasoning": 292
+  }
+]

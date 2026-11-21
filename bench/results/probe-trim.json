@@ -1,0 +1,1922 @@
+[
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1568,
+    "cached": 628,
+    "output": 162,
+    "reasoning": 71
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1302,
+    "cached": 500,
+    "output": 144,
+    "reasoning": 76
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1418,
+    "cached": 116,
+    "output": 173,
+    "reasoning": 108
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1773,
+    "cached": 756,
+    "output": 230,
+    "reasoning": 145
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1452,
+    "cached": 756,
+    "output": 123,
+    "reasoning": 48
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1875,
+    "cached": 756,
+    "output": 211,
+    "reasoning": 120
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1544,
+    "cached": 756,
+    "output": 217,
+    "reasoning": 131
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1623,
+    "cached": 500,
+    "output": 294,
+    "reasoning": 223
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1394,
+    "cached": 500,
+    "output": 194,
+    "reasoning": 131
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1725,
+    "cached": 500,
+    "output": 169,
+    "reasoning": 100
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1599,
+    "cached": 756,
+    "output": 194,
+    "reasoning": 103
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1449,
+    "cached": 500,
+    "output": 164,
+    "reasoning": 102
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1458,
+    "cached": 500,
+    "output": 81,
+    "reasoning": 6
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1608,
+    "cached": 628,
+    "output": 319,
+    "reasoning": 234
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1680,
+    "cached": 756,
+    "output": 217,
+    "reasoning": 125
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1314,
+    "cached": 500,
+    "output": 92,
+    "reasoning": 31
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1501,
+    "cached": 756,
+    "output": 239,
+    "reasoning": 153
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1530,
+    "cached": 500,
+    "output": 170,
+    "reasoning": 108
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1464,
+    "cached": 628,
+    "output": 238,
+    "reasoning": 146
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1677,
+    "cached": 628,
+    "output": 198,
+    "reasoning": 107
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1494,
+    "cached": 628,
+    "output": 257,
+    "reasoning": 184
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1351,
+    "cached": 500,
+    "output": 316,
+    "reasoning": 249
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1344,
+    "cached": 500,
+    "output": 175,
+    "reasoning": 118
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1527,
+    "cached": 500,
+    "output": 194,
+    "reasoning": 124
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1896,
+    "cached": 628,
+    "output": 110,
+    "reasoning": 23
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1426,
+    "cached": 628,
+    "output": 167,
+    "reasoning": 96
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1392,
+    "cached": 500,
+    "output": 266,
+    "reasoning": 196
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1542,
+    "cached": 628,
+    "output": 546,
+    "reasoning": 450
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1746,
+    "cached": 500,
+    "output": 238,
+    "reasoning": 172
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1276,
+    "cached": 500,
+    "output": 423,
+    "reasoning": 348
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1638,
+    "cached": 628,
+    "output": 195,
+    "reasoning": 124
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1488,
+    "cached": 500,
+    "output": 158,
+    "reasoning": 93
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1886,
+    "cached": 628,
+    "output": 258,
+    "reasoning": 174
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1736,
+    "cached": 500,
+    "output": 286,
+    "reasoning": 221
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1446,
+    "cached": 500,
+    "output": 134,
+    "reasoning": 63
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1596,
+    "cached": 756,
+    "output": 316,
+    "reasoning": 246
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1698,
+    "cached": 628,
+    "output": 290,
+    "reasoning": 198
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1505,
+    "cached": 628,
+    "output": 244,
+    "reasoning": 153
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1635,
+    "cached": 628,
+    "output": 174,
+    "reasoning": 88
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1355,
+    "cached": 500,
+    "output": 184,
+    "reasoning": 116
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1548,
+    "cached": 500,
+    "output": 497,
+    "reasoning": 432
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1485,
+    "cached": 500,
+    "output": 268,
+    "reasoning": 201
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1486,
+    "cached": 756,
+    "output": 413,
+    "reasoning": 327
+  },
+  {
+    "variant": "recorded",
+    "game": "gap-run",
+    "input": 1924,
+    "cached": 628,
+    "output": 272,
+    "reasoning": 183
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1336,
+    "cached": 500,
+    "output": 383,
+    "reasoning": 318
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "gap-run",
+    "input": 1623,
+    "cached": 628,
+    "output": 298,
+    "reasoning": 205
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "gap-run",
+    "input": 1774,
+    "cached": 500,
+    "output": 193,
+    "reasoning": 125
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1541,
+    "cached": 756,
+    "output": 153,
+    "reasoning": 63
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1391,
+    "cached": 500,
+    "output": 95,
+    "reasoning": 33
+  },
+  {
+    "variant": "both",
+    "game": "gap-run",
+    "input": 1473,
+    "cached": 500,
+    "output": 188,
+    "reasoning": 129
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1431,
+    "cached": 756,
+    "output": 285,
+    "reasoning": 195
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1626,
+    "cached": 628,
+    "output": 203,
+    "reasoning": 116
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1281,
+    "cached": 500,
+    "output": 184,
+    "reasoning": 121
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1479,
+    "cached": 628,
+    "output": 239,
+    "reasoning": 150
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1329,
+    "cached": 500,
+    "output": 197,
+    "reasoning": 129
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1770,
+    "cached": 756,
+    "output": 331,
+    "reasoning": 234
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1620,
+    "cached": 500,
+    "output": 168,
+    "reasoning": 95
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1373,
+    "cached": 500,
+    "output": 119,
+    "reasoning": 46
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1523,
+    "cached": 756,
+    "output": 170,
+    "reasoning": 81
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1476,
+    "cached": 500,
+    "output": 807,
+    "reasoning": 739
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1410,
+    "cached": 500,
+    "output": 258,
+    "reasoning": 188
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1445,
+    "cached": 628,
+    "output": 200,
+    "reasoning": 102
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1560,
+    "cached": 628,
+    "output": 397,
+    "reasoning": 306
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1701,
+    "cached": 756,
+    "output": 222,
+    "reasoning": 132
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1295,
+    "cached": 500,
+    "output": 220,
+    "reasoning": 146
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1551,
+    "cached": 500,
+    "output": 217,
+    "reasoning": 161
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1503,
+    "cached": 756,
+    "output": 311,
+    "reasoning": 225
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1653,
+    "cached": 500,
+    "output": 118,
+    "reasoning": 48
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1353,
+    "cached": 500,
+    "output": 181,
+    "reasoning": 118
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1803,
+    "cached": 756,
+    "output": 191,
+    "reasoning": 101
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1396,
+    "cached": 500,
+    "output": 173,
+    "reasoning": 105
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1672,
+    "cached": 500,
+    "output": 102,
+    "reasoning": 48
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1546,
+    "cached": 756,
+    "output": 164,
+    "reasoning": 70
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1822,
+    "cached": 628,
+    "output": 212,
+    "reasoning": 119
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1566,
+    "cached": 628,
+    "output": 258,
+    "reasoning": 169
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1416,
+    "cached": 500,
+    "output": 171,
+    "reasoning": 110
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1664,
+    "cached": 628,
+    "output": 263,
+    "reasoning": 180
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1514,
+    "cached": 500,
+    "output": 286,
+    "reasoning": 217
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1511,
+    "cached": 628,
+    "output": 248,
+    "reasoning": 156
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1361,
+    "cached": 500,
+    "output": 199,
+    "reasoning": 145
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1778,
+    "cached": 628,
+    "output": 172,
+    "reasoning": 83
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1628,
+    "cached": 500,
+    "output": 167,
+    "reasoning": 109
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1370,
+    "cached": 500,
+    "output": 186,
+    "reasoning": 121
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1520,
+    "cached": 756,
+    "output": 287,
+    "reasoning": 211
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1512,
+    "cached": 500,
+    "output": 129,
+    "reasoning": 72
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1662,
+    "cached": 628,
+    "output": 266,
+    "reasoning": 176
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1500,
+    "cached": 628,
+    "output": 180,
+    "reasoning": 93
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1711,
+    "cached": 756,
+    "output": 134,
+    "reasoning": 64
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1561,
+    "cached": 500,
+    "output": 133,
+    "reasoning": 75
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1511,
+    "cached": 756,
+    "output": 185,
+    "reasoning": 90
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1350,
+    "cached": 500,
+    "output": 345,
+    "reasoning": 290
+  },
+  {
+    "variant": "recorded",
+    "game": "key-hunt",
+    "input": 1952,
+    "cached": 628,
+    "output": 316,
+    "reasoning": 216
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1361,
+    "cached": 628,
+    "output": 381,
+    "reasoning": 322
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "key-hunt",
+    "input": 1590,
+    "cached": 628,
+    "output": 325,
+    "reasoning": 228
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "key-hunt",
+    "input": 1802,
+    "cached": 500,
+    "output": 258,
+    "reasoning": 180
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1376,
+    "cached": 500,
+    "output": 102,
+    "reasoning": 40
+  },
+  {
+    "variant": "both",
+    "game": "key-hunt",
+    "input": 1440,
+    "cached": 500,
+    "output": 203,
+    "reasoning": 128
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1526,
+    "cached": 756,
+    "output": 167,
+    "reasoning": 78
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1420,
+    "cached": 756,
+    "output": 151,
+    "reasoning": 61
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1270,
+    "cached": 500,
+    "output": 160,
+    "reasoning": 94
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1647,
+    "cached": 628,
+    "output": 159,
+    "reasoning": 71
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1308,
+    "cached": 500,
+    "output": 108,
+    "reasoning": 36
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1497,
+    "cached": 500,
+    "output": 127,
+    "reasoning": 72
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1458,
+    "cached": 628,
+    "output": 147,
+    "reasoning": 61
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1609,
+    "cached": 628,
+    "output": 223,
+    "reasoning": 149
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1455,
+    "cached": 628,
+    "output": 248,
+    "reasoning": 179
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1459,
+    "cached": 500,
+    "output": 369,
+    "reasoning": 303
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1872,
+    "cached": 628,
+    "output": 340,
+    "reasoning": 267
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1722,
+    "cached": 500,
+    "output": 229,
+    "reasoning": 161
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1305,
+    "cached": 500,
+    "output": 316,
+    "reasoning": 248
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1567,
+    "cached": 628,
+    "output": 195,
+    "reasoning": 116
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1573,
+    "cached": 500,
+    "output": 143,
+    "reasoning": 75
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1417,
+    "cached": 500,
+    "output": 245,
+    "reasoning": 177
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1723,
+    "cached": 628,
+    "output": 202,
+    "reasoning": 132
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1509,
+    "cached": 756,
+    "output": 214,
+    "reasoning": 125
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1359,
+    "cached": 500,
+    "output": 114,
+    "reasoning": 55
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1320,
+    "cached": 500,
+    "output": 189,
+    "reasoning": 135
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1470,
+    "cached": 628,
+    "output": 231,
+    "reasoning": 140
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1739,
+    "cached": 756,
+    "output": 204,
+    "reasoning": 113
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1512,
+    "cached": 500,
+    "output": 307,
+    "reasoning": 239
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1662,
+    "cached": 628,
+    "output": 633,
+    "reasoning": 561
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1363,
+    "cached": 628,
+    "output": 168,
+    "reasoning": 108
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1513,
+    "cached": 756,
+    "output": 262,
+    "reasoning": 166
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1784,
+    "cached": 756,
+    "output": 216,
+    "reasoning": 144
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1589,
+    "cached": 500,
+    "output": 242,
+    "reasoning": 182
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1634,
+    "cached": 500,
+    "output": 222,
+    "reasoning": 149
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1526,
+    "cached": 756,
+    "output": 175,
+    "reasoning": 109
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1376,
+    "cached": 628,
+    "output": 146,
+    "reasoning": 81
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1500,
+    "cached": 500,
+    "output": 95,
+    "reasoning": 26
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1650,
+    "cached": 628,
+    "output": 184,
+    "reasoning": 96
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1466,
+    "cached": 628,
+    "output": 153,
+    "reasoning": 62
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1610,
+    "cached": 628,
+    "output": 106,
+    "reasoning": 18
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1316,
+    "cached": 500,
+    "output": 117,
+    "reasoning": 43
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1460,
+    "cached": 500,
+    "output": 86,
+    "reasoning": 20
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1305,
+    "cached": 500,
+    "output": 151,
+    "reasoning": 89
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1648,
+    "cached": 628,
+    "output": 102,
+    "reasoning": 33
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1467,
+    "cached": 628,
+    "output": 113,
+    "reasoning": 27
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1498,
+    "cached": 500,
+    "output": 160,
+    "reasoning": 93
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1455,
+    "cached": 628,
+    "output": 168,
+    "reasoning": 82
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1317,
+    "cached": 500,
+    "output": 87,
+    "reasoning": 25
+  },
+  {
+    "variant": "recorded",
+    "game": "lever-room",
+    "input": 1795,
+    "cached": 628,
+    "output": 227,
+    "reasoning": 139
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "lever-room",
+    "input": 1547,
+    "cached": 628,
+    "output": 218,
+    "reasoning": 126
+  },
+  {
+    "variant": "both",
+    "game": "lever-room",
+    "input": 1397,
+    "cached": 500,
+    "output": 269,
+    "reasoning": 203
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1531,
+    "cached": 628,
+    "output": 240,
+    "reasoning": 152
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1381,
+    "cached": 500,
+    "output": 127,
+    "reasoning": 64
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1435,
+    "cached": 756,
+    "output": 173,
+    "reasoning": 86
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1285,
+    "cached": 500,
+    "output": 122,
+    "reasoning": 58
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "lever-room",
+    "input": 1645,
+    "cached": 500,
+    "output": 776,
+    "reasoning": 712
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1406,
+    "cached": 500,
+    "output": 169,
+    "reasoning": 112
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1556,
+    "cached": 756,
+    "output": 336,
+    "reasoning": 252
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1591,
+    "cached": 500,
+    "output": 302,
+    "reasoning": 249
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1741,
+    "cached": 756,
+    "output": 517,
+    "reasoning": 427
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1540,
+    "cached": 628,
+    "output": 206,
+    "reasoning": 118
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1571,
+    "cached": 756,
+    "output": 113,
+    "reasoning": 25
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1390,
+    "cached": 500,
+    "output": 171,
+    "reasoning": 118
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1301,
+    "cached": 500,
+    "output": 212,
+    "reasoning": 148
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1451,
+    "cached": 628,
+    "output": 154,
+    "reasoning": 68
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1421,
+    "cached": 500,
+    "output": 236,
+    "reasoning": 172
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1307,
+    "cached": 500,
+    "output": 150,
+    "reasoning": 85
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1457,
+    "cached": 756,
+    "output": 177,
+    "reasoning": 89
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1468,
+    "cached": 628,
+    "output": 214,
+    "reasoning": 128
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1429,
+    "cached": 500,
+    "output": 305,
+    "reasoning": 239
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1318,
+    "cached": 500,
+    "output": 230,
+    "reasoning": 159
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1579,
+    "cached": 628,
+    "output": 541,
+    "reasoning": 445
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1902,
+    "cached": 628,
+    "output": 126,
+    "reasoning": 35
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1596,
+    "cached": 628,
+    "output": 241,
+    "reasoning": 145
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1752,
+    "cached": 500,
+    "output": 232,
+    "reasoning": 162
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1810,
+    "cached": 628,
+    "output": 159,
+    "reasoning": 68
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1660,
+    "cached": 500,
+    "output": 160,
+    "reasoning": 88
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1423,
+    "cached": 500,
+    "output": 74,
+    "reasoning": 17
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1446,
+    "cached": 500,
+    "output": 418,
+    "reasoning": 347
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1573,
+    "cached": 628,
+    "output": 144,
+    "reasoning": 56
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1598,
+    "cached": 628,
+    "output": 224,
+    "reasoning": 143
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1475,
+    "cached": 628,
+    "output": 179,
+    "reasoning": 87
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 2107,
+    "cached": 756,
+    "output": 135,
+    "reasoning": 48
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1325,
+    "cached": 500,
+    "output": 143,
+    "reasoning": 74
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1448,
+    "cached": 500,
+    "output": 347,
+    "reasoning": 277
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1957,
+    "cached": 500,
+    "output": 121,
+    "reasoning": 54
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1597,
+    "cached": 500,
+    "output": 136,
+    "reasoning": 70
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1747,
+    "cached": 756,
+    "output": 193,
+    "reasoning": 99
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1749,
+    "cached": 500,
+    "output": 164,
+    "reasoning": 100
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1899,
+    "cached": 628,
+    "output": 316,
+    "reasoning": 229
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1643,
+    "cached": 628,
+    "output": 234,
+    "reasoning": 143
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1493,
+    "cached": 500,
+    "output": 180,
+    "reasoning": 113
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1535,
+    "cached": 500,
+    "output": 173,
+    "reasoning": 107
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1685,
+    "cached": 628,
+    "output": 393,
+    "reasoning": 300
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1533,
+    "cached": 756,
+    "output": 174,
+    "reasoning": 86
+  },
+  {
+    "variant": "recorded",
+    "game": "read-me",
+    "input": 1910,
+    "cached": 756,
+    "output": 320,
+    "reasoning": 232
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "read-me",
+    "input": 1640,
+    "cached": 756,
+    "output": 147,
+    "reasoning": 76
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1383,
+    "cached": 500,
+    "output": 310,
+    "reasoning": 249
+  },
+  {
+    "variant": "both",
+    "game": "read-me",
+    "input": 1490,
+    "cached": 628,
+    "output": 226,
+    "reasoning": 160
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "read-me",
+    "input": 1760,
+    "cached": 500,
+    "output": 330,
+    "reasoning": 271
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1545,
+    "cached": 628,
+    "output": 154,
+    "reasoning": 63
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1395,
+    "cached": 500,
+    "output": 112,
+    "reasoning": 46
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1288,
+    "cached": 500,
+    "output": 128,
+    "reasoning": 61
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1438,
+    "cached": 756,
+    "output": 185,
+    "reasoning": 94
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1887,
+    "cached": 628,
+    "output": 192,
+    "reasoning": 100
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1737,
+    "cached": 116,
+    "output": 240,
+    "reasoning": 170
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1371,
+    "cached": 500,
+    "output": 283,
+    "reasoning": 219
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1586,
+    "cached": 500,
+    "output": 441,
+    "reasoning": 378
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1736,
+    "cached": 628,
+    "output": 578,
+    "reasoning": 499
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1596,
+    "cached": 628,
+    "output": 275,
+    "reasoning": 190
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1521,
+    "cached": 628,
+    "output": 672,
+    "reasoning": 574
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1337,
+    "cached": 500,
+    "output": 58,
+    "reasoning": 6
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1487,
+    "cached": 628,
+    "output": 133,
+    "reasoning": 49
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1399,
+    "cached": 628,
+    "output": 179,
+    "reasoning": 92
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1249,
+    "cached": 500,
+    "output": 150,
+    "reasoning": 88
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 2000,
+    "cached": 628,
+    "output": 461,
+    "reasoning": 370
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1453,
+    "cached": 500,
+    "output": 374,
+    "reasoning": 308
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1446,
+    "cached": 500,
+    "output": 1079,
+    "reasoning": 1007
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1607,
+    "cached": 756,
+    "output": 213,
+    "reasoning": 124
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1914,
+    "cached": 628,
+    "output": 408,
+    "reasoning": 318
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1850,
+    "cached": 500,
+    "output": 1123,
+    "reasoning": 1047
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1603,
+    "cached": 628,
+    "output": 1023,
+    "reasoning": 929
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1764,
+    "cached": 500,
+    "output": 335,
+    "reasoning": 267
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1457,
+    "cached": 500,
+    "output": 159,
+    "reasoning": 104
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1792,
+    "cached": 628,
+    "output": 405,
+    "reasoning": 311
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1532,
+    "cached": 628,
+    "output": 399,
+    "reasoning": 308
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1382,
+    "cached": 500,
+    "output": 384,
+    "reasoning": 319
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1642,
+    "cached": 500,
+    "output": 508,
+    "reasoning": 432
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1640,
+    "cached": 628,
+    "output": 381,
+    "reasoning": 285
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1490,
+    "cached": 500,
+    "output": 326,
+    "reasoning": 255
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1322,
+    "cached": 500,
+    "output": 280,
+    "reasoning": 207
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1472,
+    "cached": 756,
+    "output": 347,
+    "reasoning": 255
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1866,
+    "cached": 628,
+    "output": 348,
+    "reasoning": 257
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1586,
+    "cached": 756,
+    "output": 324,
+    "reasoning": 235
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1927,
+    "cached": 756,
+    "output": 322,
+    "reasoning": 232
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1777,
+    "cached": 500,
+    "output": 377,
+    "reasoning": 308
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1620,
+    "cached": 756,
+    "output": 292,
+    "reasoning": 215
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1470,
+    "cached": 500,
+    "output": 239,
+    "reasoning": 173
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1436,
+    "cached": 500,
+    "output": 940,
+    "reasoning": 869
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1833,
+    "cached": 628,
+    "output": 323,
+    "reasoning": 255
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1716,
+    "cached": 500,
+    "output": 1200,
+    "reasoning": 1198
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1429,
+    "cached": 500,
+    "output": 199,
+    "reasoning": 133
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1683,
+    "cached": 500,
+    "output": 630,
+    "reasoning": 562
+  },
+  {
+    "variant": "no position/saw fields",
+    "game": "spike-maze",
+    "input": 1686,
+    "cached": 500,
+    "output": 537,
+    "reasoning": 478
+  },
+  {
+    "variant": "recorded",
+    "game": "spike-maze",
+    "input": 1836,
+    "cached": 628,
+    "output": 617,
+    "reasoning": 525
+  },
+  {
+    "variant": "both",
+    "game": "spike-maze",
+    "input": 1423,
+    "cached": 500,
+    "output": 217,
+    "reasoning": 158
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1579,
+    "cached": 628,
+    "output": 920,
+    "reasoning": 833
+  },
+  {
+    "variant": "thoughts only in last 6 lines",
+    "game": "spike-maze",
+    "input": 1573,
+    "cached": 756,
+    "output": 1093,
+    "reasoning": 1012
+  }
+]
