@@ -54,6 +54,49 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes float { 50% { transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .float { animation: none; } }
 
+/* Hero scene: ghosts run, three fall into the gap, the blocker appears (6 s loop) */
+.hero-scene { width: 100%; max-width: 640px; display: block; margin: 8px auto 0; overflow: visible; }
+.hero-ghost { transform-box: view-box; animation: run-makes-it 6s linear infinite; opacity: 0; }
+.hero-ghost.falls { animation-name: run-falls; }
+@keyframes run-makes-it {
+  0% { transform: translate(-40px, 98px); opacity: 0; }
+  5% { opacity: 1; }
+  40% { transform: translate(250px, 98px); }
+  52% { transform: translate(345px, 40px); }
+  64% { transform: translate(430px, 98px); }
+  85% { transform: translate(575px, 98px); opacity: 1; }
+  92%, 100% { transform: translate(575px, 98px); opacity: 0; }
+}
+@keyframes run-falls {
+  0% { transform: translate(-40px, 98px); opacity: 0; }
+  5% { opacity: 1; }
+  40% { transform: translate(250px, 98px); }
+  50% { transform: translate(320px, 60px); }
+  62% { transform: translate(342px, 150px); opacity: 1; }
+  70%, 100% { transform: translate(342px, 175px); opacity: 0; }
+}
+.hero-blocker, .hero-crosses { animation: appear 6s ease-out infinite; opacity: 0; }
+@keyframes appear { 0%, 68% { opacity: 0; } 76%, 94% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-ghost, .hero-ghost.falls { animation: none; opacity: 1; }
+  .hero-ghost:nth-of-type(1) { transform: translate(250px, 98px); }
+  .hero-ghost:nth-of-type(2) { transform: translate(200px, 98px); }
+  .hero-ghost:nth-of-type(3) { transform: translate(470px, 98px); }
+  .hero-ghost:nth-of-type(4) { transform: translate(150px, 98px); }
+  .hero-blocker, .hero-crosses { animation: none; opacity: 1; }
+}
+
+/* How it works + proof */
+.how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 900px; width: 100%; margin: 0 auto; }
+.how-step { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.how-step b { display: block; margin-bottom: 4px; }
+.how-step span { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+.how-num { font-family: 'Silkscreen', var(--mono); color: var(--mint); font-size: 0.85rem; display: block; margin-bottom: 6px; }
+.proof { max-width: 900px; width: 100%; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: center; color: var(--muted); font-size: 0.92rem; }
+.proof b { color: var(--text); font-family: var(--mono); }
+.proof a { color: var(--mint); }
+@media (max-width: 760px) { .how { grid-template-columns: 1fr; } }
+
 .summon-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: grid; gap: 18px; max-width: 900px; width: 100%; margin: 0 auto; }
 .field-label { font-weight: 600; font-size: 0.92rem; padding: 0; }
 .url-row { display: flex; gap: 10px; }

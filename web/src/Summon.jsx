@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { GhostIcon } from './Ghost.jsx';
+import { HeroScene } from './HeroScene.jsx';
+
+const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
 
 const ERRORS = {
   invalid_url: 'That does not look like a game link. Paste a full address that starts with http:// or https://',
@@ -53,18 +56,12 @@ export function Summon({ config, onStarted }) {
   return (
     <section className="summon">
       <div className="summon-hero">
-        <div className="ghost-row" aria-hidden="true">
-          {(config?.personas ?? []).map((p, i) => (
-            <span key={p.id} className="float" style={{ animationDelay: `${i * 0.35}s` }}>
-              <GhostIcon color={p.color} size={38} />
-            </span>
-          ))}
-        </div>
         <h1>Who gets stuck in your game?</h1>
         <p className="lede">
           Paste your web game's link. AI ghosts with different personalities play it, think out loud, and show you exactly where players will get stuck, before the
           deadline.
         </p>
+        <HeroScene />
       </div>
 
       <form className="summon-card" onSubmit={submit}>
@@ -159,6 +156,39 @@ export function Summon({ config, onStarted }) {
         )}
         {config?.error && <p className="form-error">Could not load the app settings. Is the server running?</p>}
       </form>
+
+      <div className="how" aria-label="How it works">
+        <div className="how-step">
+          <span className="how-num">01</span>
+          <b>Paste a link</b>
+          <span>Any web game in a browser. No install; a one-line SDK is optional for exact positions.</span>
+        </div>
+        <div className="how-step">
+          <span className="how-num">02</span>
+          <b>Ghosts play it</b>
+          <span>Four AI players with different personalities play at once. The game clock freezes while each one thinks.</span>
+        </div>
+        <div className="how-step">
+          <span className="how-num">03</span>
+          <b>See where players get stuck</b>
+          <span>A map of the level, blockers and confusing spots, each with the replay and the ghosts' own words.</span>
+        </div>
+      </div>
+
+      <p className="proof">
+        <span>
+          <b>20/20</b> planted design flaws found in our benchmark
+        </span>
+        <span>
+          <b>1</b> false alarm in <b>20</b> runs on clean games
+        </span>
+        <span>
+          about <b>$0.03</b> and <b>1 min</b> per playtest
+        </span>
+        <a href={`${REPO}/blob/main/bench/README.md`} target="_blank" rel="noreferrer">
+          See the evidence
+        </a>
+      </p>
     </section>
   );
 }
