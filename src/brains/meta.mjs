@@ -32,8 +32,9 @@ const MOVE_SCHEMA = {
     },
     duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms.' },
     confused: { type: 'boolean', description: 'True if you do not understand what to do or why something happened.' },
+    quit: { type: 'boolean', description: 'True only if, in character, you would stop playing this game right now and never come back.' },
   },
-  required: ['thought', 'player', 'hold', 'tap', 'duration_ms', 'confused'],
+  required: ['thought', 'player', 'hold', 'tap', 'duration_ms', 'confused', 'quit'],
   additionalProperties: false,
 };
 
@@ -43,6 +44,7 @@ function systemPrompt(persona, controlsHint) {
     'You are playing a web game you have never seen before. Each turn you get one screenshot (640x360).',
     'The game is PAUSED while you think. It only moves forward for the duration_ms you choose, while your keys are held.',
     'Your goal is to make progress in the game the way your personality would. Keep actions short (200-800 ms) near danger.',
+    'Your thought must describe something new you notice this turn. Do not repeat earlier thoughts.',
     controlsHint ? `Controls you know about: ${controlsHint}` : 'Work out the controls from what is on screen.',
     'Answer only with the JSON object.',
   ].join('\n');

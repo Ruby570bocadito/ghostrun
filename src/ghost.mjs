@@ -6,8 +6,9 @@ import { join } from 'node:path';
 const VIEWPORT = { width: 640, height: 360 };
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-const readState = (page) => page.evaluate(() => (window.__ghost ? { ...window.__ghost.state } : null));
 const readEvents = (page, from) => page.evaluate((n) => (window.__ghost ? window.__ghost.events.slice(n) : []), from);
+const readState = (page) =>
+  page.evaluate(() => ({ now: performance.now(), state: window.__ghost ? { ...window.__ghost.state } : null }));
 
 /** Validates and normalises a move coming from any brain. */
 export function sanitizeMove(m) {
@@ -15,11 +16,15 @@ export function sanitizeMove(m) {
   const tap = [...new Set((m?.tap ?? []).filter((k) => typeof k === 'string' && !hold.includes(k)))].slice(0, 2);
   return {
     thought: String(m?.thought ?? '').slice(0, 160),
-    player: m?.player && Number.isFinite(m.player.x) && Number.isFinite(m.player.y) ? { x: clamp(m.player.x, 0, 1000), y: clamp(m.player.y, 0, 1000) } : null,
+    player:
+      m?.player && Number.isFinite(m.player.x) && Number.isFinite(m.player.y)
+        ? { x: clamp(m.player.x, 0, 1000), y: clamp(m.player.y, 0, 1000) }
+        : null,
     hold,
     tap,
     duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, 1500),
     confused: Boolean(m?.confused),
+    quit: Boolean(m?.quit),
   };
 }
 
@@ -32,15 +37,36 @@ function describe(move) {
 }
 
 /**
- * Plays the game. Returns a full trace: steps (decisions), frames (positions every frameEveryMs) and events.
- * @param {object} o
- * @param {import('playwright').Browser} o.browser
+ * Plays the game. Returns a full trace: steps (decisions), frames (screens + positions every
+ * frameEveryMs of game time) and events reported by the game (deaths, wins...).
  */
-export async function runGhost({ browser, url, brain, persona, maxSteps = 40, outDir, frameEveryMs = 100, onStep = () => {}, stopOnWin = true }) {
+export async function runGhost({
+  browser,
+  url,
+  brain,
+  persona,
+  maxSteps = 40,
+  outDir,
+  frameEveryMs = 100,
+  onStep = () => {},
+  onFrame = () => {},
+  stopOnWin = true,
+  signal,
+}) {
   await mkdir(join(outDir, 'frames'), { recursive: true });
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   const page = await context.newPage();
-  const trace = { persona: persona.id, url, brain: brain.id, model: brain.model, steps: [], frames: [], events: [], startedAt: new Date().toISOString() };
+  const trace = {
+    persona: persona.id,
+    url,
+    brain: brain.id,
+    model: brain.model,
+    steps: [],
+    frames: [],
+    events: [],
+    notices: [],
+    startedAt: new Date().toISOString(),
+  };
   let gameMs = 0;
   let frameNo = 0;
   let eventCount = 0;
@@ -49,8 +75,10 @@ export async function runGhost({ browser, url, brain, persona, maxSteps = 40, ou
     const file = `frames/${String(frameNo++).padStart(5, '0')}.jpg`;
     const buf = await page.screenshot({ type: 'jpeg', quality: 70 });
     await writeFile(join(outDir, file), buf);
-    const state = await readState(page);
-    trace.frames.push({ t: gameMs, file, state });
+    const { now, state } = await readState(page);
+    const frame = { i: trace.frames.length, t: gameMs, pageT: now, file, state };
+    trace.frames.push(frame);
+    await onFrame(frame);
     return buf;
   };
 
@@ -68,7 +96,12 @@ export async function runGhost({ browser, url, brain, persona, maxSteps = 40, ou
 
   try {
     await page.clock.install();
-    const res = await page.goto(url, { waitUntil: 'load', timeout: 20_000 });
+    let res;
+    try {
+      res = await page.goto(url, { waitUntil: 'load', timeout: 20_000 });
+    } catch (err) {
+      throw Object.assign(new Error(`Could not open the game: ${err.message.split('\n')[0]}`), { kind: 'game_unreachable' });
+    }
     if (res && !res.ok()) throw Object.assign(new Error(`The game URL answered HTTP ${res.status()}`), { kind: 'game_unreachable' });
     const now = await page.evaluate(() => Date.now());
     await page.clock.pauseAt(now + 10);
@@ -80,16 +113,24 @@ export async function runGhost({ browser, url, brain, persona, maxSteps = 40, ou
     });
     const first = await capture();
     if (!canvas || first.length < 4000) {
-      throw Object.assign(new Error(canvas ? 'The game screen looks blank (no visible content after boot).' : 'No game canvas found on the page.'), { kind: 'game_not_playable' });
+      throw Object.assign(
+        new Error(canvas ? 'The game screen looks blank after loading, so there is nothing to play.' : 'No game canvas found on this page.'),
+        { kind: 'game_not_playable' },
+      );
     }
 
     const history = [];
     for (let step = 1; step <= maxSteps; step++) {
+      if (signal?.aborted) {
+        trace.outcome = 'stopped';
+        break;
+      }
       const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
-      const before = await readState(page);
+      const before = (await readState(page)).state;
       const decision = await brain.decide({ screenshot: shot, history, step });
       const move = sanitizeMove(decision.move);
       const t0 = gameMs;
+      const frameFrom = trace.frames.length;
 
       for (const k of move.hold) await page.keyboard.down(k);
       for (const k of move.tap) await page.keyboard.down(k);
@@ -101,17 +142,19 @@ export async function runGhost({ browser, url, brain, persona, maxSteps = 40, ou
       await advance(move.duration_ms - tapMs);
       for (const k of move.hold) await page.keyboard.up(k);
 
-      const after = await readState(page);
+      const after = (await readState(page)).state;
       const events = await readEvents(page, eventCount);
       eventCount += events.length;
-      events.forEach((e) => trace.events.push({ ...e, step, gameMs, persona: persona.id }));
+      for (const e of events) trace.events.push({ ...e, step, persona: persona.id });
 
       const record = {
         step,
         t0,
         t1: gameMs,
+        model: brain.model,
         thought: move.thought,
         confused: move.confused,
+        quit: move.quit,
         player: move.player,
         move: { hold: move.hold, tap: move.tap, duration_ms: move.duration_ms },
         before: before && { x: before.x, y: before.y },
@@ -119,22 +162,29 @@ export async function runGhost({ browser, url, brain, persona, maxSteps = 40, ou
         events: events.map((e) => e.type),
         usage: decision.usage,
         latencyMs: Math.round(decision.latencyMs),
-        frame: trace.frames.length - 1,
+        frames: [frameFrom, trace.frames.length - 1],
       };
       trace.steps.push(record);
       history.push({ step, summary: `you ${describe(move)}. You thought: "${move.thought}"` });
       await onStep(record);
-      if (stopOnWin && after?.won) break;
+      if (move.quit) {
+        trace.outcome = 'quit';
+        break;
+      }
+      if (stopOnWin && after?.won) {
+        trace.outcome = 'won';
+        break;
+      }
     }
-    trace.outcome = trace.steps.at(-1)?.after?.won ? 'won' : 'out_of_steps';
+    trace.outcome ??= 'out_of_steps';
   } catch (err) {
     trace.outcome = 'error';
-    trace.error = { kind: err.kind ?? err.constructor?.name ?? 'error', message: err.message };
+    trace.error = { kind: err.kind ?? (err.status ? `api_${err.status}` : 'error'), message: err.message };
   } finally {
     trace.endedAt = new Date().toISOString();
     trace.gameMs = gameMs;
     await writeFile(join(outDir, 'trace.json'), JSON.stringify(trace, null, 2));
-    await context.close();
+    await context.close().catch(() => {});
   }
   return trace;
 }
