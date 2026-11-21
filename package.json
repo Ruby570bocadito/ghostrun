@@ -1,0 +1,21 @@
+{
+  "name": "ghost-players",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI ghost players that playtest your web game before the deadline.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "ghost": "node src/cli.mjs",
+    "spike": "node src/spike-clock.mjs"
+  },
+  "dependencies": {
+    "openai": "7.62.0",
+    "phaser": "3.90.0",
+    "playwright": "1.65.1"
+  }
+}
