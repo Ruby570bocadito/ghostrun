@@ -64,7 +64,7 @@ for (const g of report.ghosts) {
 }
 for (const h of report.hotspots) {
   const card = report.cards.find((c) => c.hotspot === h.id);
-  console.log(`\n[${h.severity.toUpperCase()}] ${h.id} ${h.ghosts.length}/${report.ghostsTotal} ghosts, ${h.count} deaths around x=${h.x}`);
+  console.log(`\n[${h.severity.toUpperCase()}] ${h.id} ${h.type}: ${h.ghosts.length}/${report.ghostsTotal} ghosts around (${h.center.x}, ${h.center.y})`);
   if (card) console.log(`  ${card.title}\n  what: ${card.what_happens}\n  cause: ${card.likely_cause}\n  fix: ${card.suggested_fix}`);
 }
 for (const q of report.quits) console.log(`\nQUIT: ${q.persona} at step ${q.step} (x=${Math.round(q.x ?? 0)}): "${q.thought}"`);
