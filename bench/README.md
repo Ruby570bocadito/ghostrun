@@ -145,7 +145,7 @@ So Ghostrun now also **measures** it, without AI: for each objective the game ma
 | Lever Room | door | 12.9:1 | 12.9:1 |
 | Spike Maze | checkpoint | 3.6:1 | 3.6:1 |
 
-Measured on the recorded screens of 45 benchmark runs ([contrast.md](results/contrast.md)): it flags exactly the two planted invisible objects and nothing on any clean game. Re-scored with it, both rounds of the new version find **10/10** flaws with **0/10** false alarms. It was designed after the first round; the second round was played before it existed and was not used to tune it.
+Measured on the recorded screens of 70 benchmark runs ([contrast.md](results/contrast.md)), it flags exactly the two planted invisible objects and nothing on any clean game. Re-scoring 90 recorded runs with it (45 of them clean) added no false alarm, and both rounds of the new version find **10/10** flaws with **0/10** false alarms. It was designed after the first round; the second round was played before it existed and was not used to tune it.
 
 Limit: it only checks objects the game declares. An undeclared hazard (Spike Maze's invisible spikes) is still found only through what the ghosts do (deaths), which worked there because dying is visible to any player.
 
