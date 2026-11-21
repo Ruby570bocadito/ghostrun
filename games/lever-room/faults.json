@@ -1,0 +1,9 @@
+{
+  "no-hint": {
+    "label": "Hidden lever, no use-key hint",
+    "type": "missed",
+    "region": { "x0": 16, "y0": 150, "x1": 540, "y1": 300 },
+    "milestone": "lever",
+    "description": "Nothing tells the player that the lever exists or which key uses it: the instructions omit E, the lever is painted in the dull background colour and no prompt appears, so players wander between the ledge and the closed door."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "hidden-key": {
+    "label": "The key is nearly invisible",
+    "type": "missed",
+    "region": { "x0": 508, "y0": 236, "x1": 628, "y1": 356 },
+    "milestone": "key",
+    "description": "The key in the far room is drawn in almost exactly the floor colour with no glow or pulse, so players cannot see it, never pick it up and stay stuck behind the locked door."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "wrong-key": {
+    "label": "Instructions name the wrong dash key",
+    "type": "confusion",
+    "region": { "x0": 180, "y0": 180, "x1": 460, "y1": 360 },
+    "milestone": "dash",
+    "description": "The instructions and the sign say Z dashes but only X does, so players press Z at the pit edge, nothing happens and they fall in."
+  }
+}

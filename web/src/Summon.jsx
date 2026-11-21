@@ -45,7 +45,8 @@ export function Summon({ config, onStarted }) {
     }
   };
 
-  const game = config?.games?.[0];
+  const [gameId, setGameId] = useState('gap-run');
+  const game = config?.games?.find((g) => g.id === gameId) ?? config?.games?.[0];
 
   return (
     <section className="summon">
@@ -85,13 +86,22 @@ export function Summon({ config, onStarted }) {
         </div>
         {game && (
           <div className="quick-picks">
-            <span className="muted">No game handy? Try ours:</span>
+            <label className="muted" htmlFor="test-game">
+              No game handy? Try ours:
+            </label>
+            <select id="test-game" className="game-select" value={game.id} onChange={(e) => setGameId(e.target.value)}>
+              {config.games.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} · {g.kind}
+                </option>
+              ))}
+            </select>
             <button type="button" className="chip-btn" onClick={() => setUrl(game.url)}>
-              {game.name}
+              As designed
             </button>
             {game.faults.map((f) => (
               <button key={f.id} type="button" className="chip-btn chip-warn" onClick={() => setUrl(`${game.url}?fault=${f.id}`)}>
-                {game.name} with a broken jump
+                With a planted flaw: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
               </button>
             ))}
           </div>

@@ -32,15 +32,18 @@ const TYPES = {
   '.woff2': 'font/woff2',
 };
 
+// Test games shipped in games/. Their injected faults are read from games/<id>/faults.json.
 const TEST_GAMES = [
-  {
-    id: 'gap-run',
-    name: 'Gap Run',
-    kind: 'Platformer',
-    description: 'Run right and jump three gaps to reach the flag.',
-    faults: [{ id: 'gap', label: 'Gap 3 is too wide to jump (injected design fault)' }],
-  },
+  { id: 'gap-run', name: 'Gap Run', kind: 'Platformer', description: 'Run right and jump three gaps to reach the flag.' },
+  { id: 'key-hunt', name: 'Key Hunt', kind: 'Top-down puzzle', description: 'Find the key, open the door, reach the exit.' },
+  { id: 'lever-room', name: 'Lever Room', kind: 'Platformer puzzle', description: 'Pull a lever to open the door to the flag.' },
+  { id: 'spike-maze', name: 'Spike Maze', kind: 'Top-down maze', description: 'Cross a maze without touching the spikes.' },
+  { id: 'read-me', name: 'Read Me', kind: 'Platformer', description: 'Jump and dash over a wide pit.' },
 ];
+for (const g of TEST_GAMES) {
+  const faults = JSON.parse(await readFile(join('games', g.id, 'faults.json'), 'utf8').catch(() => '{}'));
+  g.faults = Object.entries(faults).map(([id, f]) => ({ id, label: f.label, type: f.type }));
+}
 
 const runs = new Map();
 let activeRun = null;

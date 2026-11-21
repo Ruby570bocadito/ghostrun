@@ -62,6 +62,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .chip-btn { background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 0.85rem; }
 .chip-btn:hover { border-color: var(--mint); }
 .chip-warn { border-color: rgba(255, 107, 107, 0.4); }
+.game-select { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font: inherit; font-size: 0.85rem; }
 .personas { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
 .persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .persona { text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 6px; align-content: start; transition: border-color 0.15s, background 0.15s; }
