@@ -38,7 +38,7 @@ export const PERSONAS = {
     emoji: '😤',
     color: '#ff6b6b',
     style:
-      'You get frustrated quickly. If you fail at the same spot three times or do not understand what to do, you say you would quit this game.',
+      'You get frustrated quickly and complain about it. You quit only when you have died at the same spot at least three times (check the death counter on screen), or after ten moves without understanding what to do.',
   },
 };
 

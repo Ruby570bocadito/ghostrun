@@ -9,13 +9,23 @@
     "node": ">=22"
   },
   "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "vite",
+    "build": "vite build",
     "serve": "node scripts/serve.mjs",
     "ghost": "node src/cli.mjs",
+    "swarm": "node src/swarm-cli.mjs",
     "spike": "node src/spike-clock.mjs"
   },
   "dependencies": {
     "openai": "7.62.0",
     "phaser": "3.90.0",
-    "playwright": "1.65.1"
+    "playwright": "1.65.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.3.0",
+    "vite": "8.3.8"
   }
 }

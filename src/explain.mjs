@@ -45,7 +45,7 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
           {
             role: 'system',
             content:
-              'You are a game-design analyst reviewing an automated playtest. Explain only the hotspot you are given, using only the evidence. Do not invent numbers.',
+              'You are a game-design analyst reviewing an automated playtest. Explain only the hotspot you are given, using only the evidence. Do not invent numbers. A FRICTION spot may be intended challenge: say so if the ghosts eventually got past, and suggest a gentle change (a hint, a checkpoint, clearer visuals) rather than removing the challenge. A BLOCKER means nobody got past, so treat it as a likely bug or design error.',
           },
           {
             role: 'user',
