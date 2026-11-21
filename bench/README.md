@@ -89,9 +89,22 @@ Bullet time matters where timing matters. In slow games (Gap Run, Key Hunt) we s
 
 On single-flaw test games, personalities did **not** find more flaws. What they changed is the kind of evidence: only the mix produced quits (the Impatient), and a mix of players cried "confused" 3.4× less often than four beginners, so a confusion finding from the mix carries more weight. We keep the personalities for that, not for recall.
 
+## Hard case: a real jam game we did not make
+
+[NILO](../games/third-party/nilo/README.md) by Rojen Maharjan (js13kGames 2020, MIT), unmodified, **without our SDK**: the ghosts only had the pixels, at 960×540.
+
+- **Menus:** all 4 ghosts got through the mouse-only menu by themselves (Play → chapter 1 → level 1, three clicks).
+- **Finding:** all 4 ended up stuck at the start of level 1 (a "stuck" finding, 4/4), in 55 s for $0.043.
+- **Checked by a person** ([review R5](../docs/ai-review-log.md)): the first card blamed the first platform being too high. Rafael reached it easily, so **that cause was wrong**: the ghosts' own clumsiness. But the ghosts had also said SPACE "did nothing", and Rafael confirmed that what SPACE ("refresh the page") does **took him a while to understand**, so that signal was right.
+- **What we changed:** every card now states a confidence and whether the ghosts' skill could explain it, and stuck/missed/confusion cards also read what ghosts said about controls that did nothing. On the same run the card became "the game shows no instructions for which key jumps… ghosts trying Space, Up, X and Z reported nothing happened". That is closer to Rafael's experience, but not exact.
+
+We count this as a partial success: the ghosts found the right area and the right symptom, and their first explanation was wrong.
+
 ## Limitations
 
 - The test games and their flaws are ours. They were written with AI assistance and are being checked by a person (see the AI review log).
 - Small samples: 2 repetitions per variant. Ghosts are random, so numbers move between runs.
 - 40 moves per ghost: in long levels ghosts can run out of moves before finishing; findings near the end of a level are less reliable.
 - Ghosts cannot tell intended difficulty from bad design: they report where players struggle; the developer decides.
+- Ghosts are worse than people at precise jumps and timing. On a real game they got stuck at a jump a person found easy (NILO above). Read "stuck" findings with the card's confidence.
+- Without the SDK, deaths and positions are what the ghosts say they saw. Positions are on-screen coordinates, so in scrolling games the map is approximate.
