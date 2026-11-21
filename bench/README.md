@@ -89,6 +89,30 @@ Bullet time matters where timing matters. In slow games (Gap Run, Key Hunt) we s
 
 On single-flaw test games, personalities did **not** find more flaws. What they changed is the kind of evidence: only the mix produced quits (the Impatient), and a mix of players cried "confused" 3.4× less often than four beginners, so a confusion finding from the mix carries more weight. We keep the personalities for that, not for recall.
 
+## People vs ghosts
+
+Rafael played all ten variants himself with the SDK's recorder on (`?human=1`, see `games/index.html`) — [results](results/people-vs-ghosts.md).
+
+**Every spot where he died or ended up stuck was also flagged by the ghosts: 4/4.**
+
+- Gap Run with the flaw: he died 3 times at the third gap and left → the ghosts' **blocker**.
+- Spike Maze with the flaw: he died once at the visible spikes near the exit → a ghost **friction** finding.
+- Read Me, clean: he died once in the pit → a ghost **friction** finding.
+
+The other way round, the ghosts are harsher than an experienced player:
+
+| Clean game | Ghosts that finished (40 moves) | Ghost deaths per run, average | Ghost game time when they finished (median) | Rafael |
+|---|---|---|---|---|
+| Gap Run | 4/8 | 7.0 | 16.8 s | finished, 15 s, 0 deaths |
+| Key Hunt | 7/8 | 0 | 12.5 s | finished, 11 s, 0 deaths |
+| Lever Room | 7/8 | 0 | 13.4 s | finished, 7 s, 0 deaths |
+| Spike Maze | 0/8 | 1.1 | — | finished, 8 s, 0 deaths |
+| Read Me | 6/8 | 3.9 | 8.5 s | finished, 7 s, 1 death |
+
+So friction findings on clean games (Gap Run's gaps, Spike Maze's spikes) mark places where a clumsier player than Rafael would struggle, which is why they are friction and not critical. Mazes are the ghosts' weak spot.
+
+**Caveats:** one person, who is the developer and had already seen the planted flaws in review R2, so his sessions on the flawed versions were not blind (he went straight to the hidden key, the lever's E and the X dash). His clean-game sessions are the fair comparison. We plan to repeat this with people who have never seen the games.
+
 ## Hard case: a real jam game we did not make
 
 [NILO](../games/third-party/nilo/README.md) by Rojen Maharjan (js13kGames 2020, MIT), unmodified, **without our SDK**: the ghosts only had the pixels, at 960×540.

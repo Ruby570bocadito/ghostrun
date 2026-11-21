@@ -1,0 +1,259 @@
+[
+  {
+    "player": "rafa",
+    "game": "gap-run",
+    "variant": "clean",
+    "outcome": "won",
+    "seconds": 15,
+    "deaths": 0,
+    "milestonesReached": [],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "friction!@(1017,360)",
+      "friction!@(690,360)",
+      "friction!@(376,360)",
+      "friction!@(1024,360)",
+      "friction!@(370,360)",
+      "friction@(677,360)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "gap-run",
+    "variant": "gap",
+    "outcome": "playing",
+    "seconds": 12,
+    "deaths": 3,
+    "milestonesReached": [],
+    "troubleSpots": [
+      {
+        "kind": "deaths",
+        "count": 3,
+        "center": {
+          "x": 1120,
+          "y": 360
+        },
+        "region": {
+          "x0": 1070,
+          "x1": 1169,
+          "y0": 300,
+          "y1": 380
+        },
+        "ghostMatch": [
+          "blocker",
+          "blocker"
+        ]
+      },
+      {
+        "kind": "ended here",
+        "count": 24,
+        "center": {
+          "x": 910,
+          "y": 267
+        },
+        "region": {
+          "x0": 746,
+          "x1": 1137,
+          "y0": 169,
+          "y1": 362
+        },
+        "ghostMatch": [
+          "blocker",
+          "blocker"
+        ]
+      }
+    ],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "blocker!@(1042,360)",
+      "friction!@(365,360)",
+      "friction!@(681,360)",
+      "blocker!@(1027,360)",
+      "friction!@(686,360)",
+      "friction!@(376,360)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "key-hunt",
+    "variant": "clean",
+    "outcome": "won",
+    "seconds": 11,
+    "deaths": 0,
+    "milestonesReached": [
+      "key",
+      "door"
+    ],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": []
+  },
+  {
+    "player": "rafa",
+    "game": "key-hunt",
+    "variant": "hidden-key",
+    "outcome": "won",
+    "seconds": 10,
+    "deaths": 0,
+    "milestonesReached": [
+      "key",
+      "door"
+    ],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "missed@(568,296)",
+      "missed!@(568,296)",
+      "stuck!@(354,224)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "lever-room",
+    "variant": "clean",
+    "outcome": "won",
+    "seconds": 7,
+    "deaths": 0,
+    "milestonesReached": [
+      "lever",
+      "door"
+    ],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": []
+  },
+  {
+    "player": "rafa",
+    "game": "lever-room",
+    "variant": "no-hint",
+    "outcome": "won",
+    "seconds": 13,
+    "deaths": 0,
+    "milestonesReached": [
+      "lever",
+      "door"
+    ],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "missed!@(64,226)",
+      "stuck!@(487,239)",
+      "missed!@(64,226)",
+      "stuck!@(489,244)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "spike-maze",
+    "variant": "clean",
+    "outcome": "won",
+    "seconds": 8,
+    "deaths": 0,
+    "milestonesReached": [
+      "checkpoint"
+    ],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "friction!@(155,312)",
+      "friction@(506,88)",
+      "friction!@(507,88)",
+      "friction@(416,113)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "spike-maze",
+    "variant": "hidden-spikes",
+    "outcome": "won",
+    "seconds": 10,
+    "deaths": 1,
+    "milestonesReached": [
+      "checkpoint"
+    ],
+    "troubleSpots": [
+      {
+        "kind": "deaths",
+        "count": 1,
+        "center": {
+          "x": 410,
+          "y": 120
+        },
+        "region": {
+          "x0": 369.99999840664645,
+          "x1": 449.99999840664645,
+          "y0": 59.62438963241392,
+          "y1": 139.6243896324139
+        },
+        "ghostMatch": [
+          "friction"
+        ]
+      }
+    ],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "blocker!@(155,312)",
+      "missed!@(304,312)",
+      "missed@(304,312)",
+      "friction!@(155,312)",
+      "friction@(230,312)",
+      "friction@(411,120)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "read-me",
+    "variant": "clean",
+    "outcome": "won",
+    "seconds": 7,
+    "deaths": 1,
+    "milestonesReached": [
+      "dash"
+    ],
+    "troubleSpots": [
+      {
+        "kind": "deaths",
+        "count": 1,
+        "center": {
+          "x": 398,
+          "y": 322
+        },
+        "region": {
+          "x0": 358,
+          "x1": 438,
+          "y0": 262.3333333333333,
+          "y1": 342.3333333333333
+        },
+        "ghostMatch": [
+          "friction",
+          "friction"
+        ]
+      }
+    ],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "friction!@(343,320)",
+      "friction!@(351,321)"
+    ]
+  },
+  {
+    "player": "rafa",
+    "game": "read-me",
+    "variant": "wrong-key",
+    "outcome": "won",
+    "seconds": 4,
+    "deaths": 0,
+    "milestonesReached": [
+      "dash"
+    ],
+    "troubleSpots": [],
+    "ghostRuns": 2,
+    "ghostFindings": [
+      "blocker!@(334,322)",
+      "missed!@(240,286)",
+      "blocker!@(320,322)",
+      "missed!@(240,286)"
+    ]
+  }
+]
