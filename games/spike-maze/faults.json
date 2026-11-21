@@ -1,0 +1,9 @@
+{
+  "hidden-spikes": {
+    "label": "Invisible spikes",
+    "type": "deaths",
+    "region": { "x0": 144, "y0": 280, "x1": 240, "y1": 344 },
+    "milestone": null,
+    "description": "The two spike tiles on the straight corridor to the checkpoint are not drawn but still kill, so players keep dying on hazards they cannot see."
+  }
+}
