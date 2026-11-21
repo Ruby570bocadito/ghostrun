@@ -63,16 +63,45 @@ function reducer(state, e) {
   }
 }
 
-/** Subscribes to a run's live event stream. */
+/**
+ * Subscribes to a run's live event stream. If the stream drops before the run ends (a proxy, a network blip,
+ * a tab put to sleep), it is opened again and the server sends the run from the start. Closing it for good
+ * left the live view frozen after the run had finished (found by a test agent).
+ */
 export function useRun(runId) {
   const [state, dispatch] = useReducer(reducer, initial);
   useEffect(() => {
     if (!runId) return undefined;
-    dispatch({ type: 'reset' });
-    const es = new EventSource(`/api/runs/${runId}/stream`);
-    es.onmessage = (msg) => dispatch(JSON.parse(msg.data));
-    es.onerror = () => es.close();
-    return () => es.close();
+    let es = null;
+    let ended = false;
+    let misses = 0;
+    let retry = null;
+    const open = () => {
+      dispatch({ type: 'reset' });
+      es = new EventSource(`/api/runs/${runId}/stream`);
+      es.onmessage = (msg) => {
+        misses = 0;
+        const e = JSON.parse(msg.data);
+        if (e.type === 'report' || e.type === 'failed') ended = true;
+        dispatch(e);
+      };
+      es.onerror = () => {
+        es.close();
+        if (ended) return;
+        if (++misses > 20) {
+          ended = true;
+          dispatch({ type: 'failed', message: 'Lost the connection to the server. Reload the page to see this run.' });
+          return;
+        }
+        retry = setTimeout(open, 2000);
+      };
+    };
+    open();
+    return () => {
+      ended = true;
+      clearTimeout(retry);
+      es?.close();
+    };
   }, [runId]);
   return state;
 }

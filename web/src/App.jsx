@@ -37,6 +37,18 @@ export default function App() {
   const personas = Object.fromEntries((config?.personas ?? []).map((p) => [p.id, p]));
   const showReport = run.status === 'done' || (run.status === 'failed' && run.report);
 
+  // A title per screen, so browser tabs and screen readers say where you are (found by a test agent).
+  const host = (() => {
+    try {
+      return new URL(run.config?.url).host;
+    } catch {
+      return '';
+    }
+  })();
+  useEffect(() => {
+    document.title = !runId ? `${APP_NAME} · Who gets stuck in your game?` : showReport ? `Report · ${host} · ${APP_NAME}` : `Playing ${host} · ${APP_NAME}`;
+  }, [runId, showReport, host]);
+
   return (
     <div className="app">
       <header className="topbar">
@@ -49,8 +61,8 @@ export default function App() {
             <span className="chip mono" title="Model the ghosts play with">
               {config.model}
             </span>
-            <span className="chip mono" title="API spending so far against the cap">
-              ${config.budget.spentUsd.toFixed(2)} / ${config.budget.capUsd}
+            <span className="chip mono" title="AI spending of this server so far, against its cap">
+              AI spend ${config.budget.spentUsd.toFixed(2)} / ${config.budget.capUsd}
             </span>
           </div>
         )}

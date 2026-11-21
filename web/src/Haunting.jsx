@@ -30,7 +30,7 @@ function GhostTile({ runId, g, p }) {
       <footer className="tile-foot mono">
         <span>move {g.steps}</span>
         <span className={g.deaths ? 'deaths' : ''}>✕ {g.deaths}</span>
-        <span className="progress" aria-label={`Level progress ${Math.round(progress * 100)}%`}>
+        <span className="progress" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
           <span style={{ width: `${progress * 100}%` }} />
         </span>
       </footer>

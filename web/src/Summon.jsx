@@ -7,6 +7,21 @@ const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
 // The test games are served by the app under /play/; turn their paths into full links at this address.
 const here = (path) => new URL(path, window.location.origin).href;
 
+/** Turns what the visitor typed into a link, or says what is wrong (found by test agents: the browser's own
+ * check showed nothing they could read, and "www.mygame.com" without https:// was refused). */
+export function readLink(text) {
+  const value = text.trim();
+  if (!value) return { error: 'Paste your game\'s link first.' };
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : /^[^\s/]+\.[^\s]+$/.test(value) ? `https://${value}` : value;
+  try {
+    const u = new URL(withScheme);
+    if (!/^https?:$/.test(u.protocol) || !u.hostname.includes('.') && u.hostname !== 'localhost') throw new Error();
+    return { url: u.href };
+  } catch {
+    return { error: 'That is not a link. Paste the full address of your game, like https://you.itch.io/your-game' };
+  }
+}
+
 const ERRORS = {
   invalid_url: 'That does not look like a game link. Paste a full address that starts with http:// or https://',
   busy: 'The ghosts are busy with another game right now. Try again when that run finishes.',
@@ -33,12 +48,18 @@ export function Summon({ config, onStarted }) {
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
+    const link = readLink(url);
+    if (link.error) {
+      setError(link.error);
+      return;
+    }
+    setUrl(link.url);
     setSending(true);
     try {
       const res = await fetch('/api/runs', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), personas: selected, steps, viewport, simulateOutage }),
+        body: JSON.stringify({ url: link.url, personas: selected, steps, viewport, simulateOutage }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -68,7 +89,7 @@ export function Summon({ config, onStarted }) {
         <HeroScene />
       </div>
 
-      <form className="summon-card" onSubmit={submit}>
+      <form className="summon-card" onSubmit={submit} noValidate>
         <label className="field-label" htmlFor="game-url">
           Game link
         </label>
@@ -80,8 +101,8 @@ export function Summon({ config, onStarted }) {
             placeholder="https://your-game.itch.io/..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            required
             autoComplete="off"
+            aria-describedby="link-error"
           />
           <button className="btn-primary" type="submit" disabled={sending || !selected.length || !config || config.error}>
             {sending ? 'Summoning…' : 'Summon the ghosts'}
@@ -92,18 +113,34 @@ export function Summon({ config, onStarted }) {
             <label className="muted" htmlFor="test-game">
               No game handy? Try ours:
             </label>
-            <select id="test-game" className="game-select" value={game.id} onChange={(e) => setGameId(e.target.value)}>
+            <select
+              id="test-game"
+              className="game-select"
+              value={game.id}
+              onChange={(e) => {
+                // Choosing a game fills in its link: two test agents chose one and got "Paste your game's link first".
+                setGameId(e.target.value);
+                const g = config.games.find((x) => x.id === e.target.value);
+                if (g) setUrl(here(g.url));
+              }}
+            >
               {config.games.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.name} · {g.kind}
                 </option>
               ))}
             </select>
-            <button type="button" className="chip-btn" onClick={() => setUrl(here(game.url))}>
+            <button type="button" className="chip-btn" aria-pressed={url === here(game.url)} onClick={() => setUrl(here(game.url))}>
               As designed
             </button>
             {game.faults.map((f) => (
-              <button key={f.id} type="button" className="chip-btn chip-warn" onClick={() => setUrl(here(`${game.url}?fault=${f.id}`))}>
+              <button
+                key={f.id}
+                type="button"
+                className="chip-btn chip-warn"
+                aria-pressed={url === here(`${game.url}?fault=${f.id}`)}
+                onClick={() => setUrl(here(`${game.url}?fault=${f.id}`))}
+              >
                 With a planted flaw: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
               </button>
             ))}
@@ -117,7 +154,7 @@ export function Summon({ config, onStarted }) {
               const on = selected.includes(p.id);
               return (
                 <button type="button" key={p.id} className={`persona ${on ? 'on' : ''}`} style={{ '--c': p.color }} onClick={() => toggle(p.id)} aria-pressed={on}>
-                  <GhostIcon color={on ? p.color : '#3a3f63'} size={30} />
+                  <GhostIcon color={on ? p.color : '#6e74a0'} size={30} />
                   <span className="persona-name">{p.name}</span>
                   <span className="persona-style">{p.style.split('. ')[0]}.</span>
                 </button>
@@ -154,7 +191,7 @@ export function Summon({ config, onStarted }) {
           </label>
         </details>
         {error && (
-          <p className="form-error" role="alert">
+          <p className="form-error" role="alert" id="link-error">
             {error}
           </p>
         )}
@@ -165,7 +202,7 @@ export function Summon({ config, onStarted }) {
         <div className="how-step">
           <span className="how-num">01</span>
           <b>Paste a link</b>
-          <span>Any web game in a browser. No install; a one-line SDK is optional for exact positions.</span>
+          <span>Any web game in a browser. No install. Optional: one line of code in your game gives exact positions.</span>
         </div>
         <div className="how-step">
           <span className="how-num">02</span>
@@ -181,10 +218,10 @@ export function Summon({ config, onStarted }) {
 
       <p className="proof">
         <span>
-          <b>20/20</b> planted design flaws found in our benchmark
+          <b>27/30</b> planted design flaws found in our benchmark
         </span>
         <span>
-          <b>0</b> false alarms in <b>20</b> runs on clean games
+          <b>0</b> false alarms in <b>30</b> runs on clean games
         </span>
         <span>
           about <b>$0.02</b> and <b>1 min</b> per playtest

@@ -26,12 +26,15 @@ function clipFrames(runId, trace, [from, to]) {
   return trace.frames.slice(from, to + 1).map((f) => `/runs/${runId}/${trace.persona}/${f.file}`);
 }
 
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
 function statLine(f, report) {
   const n = `${f.ghosts.length}/${report.ghostsTotal} ghosts`;
   switch (f.type) {
     case 'blocker':
     case 'friction':
-      return `${n} died here · ${f.count} deaths · ${f.passed.length}/${f.reached.length} got past`;
+      return `${n} died here · ${plural(f.count, 'death')} · ${f.passed.length}/${f.reached.length} that reached it got past this spot`;
     case 'missed':
       return `Objective “${f.milestone}” reached by ${f.reachedBy.length}/${report.ghostsTotal} ghosts`;
     case 'stuck':
@@ -39,7 +42,7 @@ function statLine(f, report) {
     case 'confusion':
       return `${n} said they were confused here (${f.count} times)`;
     case 'hard_to_see':
-      return `“${f.milestone}” has a contrast of ${f.contrast}:1 against its background (WCAG asks 3:1) · ${f.reachedBy.length}/${report.ghostsTotal} AI ghosts found it anyway`;
+      return `“${f.milestone}” has a contrast of ${f.contrast}:1 against its background (people need at least 3:1 to notice it, per WCAG) · ${f.reachedBy.length}/${report.ghostsTotal} AI ghosts found it anyway`;
     default:
       return n;
   }
@@ -56,6 +59,8 @@ function provenance(f) {
       return 'Found from where the ghosts spent their last moves, no AI involved.';
     case 'confusion':
       return "Found from the ghosts' own “confused” flags, grouped by position.";
+    case 'hard_to_see':
+      return 'Measured on the screen: the contrast of the objective against what surrounds it, with the WCAG formula. No AI involved.';
     default:
       return '';
   }
@@ -68,53 +73,57 @@ function Finding({ f, card, report, runId, byPersona, personas, selected }) {
   const extra = [
     f.stuckGhosts?.length ? `${f.stuckGhosts.length} ended their run stuck here` : null,
     f.confusedGhosts?.length ? `${f.confusedGhosts.length} said they were confused here` : null,
-    f.type !== 'hard_to_see' && f.contrast ? `measured contrast ${f.contrast}:1 (WCAG asks 3:1)` : null,
+    f.type !== 'hard_to_see' && f.contrast ? `measured contrast ${f.contrast}:1 (people need at least 3:1)` : null,
   ].filter(Boolean);
+  // Friction read from the data, not from the AI: most ghosts that reached the spot got past it.
+  const fair = f.type === 'friction' && f.reached?.length && f.passed.length * 2 >= f.reached.length;
+  const quotes = f.evidence.some((e) => e.thought) && f.type !== 'hard_to_see' ? f.evidence.filter((e) => e.thought).slice(0, 3).map((e) => ({ persona: e.persona, text: e.thought })) : (f.quotes ?? []).slice(0, 3).map((text) => ({ text }));
   return (
     <article id={`f-${f.id}`} className={`finding ${f.type} ${selected ? 'selected' : ''}`}>
       <div className="finding-main">
-        <span className={`badge ${f.type}`}>{TYPE_LABEL[f.type] ?? f.type}</span>
+        <span className={`badge ${f.type}`}>
+          {f.id} · {TYPE_LABEL[f.type] ?? f.type}
+        </span>
         <h3>{card?.title ?? `${TYPE_LABEL[f.type]} around (${f.center.x}, ${f.center.y})`}</h3>
         {card?.confidence && (
           <p className={`confidence conf-${card.confidence}`}>
             Confidence: {card.confidence}
-            {card.could_be_ghost_skill ? ' · could be the ghosts’ own lack of skill, not the design' : ''}
+            {card.could_be_ghost_skill && f.type !== 'friction' ? ' · could be the ghosts’ own lack of skill, not the design' : ''}
           </p>
         )}
         <p className="stat-line mono">
           {statLine(f, report)}
           {extra.length ? ` · ${extra.join(' · ')}` : ''}
         </p>
+        {fair && <p className="fair-line">Most ghosts that reached it got past: probably a fair challenge, not a flaw.</p>}
         {card && (
           <dl className="card-fields">
             <dt>What happens</dt>
-            <dd>{card.what_happens}</dd>
+            <dd>{capital(card.what_happens)}</dd>
             <dt>Likely cause</dt>
-            <dd>{card.likely_cause}</dd>
+            <dd>{capital(card.likely_cause)}</dd>
             <dt>Try this</dt>
-            <dd>{card.suggested_fix}</dd>
+            <dd>{capital(card.suggested_fix)}</dd>
           </dl>
         )}
-        {f.evidence.some((e) => e.thought) && <p className="quotes-label">What they were planning right before (the replay shows what actually happened)</p>}
+        {quotes.length > 0 && (
+          <p className="quotes-label">{f.type === 'hard_to_see' ? 'What ghosts said near it' : 'What they were planning right before (the replay shows what actually happened)'}</p>
+        )}
         <ul className="quotes">
-          {f.evidence
-            .filter((e) => e.thought)
-            .slice(0, 3)
-            .map((e) => (
-              <li key={e.persona}>
-                <GhostIcon color={personas[e.persona]?.color} size={16} />
-                <span>“{e.thought}”</span>
-              </li>
-            ))}
+          {quotes.map((q, i) => (
+            <li key={i}>
+              <GhostIcon color={q.persona ? personas[q.persona]?.color : '#9bf6ec'} size={16} />
+              <span>“{q.text}”</span>
+            </li>
+          ))}
         </ul>
       </div>
       <div className="finding-clip">
-        <div className="clip-tabs" role="tablist" aria-label="Whose replay">
+        <div className="clip-tabs" role="group" aria-label="Whose replay">
           {f.evidence.map((e) => (
             <button
               key={e.persona}
-              role="tab"
-              aria-selected={e.persona === ev?.persona}
+              aria-pressed={e.persona === ev?.persona}
               className={e.persona === ev?.persona ? 'on' : ''}
               style={{ '--c': personas[e.persona]?.color }}
               onClick={() => setWho(e.persona)}
@@ -151,8 +160,10 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   const target = url ? new URL(url) : null;
   const host = target ? target.host + target.pathname + target.search : '';
 
-  const critical = findings.filter((f) => CRITICAL.includes(f.type) && f.severity === 'high').length;
-  const minor = findings.length - critical;
+  // One-death spots and other weak signals (severity low) are not shown as findings.
+  const shown = findings.filter((f) => f.severity !== 'low');
+  const critical = shown.filter((f) => CRITICAL.includes(f.type) && f.severity === 'high').length;
+  const minor = shown.length - critical;
   const finished = report.ghosts.filter((g) => g.outcome === 'won').length;
 
   const select = (id) => {
@@ -229,12 +240,17 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         <div className="notices" role="status">
           <h3>What went wrong during the run, and how it was handled</h3>
           <ul>
-            {report.notices.map((n, i) => (
-              <li key={i}>
-                <b>{personas[n.persona]?.name ?? n.persona}</b>: {n.from} failed at move {n.step} ({n.simulated ? 'simulated outage, ' : ''}
-                {n.reason}). It switched to <b>{n.to}</b> and kept playing; no moves were lost.
-              </li>
-            ))}
+            {report.notices.map((n, i) =>
+              n.type === 'bad_output' ? (
+                <li key={i}>
+                  <b>{personas[n.persona]?.name ?? n.persona}</b>: at move {n.step} the model's answer was unusable twice, so the ghost waited a moment and kept playing.
+                </li>
+              ) : (
+                <li key={i}>
+                  <b>{personas[n.persona]?.name ?? n.persona}</b>: {n.from} failed at move {n.step} ({n.simulated ? `simulated outage, ${n.reason.split(':')[0]}` : n.reason.replace(/\.\s*$/, '')}). It switched to <b>{n.to}</b> and kept playing; no moves were lost.
+                </li>
+              ),
+            )}
           </ul>
         </div>
       )}
@@ -293,16 +309,23 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           <p className="legend small muted">
             {report.positionSource === 'ghosts'
               ? "This game has no Ghostrun SDK: positions and deaths are what each ghost reported seeing on screen · red glow = where they were · ✕ = deaths · click a box to see its replay"
-              : "Level rebuilt from the ghosts' frames · red glow = where ghosts spent time · ✕ = deaths (ghost color) · click a box to see its replay"}
+              : "Level rebuilt from the ghosts' screenshots · red glow = where ghosts spent time · ✕ = deaths (ghost color) · click a box to see its replay"}
           </p>
         </div>
       ) : (
         <p className="muted">This game does not report positions, so findings are shown without a level map.</p>
       )}
 
+      {shown.length > 0 && (
+        <p className="legend">
+          <b>Blocker</b>: nobody got past · <b>Missed objective</b>: most ghosts never reached it · <b>Stuck</b>: ghosts ended up circling here · <b>Hard to see</b>: too little
+          contrast to notice · <b>Confusing</b>: ghosts said they did not understand · <b>Friction</b>: ghosts died but got past, often a fair challenge. The first four are the
+          critical issues.
+        </p>
+      )}
       <div className="findings">
-        {findings.length === 0 && <p className="panel">No findings: no place where ghosts died repeatedly, got stuck or got confused.</p>}
-        {findings.map((f) => (
+        {shown.length === 0 && <p className="panel">No findings: no place where ghosts died repeatedly, got stuck or got confused.</p>}
+        {shown.map((f) => (
           <Finding
             key={f.id}
             f={f}
@@ -358,7 +381,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                   {OUTCOME_LABEL[g.outcome] ?? g.outcome}
                 </span>
               </div>
-              <span className="progress wide" aria-label={`Progress ${Math.round((g.progress ?? 0) * 100)}%`}>
+              <span className="progress wide" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((g.progress ?? 0) * 100)}>
                 <span style={{ width: `${(g.progress ?? 0) * 100}%` }} />
               </span>
               <span className="mono small">

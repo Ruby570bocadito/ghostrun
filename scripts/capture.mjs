@@ -10,7 +10,7 @@ if (!url || !out) {
 }
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: Number(width), height: Number(height) }, deviceScaleFactor: Number(scale) });
-await page.goto(url, { waitUntil: 'networkidle' });
+await page.goto(url, { waitUntil: 'load', timeout: 60000 });
 await page.waitForTimeout(Number(waitMs));
 await page.screenshot({ path: out, fullPage: mode !== 'view', ...(out.endsWith('.jpg') ? { type: 'jpeg', quality: 82 } : {}) });
 await browser.close();

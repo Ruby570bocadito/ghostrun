@@ -35,6 +35,10 @@ const STATUS = { resolved: 'Resolved', improved: 'Improved', still: 'Still there
 
 function who(f, total) {
   if (!f) return '—';
+  // For deaths, what changes is how many got past and how often they died. "4/4 ghosts → 4/4 ghosts" read as no
+  // change to a judge agent, although nobody got past before and 3 of 4 did after.
+  if ((f.type === 'blocker' || f.type === 'friction') && f.reached?.length)
+    return `${f.passed.length}/${f.reached.length} got past, ${f.count} ${f.count === 1 ? 'death' : 'deaths'}`;
   return `${f.ghosts.length}/${total} ghosts`;
 }
 
@@ -100,7 +104,7 @@ export function Compare({ before, after, beforeId }) {
             <span className={`cmp-badge cmp-${r.status}`}>{STATUS[r.status]}</span>
             <span className="cmp-title">{title(r)}</span>
             <span className="mono small muted">
-              {TYPE_LABEL[(r.before ?? r.after).type]}: {who(r.before, before.ghostsTotal)} → {r.after ? `${TYPE_LABEL[r.after.type]}, ${who(r.after, after.ghostsTotal)}` : 'gone'}
+              {TYPE_LABEL[(r.before ?? r.after).type]}: {who(r.before, before.ghostsTotal)} → {r.after ? `${TYPE_LABEL[r.after.type]}: ${who(r.after, after.ghostsTotal)}` : 'gone'}
             </span>
           </li>
         ))}

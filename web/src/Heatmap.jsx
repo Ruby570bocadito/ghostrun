@@ -110,9 +110,10 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect, r
 
   return (
     <div className="heatmap" style={{ aspectRatio: `${W} / ${H}` }}>
-      <canvas ref={baseRef} width={W} height={H} className={stitched ? 'ready' : ''} />
-      <canvas ref={heatRef} width={W} height={H} />
-      {(report.findings ?? report.hotspots).map((h) => {
+      {/* Pictures of the level and the heat: the findings themselves are the buttons below, with text. */}
+      <canvas ref={baseRef} width={W} height={H} className={stitched ? 'ready' : ''} aria-hidden="true" />
+      <canvas ref={heatRef} width={W} height={H} aria-hidden="true" />
+      {(report.findings ?? report.hotspots).filter((h) => h.severity !== 'low').map((h) => {
         const r = h.region ?? { x0: h.x0 - 30, x1: h.x1 + 30, y0: 0, y1: H };
         return (
           <button
@@ -127,8 +128,8 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect, r
                 : `${TYPE_LABEL[h.type] ?? h.type}: ${h.ghosts.length} of ${report.ghostsTotal} ghosts`
             }
           >
-            <span className="hot-tag">
-              {TYPE_LABEL[h.type] ?? h.type} · {h.type === 'hard_to_see' ? `${h.contrast}:1` : `${h.ghosts.length}/${report.ghostsTotal}`}
+            <span className={`hot-tag${r.x1 / W > 0.85 ? ' edge-right' : r.x0 / W < 0.15 ? ' edge-left' : ''}`}>
+              {h.id} · {TYPE_LABEL[h.type] ?? h.type} · {h.type === 'hard_to_see' ? `${h.contrast}:1` : `${h.ghosts.length}/${report.ghostsTotal}`}
             </span>
           </button>
         );
