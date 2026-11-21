@@ -23,8 +23,13 @@ export function score(report, fault) {
     return { kind: 'clean', finished, falseAlarms: alarms.length, alarmTypes: alarms.map((a) => a.type), friction: findings.filter((f) => f.type === 'friction').length };
   }
   const inRegion = findings.filter((f) => intersects(f.region, fault.region) || (fault.milestone && f.milestone === fault.milestone));
-  const strict = inRegion.filter((f) => COMPATIBLE[fault.type].includes(f.type));
+  // Found = a CRITICAL finding of a compatible type in the flaw's place: the same set (high-severity blocker,
+  // missed objective, stuck, hard to see) that makes a false alarm on a clean game. Until 21 Nov night a
+  // friction finding also counted, but friction appears at the same spots in the clean versions of 2 of our
+  // 5 games, so it did not tell the flawed version from the clean one (found by a review agent).
+  const strict = inRegion.filter((f) => COMPATIBLE[fault.type].includes(f.type) && ALARM_TYPES.includes(f.type) && f.severity === 'high');
+  const lenient = inRegion.filter((f) => COMPATIBLE[fault.type].includes(f.type));
   const rank = strict.length ? report.findings.indexOf(strict[0]) + 1 : null;
   const elsewhere = findings.filter((f) => !inRegion.includes(f) && ALARM_TYPES.includes(f.type) && f.severity === 'high');
-  return { kind: 'fault', finished, detected: inRegion.length > 0, detectedStrict: strict.length > 0, matched: inRegion.map((f) => f.type), rank, otherAlarms: elsewhere.length };
+  return { kind: 'fault', finished, detected: inRegion.length > 0, detectedLenient: lenient.length > 0, detectedStrict: strict.length > 0, matched: inRegion.map((f) => f.type), rank, otherAlarms: elsewhere.length };
 }

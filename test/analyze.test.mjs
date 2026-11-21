@@ -2,7 +2,7 @@
 // Run: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze, cluster2d } from '../src/analyze.mjs';
+import { analyze, bestOverlap, cluster2d, mergeOverlapping } from '../src/analyze.mjs';
 import { sanitizeMove } from '../src/ghost.mjs';
 import { score } from '../bench/score.mjs';
 
@@ -189,4 +189,85 @@ test('score finds a fault in the right region and flags false alarms on clean ga
   assert.equal(miss.detected, false);
   const clean = score(r, null);
   assert.equal(clean.falseAlarms, 1);
+});
+
+// Found by test agents on 21 Nov (a wide gap split in two contradicting cards, stuck ghosts on the wrong card,
+// one-death cards) and by a review agent (friction counted as "found" although clean games have it too).
+
+test('a wide gap with deaths at both edges is one blocker, not two cards that contradict each other', () => {
+  const traces = [
+    walker('a', { upTo: 900, deathX: 1000, deaths: 3 }),
+    walker('b', { upTo: 900, deathX: 1000, deaths: 3 }),
+    walker('c', { upTo: 900, deathX: 1090, deaths: 3 }),
+    walker('d', { upTo: 900, deathX: 1090, deaths: 3 }),
+  ];
+  const r = analyze(traces);
+  const atGap = r.findings.filter((f) => f.center.x > 950 && f.center.x < 1150);
+  assert.equal(atGap.length, 1);
+  assert.equal(atGap[0].type, 'blocker');
+  assert.equal(atGap[0].count, 12);
+  assert.equal(atGap[0].passed.length, 0);
+});
+
+// Found while checking the gallery (21 Nov): the merge above joined two different gaps of Gap Run into one
+// finding, because the run-up to the second gap starts where the first gap's area ends.
+test('two neighbouring gaps whose areas only touch stay two findings; two halves of one gap become one', () => {
+  const area = (x0, x1) => [{ x0, x1 }]; // here each group carries its own area
+  const regionOf = (g) => ({ x0: Math.min(...g.map((a) => a.x0)), x1: Math.max(...g.map((a) => a.x1)), y0: 163, y1: 409 });
+  // Areas as measured on a real run: first gap 213-400, run-up and second gap 396-733 (4 px of contact).
+  assert.equal(mergeOverlapping([area(213, 400), area(396, 733)], regionOf).length, 2);
+  // Deaths at both edges of one wide gap: the areas overlap by more than half of the smaller one.
+  assert.equal(mergeOverlapping([area(979, 1153), area(888, 1045)], regionOf).length, 1);
+});
+
+test('in a single-screen level, two death spots 100 px apart stay separate', () => {
+  const small = (t) => ({ ...t, frames: t.frames.map((f) => ({ ...f, state: { ...f.state, worldW: 640 } })) });
+  const traces = [
+    small(walker('a', { upTo: 100, deathX: 200, deaths: 3 })),
+    small(walker('b', { upTo: 100, deathX: 200, deaths: 3 })),
+    small(walker('c', { upTo: 100, deathX: 300, deaths: 3 })),
+    small(walker('d', { upTo: 100, deathX: 300, deaths: 3 })),
+  ];
+  assert.equal(analyze(traces).findings.filter((f) => f.type === 'blocker' || f.type === 'friction').length, 2);
+});
+
+test('a single death is too weak to be a finding', () => {
+  const r = analyze([walker('a', { upTo: 400, deathX: 500, deaths: 1 }), walker('b', { upTo: 700 }), walker('c', { upTo: 700 }), walker('d', { upTo: 700 })]);
+  const f = r.findings.find((x) => x.type === 'friction');
+  assert.equal(f.severity, 'low');
+});
+
+test('ghosts stuck near two spots are attached to the one they overlap most', () => {
+  const findings = [
+    { id: 'A', region: { x0: 200, x1: 400, y0: 0, y1: 360 } },
+    { id: 'B', region: { x0: 380, x1: 700, y0: 0, y1: 360 } },
+  ];
+  assert.equal(bestOverlap(findings, { x0: 390, x1: 650, y0: 100, y1: 300 }).id, 'B');
+  assert.equal(bestOverlap(findings, { x0: 900, x1: 950, y0: 0, y1: 10 }), undefined);
+});
+
+test('an objective nobody but one ghost found is critical when it is practically invisible', () => {
+  const traces = ['a', 'b', 'c'].map((p) => {
+    const t = walker(p, { upTo: 400 });
+    t.frames[0].state.milestones = [{ name: 'key', x: 500, y: 100, kind: 'object' }];
+    return t;
+  });
+  traces[0].events.push({ type: 'milestone', name: 'key', x: 500, y: 100, t: 500, step: 1 });
+  const plain = analyze(traces).findings.find((x) => x.type === 'missed');
+  assert.equal(plain.severity, 'medium');
+  const measured = analyze(traces, { objectives: [{ name: 'key', x: 500, y: 100, ratio: 1.09, persona: 'a', frame: 0 }] }).findings.find((x) => x.type === 'missed');
+  assert.equal(measured.severity, 'high');
+  assert.equal(measured.contrast, 1.09);
+});
+
+test('only a critical finding counts as finding a planted flaw (friction also appears in clean games)', () => {
+  const fault = { type: 'deaths', region: { x0: 100, y0: 100, x1: 300, y1: 300 } };
+  const inPlace = { center: { x: 200, y: 200 }, region: { x0: 150, y0: 150, x1: 250, y1: 250 } };
+  const report = (findings) => ({ findings, ghosts: [] });
+  const friction = score(report([{ ...inPlace, type: 'friction', severity: 'high' }]), fault);
+  assert.equal(friction.detectedLenient, true);
+  assert.equal(friction.detectedStrict, false);
+  assert.equal(score(report([{ ...inPlace, type: 'blocker', severity: 'high' }]), fault).detectedStrict, true);
+  const missedFault = { type: 'missed', milestone: 'key', region: { x0: 100, y0: 100, x1: 300, y1: 300 } };
+  assert.equal(score(report([{ ...inPlace, type: 'hard_to_see', severity: 'high', milestone: 'key' }]), missedFault).detectedStrict, true);
 });

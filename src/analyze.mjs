@@ -60,8 +60,43 @@ function bbox(points, pad, W, H) {
 }
 
 export const intersects = (a, b) => a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1;
+const overlapArea = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+
+/** The finding whose area overlaps `region` the most (stuck or confused ghosts belong to the closest spot, not the first one listed). */
+export function bestOverlap(findings, region) {
+  return findings.filter((f) => intersects(f.region, region)).sort((a, b) => overlapArea(b.region, region) - overlapArea(a.region, region))[0];
+}
+
+const areaOf = (r) => Math.max(1, (r.x1 - r.x0) * (r.y1 - r.y0));
+
+/**
+ * Death clusters whose areas (the deaths plus the moves that led to them) overlap substantially are one place
+ * in the level. A wide gap collects deaths at both of its edges, and single linkage alone split it in two
+ * findings that contradicted each other (found by test agents: "2/4 got past" next to "0/4 got past" for the
+ * same gap). "Substantially" = at least `minShare` of the smaller area: the two halves of one wide gap
+ * overlapped 54% and 89% in our runs, while two neighbouring gaps only touch at the platform between them
+ * (1-10% in all our runs; merging on any contact made one finding span two gaps).
+ */
+export function mergeOverlapping(groups, regionOf, minShare = 0.25) {
+  let merged = groups.map((deaths) => ({ deaths, region: regionOf(deaths) }));
+  const sameSpot = (a, b) => overlapArea(a, b) >= minShare * Math.min(areaOf(a), areaOf(b));
+  for (let changed = true; changed; ) {
+    changed = false;
+    search: for (let i = 0; i < merged.length; i++)
+      for (let j = i + 1; j < merged.length; j++)
+        if (sameSpot(merged[i].region, merged[j].region)) {
+          const deaths = [...merged[i].deaths, ...merged[j].deaths];
+          merged = merged.filter((_, k) => k !== i && k !== j);
+          merged.push({ deaths, region: regionOf(deaths) });
+          changed = true;
+          break search;
+        }
+  }
+  return merged.map((m) => m.deaths);
+}
 
 function frictionSeverity(share, count) {
+  if (count <= 1) return 'low'; // one death is a weak signal, not a finding
   if (share >= 0.5 || count >= 6) return 'high';
   if (share >= 0.25 || count >= 3) return 'medium';
   return 'low';
@@ -161,9 +196,13 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
     }
   }
   const sideScroller = worldW > 700;
-  for (const g of cluster2d(deaths, deathRadius)) {
+  const deathRegion = (g) => bbox([...g, ...g.flatMap((d) => d.approach)], 24, worldW, worldH);
+  // Only in side-scrolling levels, where "getting past" is measured along x: there, overlapping clusters are one obstacle.
+  // In a single-screen maze two clusters 100 px apart can be different corridors (merging them made a false blocker).
+  const clusters = cluster2d(deaths, deathRadius);
+  for (const g of sideScroller ? mergeOverlapping(clusters, deathRegion) : clusters) {
     const personas = [...new Set(g.map((d) => d.persona))];
-    const region = bbox([...g, ...g.flatMap((d) => d.approach)], 24, worldW, worldH);
+    const region = deathRegion(g);
     const inside = (p) => p.x >= region.x0 - 20 && p.x <= region.x1 + 20 && p.y >= region.y0 - 20 && p.y <= region.y1 + 20;
     const reachedTraces = traces.filter((t) => t.outcome !== 'error' && t.frames.some((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f))));
     const reached = reachedTraces.map((t) => t.persona);
@@ -245,6 +284,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
     const missed = findings.find((f) => f.type === 'missed' && f.milestone === o.name);
     if (missed) {
       missed.contrast = o.ratio; // the same objective: one finding, with the measured cause attached
+      if (o.ratio < CONTRAST_INVISIBLE) missed.severity = 'high'; // practically invisible: critical even if one ghost found it
       continue;
     }
     const reachedBy = ghosts.filter((g) => g.milestones.includes(o.name)).map((g) => g.persona);
@@ -294,7 +334,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
   }
   for (const g of cluster2d(zones, 140)) {
     const region = bbox(g.flatMap((z) => z.points), 20, worldW, worldH);
-    const overlapping = findings.find((f) => intersects(f.region, region));
+    const overlapping = bestOverlap(findings, region);
     if (overlapping) {
       overlapping.stuckGhosts = [...new Set([...(overlapping.stuckGhosts ?? []), ...g.map((z) => z.persona)])];
       continue;
@@ -324,7 +364,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
     const personas = [...new Set(g.map((p) => p.persona))];
     if (personas.length < 2 && g.length < 3) continue;
     const region = bbox(g, 40, worldW, worldH);
-    const overlapping = findings.find((f) => intersects(f.region, region));
+    const overlapping = bestOverlap(findings, region);
     if (overlapping) {
       overlapping.confusedGhosts = [...new Set([...(overlapping.confusedGhosts ?? []), ...personas])];
       overlapping.quotes = [...new Set([...overlapping.quotes, ...g.map((p) => p.thought)])].slice(0, 8);
