@@ -30,7 +30,7 @@ test('sanitizeMove clamps duration, removes duplicate keys and caps key counts',
   assert.deepEqual(m.tap, ['Space']);
   assert.equal(m.duration_ms, 1500);
   assert.equal(sanitizeMove({}).duration_ms, 400);
-  assert.equal(sanitizeMove({ player: { x: 2000, y: -5 } }).player.x, 1000);
+  assert.deepEqual(sanitizeMove({ player: { x: 5000, y: -5.6 } }).player, { x: 2000, y: 0 });
 });
 
 test('cluster2d groups nearby points and separates distant ones', () => {

@@ -15,7 +15,9 @@ const MOVE_SCHEMA = {
     thought: { type: 'string', description: 'What you notice or feel right now, first person, in character, at most 15 words.' },
     player: {
       type: 'object',
-      description: 'Where YOUR character is on this screenshot, on a 0-1000 grid ((0,0) top-left).',
+      // v1 asked for a 0-1000 grid while the prompt also said "640x360"; 12-41% of answers came back in
+      // pixels (bench/results/perception-baseline.md). v2 asks for pixels only, matching the image size.
+      description: 'Where YOUR character is on this 640x360 screenshot, in pixels: x from 0 (left edge) to 640 (right edge), y from 0 (top) to 360 (bottom).',
       properties: { x: { type: 'integer' }, y: { type: 'integer' } },
       required: ['x', 'y'],
       additionalProperties: false,
@@ -64,6 +66,7 @@ export function createMetaBrain({ model = process.env.GHOST_MODEL || 'muse-ember
   return {
     id: 'meta',
     model,
+    coords: 'pixels', // units of move.player (see MOVE_SCHEMA)
     async decide({ screenshot, history }) {
       const recent = history.slice(-6).map((h) => `step ${h.step}: ${h.summary}`).join('\n') || 'This is your first look at the game.';
       const t0 = performance.now();

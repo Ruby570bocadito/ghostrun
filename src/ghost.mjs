@@ -18,7 +18,7 @@ export function sanitizeMove(m) {
     thought: String(m?.thought ?? '').slice(0, 160),
     player:
       m?.player && Number.isFinite(m.player.x) && Number.isFinite(m.player.y)
-        ? { x: clamp(m.player.x, 0, 1000), y: clamp(m.player.y, 0, 1000) }
+        ? { x: clamp(Math.round(m.player.x), 0, 2000), y: clamp(Math.round(m.player.y), 0, 2000) }
         : null,
     hold,
     tap,
@@ -63,6 +63,7 @@ export async function runGhost({
     url,
     brain: brain.id,
     model: brain.model,
+    coords: brain.coords ?? 'grid1000', // units of steps[].player (older runs used a 0-1000 grid)
     steps: [],
     frames: [],
     events: [],
