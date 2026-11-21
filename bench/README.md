@@ -48,6 +48,20 @@ Each move, the ghost reports where its character is on screen; the game reports 
 
 Read in whichever units fit best, v1 answers were already precise (median 5–7 px): the model saw well, our prompt was ambiguous. Moves where the character could not be seen (off screen in a pit, or during the red flash after a death) are counted apart.
 
+## Which model should the ghosts use? (Meta Model API)
+
+Same benchmark, same prompt, bullet time on, `reasoning_effort: minimal`. Spark ran each variant once; Wonder, the most expensive, only on Gap Run and Key Hunt.
+
+| Model | Flaws found | Clean games with a false alarm | Ghosts that finished clean games | Decision time, median / 90th pct. | Cost per run (4 ghosts) |
+|---|---|---|---|---|---|
+| **`muse-ember-1.0`** ([baseline-v2](results/baseline-v2.md)) | 10/10 | 0/10 | **60%** | **0.9 s / 1.2 s** | **$0.025** |
+| `muse-spark-1.3` ([model-spark](results/model-spark.md)) | 5/5 | 1/5 | 50% | 2.5 s / 62 s* | $0.273 (11×) |
+| `muse-wonder-1.0` ([model-wonder](results/model-wonder.md), 2 games) | 2/2 | 0/2 | 38% | 2.6 s / 4.9 s | $0.427 (17×) |
+
+\* 11% of Spark's decisions took over 30 s, hit our timeout and were retried (worst: 74 s).
+
+The larger models found the same flaws and did not play better on these games, while costing 11–17× more and deciding about 3× slower. With bullet time the game waits, so speed does not change the result, but it is the difference between a playtest in about a minute and one in several minutes. That is why the ghosts use **Muse Ember**: Meta describes it as its model for "high-volume, repeated work", and here a playtest is hundreds of small repeated decisions. The analyst that writes the finding cards, a handful of calls per report, uses Muse Spark. Samples for Spark and Wonder are small, so we only claim that they were not better here, not that they are worse.
+
 ## Experiments on our AI design decisions
 
 All on the same 10 variants × 2 repetitions, 4 ghosts, `muse-ember-1.0`.

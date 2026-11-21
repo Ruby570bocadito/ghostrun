@@ -1,0 +1,446 @@
+{
+  "summary": {
+    "label": "model-spark",
+    "model": "muse-spark-1.3",
+    "bulletTime": true,
+    "personas": [
+      "newbie",
+      "speedrunner",
+      "reader",
+      "impatient"
+    ],
+    "steps": 40,
+    "runs": 10,
+    "recall": 1,
+    "recallAny": 1,
+    "cleanRunsWithFalseAlarm": 0.2,
+    "cleanFinishRate": 0.5,
+    "avgCostUsd": 0.27251142500000003,
+    "totalCostUsd": 2.7251142500000003,
+    "avgSeconds": 346.6,
+    "finishedAt": "2026-11-21T18:33:12.656Z"
+  },
+  "results": [
+    {
+      "game": "key-hunt",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 4,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 0,
+      "findings": [],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 93,
+      "errors": [],
+      "costUsd": 0.22686925,
+      "seconds": 386,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\key-hunt-clean-1"
+    },
+    {
+      "game": "gap-run",
+      "variant": "gap",
+      "fault": {
+        "type": "blocker",
+        "label": "Gap 3 is too wide to jump"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 1045,
+            "y": 360
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 365,
+            "y": 360
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 710,
+            "y": 360
+          },
+          "ghosts": 3
+        }
+      ],
+      "deaths": 25,
+      "deathsWhileThinking": 0,
+      "steps": 100,
+      "errors": [
+        "Model returned invalid JSON: {\"confused\": false, \"duration_ms\": 600, \"hold\": [\"ArrowRight\"], \"player\": {\"x\": 201, \"y\": 262}, \"quit\": false, \"tap\": [], \"thought\": \"Landed on teal block, death counter mocking me still rushing right"
+      ],
+      "costUsd": 0.21892275,
+      "seconds": 468,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\gap-run-gap-1"
+    },
+    {
+      "game": "gap-run",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 0,
+      "falseAlarms": 1,
+      "alarmTypes": [
+        "blocker"
+      ],
+      "friction": 2,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 1012,
+            "y": 360
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 697,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 359,
+            "y": 360
+          },
+          "ghosts": 3
+        }
+      ],
+      "deaths": 38,
+      "deathsWhileThinking": 0,
+      "steps": 130,
+      "errors": [],
+      "costUsd": 0.29070125,
+      "seconds": 543,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\gap-run-clean-1"
+    },
+    {
+      "game": "lever-room",
+      "variant": "no-hint",
+      "fault": {
+        "type": "missed",
+        "label": "Hidden lever, no use-key hint"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 1,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "missed",
+        "confusion"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "missed",
+          "severity": "medium",
+          "center": {
+            "x": 64,
+            "y": 226
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F2",
+          "type": "confusion",
+          "severity": "high",
+          "center": {
+            "x": 466,
+            "y": 234
+          },
+          "ghosts": 2
+        }
+      ],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 133,
+      "errors": [],
+      "costUsd": 0.31120225,
+      "seconds": 354,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\lever-room-no-hint-1"
+    },
+    {
+      "game": "lever-room",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 3,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "confusion",
+          "severity": "high",
+          "center": {
+            "x": 489,
+            "y": 271
+          },
+          "ghosts": 4
+        }
+      ],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 105,
+      "errors": [],
+      "costUsd": 0.24147599999999997,
+      "seconds": 445,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\lever-room-clean-1"
+    },
+    {
+      "game": "read-me",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 3,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 2,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 332,
+            "y": 322
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "medium",
+          "center": {
+            "x": 450,
+            "y": 318
+          },
+          "ghosts": 1
+        }
+      ],
+      "deaths": 4,
+      "deathsWhileThinking": 0,
+      "steps": 24,
+      "errors": [],
+      "costUsd": 0.05290500000000001,
+      "seconds": 24,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\read-me-clean-1"
+    },
+    {
+      "game": "key-hunt",
+      "variant": "hidden-key",
+      "fault": {
+        "type": "missed",
+        "label": "The key is nearly invisible"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "missed"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 568,
+            "y": 296
+          },
+          "ghosts": 4
+        }
+      ],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 160,
+      "errors": [],
+      "costUsd": 0.39305049999999997,
+      "seconds": 619,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\key-hunt-hidden-key-1"
+    },
+    {
+      "game": "read-me",
+      "variant": "wrong-key",
+      "fault": {
+        "type": "confusion",
+        "label": "Instructions name the wrong dash key"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker",
+        "missed"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 303,
+            "y": 322
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 240,
+            "y": 286
+          },
+          "ghosts": 4
+        }
+      ],
+      "deaths": 53,
+      "deathsWhileThinking": 0,
+      "steps": 129,
+      "errors": [],
+      "costUsd": 0.302345,
+      "seconds": 226,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\read-me-wrong-key-1"
+    },
+    {
+      "game": "spike-maze",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 0,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 2,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 155,
+            "y": 312
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 506,
+            "y": 88
+          },
+          "ghosts": 2
+        }
+      ],
+      "deaths": 29,
+      "deathsWhileThinking": 0,
+      "steps": 160,
+      "errors": [],
+      "costUsd": 0.39941400000000005,
+      "seconds": 240,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\spike-maze-clean-1"
+    },
+    {
+      "game": "spike-maze",
+      "variant": "hidden-spikes",
+      "fault": {
+        "type": "deaths",
+        "label": "Invisible spikes"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker",
+        "missed"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 155,
+            "y": 312
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 304,
+            "y": 312
+          },
+          "ghosts": 4
+        }
+      ],
+      "deaths": 69,
+      "deathsWhileThinking": 0,
+      "steps": 126,
+      "errors": [],
+      "costUsd": 0.28822825,
+      "seconds": 161,
+      "dir": "runs\\bench-model-spark-2026-11-21T18-13-47-002Z\\spike-maze-hidden-spikes-1"
+    }
+  ]
+}

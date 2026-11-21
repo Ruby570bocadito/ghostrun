@@ -1,0 +1,199 @@
+{
+  "summary": {
+    "label": "model-wonder",
+    "model": "muse-wonder-1.0",
+    "bulletTime": true,
+    "personas": [
+      "newbie",
+      "speedrunner",
+      "reader",
+      "impatient"
+    ],
+    "steps": 40,
+    "runs": 4,
+    "recall": 1,
+    "recallAny": 1,
+    "cleanRunsWithFalseAlarm": 0,
+    "cleanFinishRate": 0.375,
+    "avgCostUsd": 0.426624,
+    "totalCostUsd": 1.706496,
+    "avgSeconds": 188.25,
+    "finishedAt": "2026-11-21T18:40:21.299Z"
+  },
+  "results": [
+    {
+      "game": "gap-run",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 1,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 3,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 361,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 682,
+            "y": 360
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "medium",
+          "center": {
+            "x": 996,
+            "y": 360
+          },
+          "ghosts": 1
+        }
+      ],
+      "deaths": 9,
+      "deathsWhileThinking": 0,
+      "steps": 74,
+      "errors": [
+        "Model returned invalid JSON: Running toward the gap on the right side of the platform.{\"confused\": false, \"duration_ms\": 400, \"hold\": [\"ArrowRight\"], \"player\":  {\"x\": 313, \"y\": 286}, \"quit\": false, \"tap\": [], \"thought\": \"I notice"
+      ],
+      "costUsd": 0.410908,
+      "seconds": 242,
+      "dir": "runs\\bench-model-wonder-2026-11-21T18-33-13-236Z\\gap-run-clean-1"
+    },
+    {
+      "game": "gap-run",
+      "variant": "gap",
+      "fault": {
+        "type": "blocker",
+        "label": "Gap 3 is too wide to jump"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 1063,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 362,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 693,
+            "y": 360
+          },
+          "ghosts": 2
+        }
+      ],
+      "deaths": 20,
+      "deathsWhileThinking": 0,
+      "steps": 101,
+      "errors": [
+        "Model returned invalid JSON: Airborne over the first gap — I'll keep holding right to land on the next platform.{\"confused\": false, \"duration_ms\": 500, \"hold\": [\"ArrowRight\"], \"player\":   {\"x\": 312, \"y\":  192}, \"quit\": false, \"ta"
+      ],
+      "costUsd": 0.578912,
+      "seconds": 291,
+      "dir": "runs\\bench-model-wonder-2026-11-21T18-33-13-236Z\\gap-run-gap-1"
+    },
+    {
+      "game": "key-hunt",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 2,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 0,
+      "findings": [],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 51,
+      "errors": [
+        "Model returned invalid JSON: Starting the maze — heading toward the key at the bottom right.{\"confused\": false, \"duration_ms\": 600, \"hold\": [\"ArrowRight\"], \"player\":  {\"x\":  101, \"y\":  170}, \"quit\": false, \"tap\": [], \"thought\": \"",
+        "Model returned invalid JSON: Annoying — that wall blocks the key, so I'll head up and over it.{\"confused\": false, \"duration_ms\": 600, \"hold\": [\"ArrowUp\"], \"player\":  {\"x\": 350, \"y\": 319}, \"quit\": false, \"tap\": [], \"thought\": \"Key"
+      ],
+      "costUsd": 0.31754000000000004,
+      "seconds": 83,
+      "dir": "runs\\bench-model-wonder-2026-11-21T18-33-13-236Z\\key-hunt-clean-1"
+    },
+    {
+      "game": "key-hunt",
+      "variant": "hidden-key",
+      "fault": {
+        "type": "missed",
+        "label": "The key is nearly invisible"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "missed"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 568,
+            "y": 296
+          },
+          "ghosts": 1
+        }
+      ],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 61,
+      "errors": [
+        "Model returned invalid JSON: Dropping down past the wall tip to duck underneath and shoot left.{\"confused\": false, \"duration_ms\": 600, \"hold\": [\"ArrowDown\"], \"player\":  {\"x\": 238, \"y\": 185}, \"quit\": false, \"tap\": [], \"thought\": \"",
+        "Model returned invalid JSON: Starting the maze — exploring right to look for the key.{\"confused\": false, \"duration_ms\": 600, \"hold\": [\"ArrowRight\", \"ArrowDown\"], \"player\":   {\"x\": 101, \"y\":  121}, \"quit\": false, \"tap\": [], \"thoug",
+        "Model returned invalid JSON: Starting out — heading right to navigate around that first wall.{\"confused\": false, \"duration_ms\": 600, \"hold\": [\"ArrowRight\"], \"player\":  { \"x\": 101, \"y\": 126}, \"quit\": false, \"tap\": [], \"thought\": \""
+      ],
+      "costUsd": 0.399136,
+      "seconds": 137,
+      "dir": "runs\\bench-model-wonder-2026-11-21T18-33-13-236Z\\key-hunt-hidden-key-1"
+    }
+  ]
+}
