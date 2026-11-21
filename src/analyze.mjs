@@ -1,8 +1,14 @@
-// Turns the ghosts' traces into findings. This part uses NO AI: hotspots come from events
-// the game reported (deaths, quits) and from the ghosts' own "confused" flags. The AI only
-// explains hotspots afterwards (explain.mjs), and can only talk about the ones found here.
+// Turns the ghosts' traces into findings. This part uses NO AI. Findings come from:
+//  - deaths the game reported            → blocker (nobody got past) or friction (they did, eventually)
+//  - milestones nobody (or few) reached  → missed  (e.g. nobody found the key)
+//  - where non-finishers ended up        → stuck   (circling the same area until they ran out of moves)
+//  - the ghosts' own "confused" flags    → confusion
+// The AI only explains findings afterwards (explain.mjs) and can only talk about the ones found here.
 
 const mean = (a) => a.reduce((s, v) => s + v, 0) / Math.max(1, a.length);
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const SEVERITY_RANK = { high: 0, medium: 1, low: 2 };
+const TYPE_RANK = { blocker: 0, missed: 1, stuck: 2, confusion: 3, friction: 4 };
 
 function frameAt(frames, pageT) {
   // Last frame recorded at or before pageT (frames are in time order).
@@ -19,40 +25,61 @@ function frameAt(frames, pageT) {
   return best;
 }
 
-function clipAround(frames, pageT, beforeMs = 1600, afterMs = 300) {
-  const from = frameAt(frames, pageT - beforeMs);
-  const to = Math.min(frames.length - 1, frameAt(frames, pageT + afterMs));
-  return [from, to];
+const clipAround = (frames, pageT, beforeMs = 1600, afterMs = 300) => [
+  frameAt(frames, pageT - beforeMs),
+  Math.min(frames.length - 1, frameAt(frames, pageT + afterMs)),
+];
+
+/** Single-linkage clustering in 2D. */
+export function cluster2d(points, radius) {
+  const parent = points.map((_, i) => i);
+  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  for (let i = 0; i < points.length; i++)
+    for (let j = i + 1; j < points.length; j++) if (dist(points[i], points[j]) <= radius) parent[find(i)] = find(j);
+  const groups = new Map();
+  points.forEach((p, i) => {
+    const r = find(i);
+    if (!groups.has(r)) groups.set(r, []);
+    groups.get(r).push(p);
+  });
+  return [...groups.values()];
 }
 
-function cluster(points, gap) {
-  const sorted = [...points].sort((a, b) => a.x - b.x);
-  const groups = [];
-  for (const p of sorted) {
-    const g = groups.at(-1);
-    if (g && p.x - g.at(-1).x <= gap) g.push(p);
-    else groups.push([p]);
-  }
-  return groups;
+function bbox(points, pad, W, H) {
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  return {
+    x0: Math.max(0, Math.round(Math.min(...xs) - pad)),
+    y0: Math.max(0, Math.round(Math.min(...ys) - pad)),
+    x1: Math.min(W, Math.round(Math.max(...xs) + pad)),
+    y1: Math.min(H, Math.round(Math.max(...ys) + pad)),
+  };
 }
 
-function severity(share, count) {
+export const intersects = (a, b) => a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1;
+
+function frictionSeverity(share, count) {
   if (share >= 0.5 || count >= 6) return 'high';
   if (share >= 0.25 || count >= 3) return 'medium';
   return 'low';
 }
 
-export function analyze(traces, { gapPx = 70 } = {}) {
+function stepAt(trace, frameIndex) {
+  return trace.steps.find((s) => s.frames && frameIndex >= s.frames[0] && frameIndex <= s.frames[1]) ?? null;
+}
+
+export function analyze(traces, { deathRadius = 70, stuckRadius = 90 } = {}) {
   const ghostsTotal = traces.length;
   const states = traces.flatMap((t) => t.frames.map((f) => f.state).filter(Boolean));
   const worldW = Math.max(1, ...states.map((s) => s.worldW ?? 0));
   const worldH = Math.max(1, ...states.map((s) => s.worldH ?? 0));
   const hasPositions = states.some((s) => Number.isFinite(s.x));
+  const declaredMilestones = states.find((s) => Array.isArray(s.milestones))?.milestones ?? [];
+  const posOf = (f) => ({ x: f.state.x, y: Math.min(worldH, f.state.y) });
 
   const ghosts = traces.map((t) => {
     const xs = t.frames.map((f) => f.state?.x).filter(Number.isFinite);
-    const tokensIn = t.steps.reduce((a, s) => a + (s.usage?.input ?? 0), 0);
-    const tokensOut = t.steps.reduce((a, s) => a + (s.usage?.output ?? 0), 0);
+    const milestones = [...new Set(t.events.filter((e) => e.type === 'milestone').map((e) => e.name))];
     return {
       persona: t.persona,
       outcome: t.outcome,
@@ -60,62 +87,191 @@ export function analyze(traces, { gapPx = 70 } = {}) {
       model: t.steps.at(-1)?.model ?? t.model,
       steps: t.steps.length,
       deaths: t.events.filter((e) => e.type === 'death').length,
+      milestones,
       maxX: xs.length ? Math.max(...xs) : null,
-      progress: xs.length ? Math.min(1, Math.max(...xs) / worldW) : null,
+      progress:
+        t.outcome === 'won'
+          ? 1
+          : declaredMilestones.length
+            ? milestones.length / (declaredMilestones.length + 1)
+            : xs.length
+              ? Math.min(1, Math.max(...xs) / worldW)
+              : null,
       gameMs: t.gameMs,
-      tokensIn,
-      tokensOut,
+      tokensIn: t.steps.reduce((a, s) => a + (s.usage?.input ?? 0), 0),
+      tokensOut: t.steps.reduce((a, s) => a + (s.usage?.output ?? 0), 0),
       avgLatencyMs: Math.round(mean(t.steps.map((s) => s.latencyMs))),
       confusedSteps: t.steps.filter((s) => s.confused).length,
     };
   });
+  const active = ghosts.filter((g) => g.outcome !== 'error');
+  const findings = [];
 
-  // Deaths → hotspots
+  // 1) Deaths → blocker / friction
   const deaths = [];
   for (const t of traces) {
-    for (const e of t.events.filter((ev) => ev.type === 'death')) {
+    for (const e of t.events.filter((ev) => ev.type === 'death' && Number.isFinite(ev.x))) {
       const step = t.steps.find((s) => s.step === e.step);
+      const approach = t.frames.filter((f) => f.state && f.pageT >= e.t - 600 && f.pageT <= e.t).map(posOf);
       deaths.push({
         persona: t.persona,
         x: e.x,
-        y: e.y,
+        y: Math.min(worldH, e.y),
+        approach,
         step: e.step,
-        frame: frameAt(t.frames, e.t),
         clip: clipAround(t.frames, e.t),
         thought: step?.thought ?? '',
       });
     }
   }
-  const hotspots = cluster(deaths.filter((d) => Number.isFinite(d.x)), gapPx).map((g, i) => {
+  for (const g of cluster2d(deaths, deathRadius)) {
     const personas = [...new Set(g.map((d) => d.persona))];
-    // One clip per ghost, the first time it died here.
-    const evidence = personas.map((p) => g.find((d) => d.persona === p));
-    const quotes = [...new Set(g.map((d) => d.thought).filter(Boolean))].slice(0, 6);
-    const x0 = Math.round(g[0].x);
-    const x1 = Math.round(g.at(-1).x);
-    // Blocker = every ghost that reached this spot stayed stuck before it; friction = they died but got through.
-    const reached = ghosts.filter((gh) => gh.maxX != null && gh.maxX >= x0 - 40).map((gh) => gh.persona);
-    const passed = ghosts.filter((gh) => gh.maxX != null && gh.maxX > x1 + 60).map((gh) => gh.persona);
+    const region = bbox([...g, ...g.flatMap((d) => d.approach)], 24, worldW, worldH);
+    const inside = (p) => p.x >= region.x0 - 20 && p.x <= region.x1 + 20 && p.y >= region.y0 - 20 && p.y <= region.y1 + 20;
+    const reached = traces
+      .filter((t) => t.outcome !== 'error' && t.frames.some((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f))))
+      .map((t) => t.persona);
+    // "Got past" = was later seen beyond the far edge of the danger zone (side-scrollers) or finished.
+    const passed = ghosts
+      .filter((gh) => gh.outcome === 'won' || (gh.maxX != null && worldW > 700 && gh.maxX > region.x1 + 40))
+      .map((gh) => gh.persona);
     const type = reached.length > 0 && passed.length === 0 ? 'blocker' : 'friction';
-    return {
-      id: `H${i + 1}`,
-      kind: 'deaths',
+    findings.push({
       type,
-      x: Math.round(mean(g.map((d) => d.x))),
-      x0,
-      x1,
+      severity: type === 'blocker' ? 'high' : frictionSeverity(personas.length / ghostsTotal, g.length),
+      center: { x: Math.round(mean(g.map((d) => d.x))), y: Math.round(mean(g.map((d) => d.y))) },
+      region,
       count: g.length,
       ghosts: personas,
       share: personas.length / ghostsTotal,
       reached,
       passed,
-      severity: type === 'blocker' ? 'high' : severity(personas.length / ghostsTotal, g.length),
-      evidence,
-      quotes,
-    };
-  });
+      evidence: personas.map((p) => {
+        const d = g.find((x) => x.persona === p);
+        return { persona: p, step: d.step, clip: d.clip, thought: d.thought };
+      }),
+      quotes: [...new Set(g.map((d) => d.thought).filter(Boolean))].slice(0, 6),
+    });
+  }
 
-  // Ghosts that gave up
+  // 2) Milestones few or no ghosts reached → missed (only the first one: later ones are consequences)
+  for (const m of declaredMilestones) {
+    const reachedBy = ghosts.filter((g) => g.milestones.includes(m.name)).map((g) => g.persona);
+    if (!active.length || reachedBy.length >= Math.ceil(active.length / 2)) continue;
+    const missedBy = active.filter((g) => !reachedBy.includes(g.persona));
+    const evidence = missedBy.map((g) => {
+      const t = traces.find((tr) => tr.persona === g.persona);
+      // Their closest approach to the objective.
+      let best = null;
+      t.frames.forEach((f, i) => {
+        if (!f.state || !Number.isFinite(f.state.x)) return;
+        const d = dist(posOf(f), m);
+        if (!best || d < best.d) best = { d, i, pageT: f.pageT };
+      });
+      const s = best ? stepAt(t, best.i) : null;
+      return {
+        persona: g.persona,
+        step: s?.step ?? null,
+        clip: best ? clipAround(t.frames, best.pageT, 1500, 1500) : [0, 0],
+        thought: s?.thought ?? '',
+        closest: best ? Math.round(best.d) : null,
+      };
+    });
+    findings.push({
+      type: 'missed',
+      severity: reachedBy.length === 0 ? 'high' : 'medium',
+      milestone: m.name,
+      center: { x: m.x, y: m.y },
+      region: { x0: Math.max(0, m.x - 70), y0: Math.max(0, m.y - 70), x1: Math.min(worldW, m.x + 70), y1: Math.min(worldH, m.y + 70) },
+      count: missedBy.length,
+      ghosts: missedBy.map((g) => g.persona),
+      share: missedBy.length / ghostsTotal,
+      reachedBy,
+      evidence,
+      quotes: [...new Set(evidence.map((e) => e.thought).filter(Boolean))].slice(0, 6),
+    });
+    break;
+  }
+
+  // 3) Where ghosts that did not finish ended up circling → stuck
+  const zones = [];
+  for (const t of traces) {
+    if (!['out_of_steps', 'quit', 'stopped'].includes(t.outcome)) continue;
+    const withPos = t.frames.map((f, i) => ({ f, i })).filter(({ f }) => f.state && Number.isFinite(f.state.x));
+    const tail = withPos.slice(-Math.max(20, Math.floor(withPos.length * 0.4)));
+    if (tail.length < 10) continue;
+    const pts = tail.map(({ f, i }) => ({ ...posOf(f), i }));
+    const main = cluster2d(pts, stuckRadius).sort((a, b) => b.length - a.length)[0];
+    if (main.length < tail.length * 0.5) continue; // still moving around a lot: not stuck
+    const last = main.at(-1).i;
+    const s = stepAt(t, last);
+    zones.push({
+      persona: t.persona,
+      x: mean(main.map((p) => p.x)),
+      y: mean(main.map((p) => p.y)),
+      points: main,
+      clip: [Math.max(0, last - 30), last],
+      thought: s?.thought ?? t.steps.at(-1)?.thought ?? '',
+      step: s?.step ?? null,
+    });
+  }
+  for (const g of cluster2d(zones, 140)) {
+    const region = bbox(g.flatMap((z) => z.points), 20, worldW, worldH);
+    const overlapping = findings.find((f) => intersects(f.region, region));
+    if (overlapping) {
+      overlapping.stuckGhosts = [...new Set([...(overlapping.stuckGhosts ?? []), ...g.map((z) => z.persona)])];
+      continue;
+    }
+    const personas = [...new Set(g.map((z) => z.persona))];
+    if (personas.length < 2) continue; // one ghost struggling alone is noise, not a finding
+    findings.push({
+      type: 'stuck',
+      severity: personas.length / ghostsTotal >= 0.5 ? 'high' : 'medium',
+      center: { x: Math.round(mean(g.map((z) => z.x))), y: Math.round(mean(g.map((z) => z.y))) },
+      region,
+      count: personas.length,
+      ghosts: personas,
+      share: personas.length / ghostsTotal,
+      evidence: g.map((z) => ({ persona: z.persona, step: z.step, clip: z.clip, thought: z.thought })),
+      quotes: [...new Set(g.map((z) => z.thought).filter(Boolean))].slice(0, 6),
+    });
+  }
+
+  // 4) Several ghosts confused in the same area → confusion
+  const confusedPoints = traces.flatMap((t) =>
+    t.steps
+      .filter((s) => s.confused && Number.isFinite(s.after?.x ?? s.before?.x))
+      .map((s) => ({ persona: t.persona, x: s.after?.x ?? s.before.x, y: Math.min(worldH, s.after?.y ?? s.before?.y ?? 0), step: s.step, thought: s.thought, clip: s.frames })),
+  );
+  for (const g of cluster2d(confusedPoints, stuckRadius * 1.5)) {
+    const personas = [...new Set(g.map((p) => p.persona))];
+    if (personas.length < 2 && g.length < 3) continue;
+    const region = bbox(g, 40, worldW, worldH);
+    const overlapping = findings.find((f) => intersects(f.region, region));
+    if (overlapping) {
+      overlapping.confusedGhosts = [...new Set([...(overlapping.confusedGhosts ?? []), ...personas])];
+      overlapping.quotes = [...new Set([...overlapping.quotes, ...g.map((p) => p.thought)])].slice(0, 8);
+      continue;
+    }
+    findings.push({
+      type: 'confusion',
+      severity: personas.length / ghostsTotal >= 0.5 ? 'high' : 'medium',
+      center: { x: Math.round(mean(g.map((p) => p.x))), y: Math.round(mean(g.map((p) => p.y))) },
+      region,
+      count: g.length,
+      ghosts: personas,
+      share: personas.length / ghostsTotal,
+      evidence: personas.map((p) => {
+        const c = g.find((x) => x.persona === p);
+        return { persona: p, step: c.step, clip: c.clip, thought: c.thought };
+      }),
+      quotes: [...new Set(g.map((p) => p.thought))].slice(0, 6),
+    });
+  }
+
+  findings.sort((a, b) => TYPE_RANK[a.type] - TYPE_RANK[b.type] || SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.share - a.share || b.count - a.count);
+  findings.forEach((f, i) => (f.id = `F${i + 1}`));
+
   const quits = traces
     .filter((t) => t.outcome === 'quit')
     .map((t) => {
@@ -123,24 +279,7 @@ export function analyze(traces, { gapPx = 70 } = {}) {
       return { persona: t.persona, step: s.step, x: s.after?.x ?? null, thought: s.thought, clip: s.frames };
     });
 
-  // Moments where ghosts said they were confused
-  const confusedPoints = traces.flatMap((t) =>
-    t.steps.filter((s) => s.confused).map((s) => ({ persona: t.persona, x: s.after?.x ?? s.before?.x, step: s.step, thought: s.thought, clip: s.frames })),
-  );
-  const confusion = cluster(confusedPoints.filter((p) => Number.isFinite(p.x)), gapPx * 2).map((g, i) => ({
-    id: `C${i + 1}`,
-    kind: 'confusion',
-    x: Math.round(mean(g.map((p) => p.x))),
-    count: g.length,
-    ghosts: [...new Set(g.map((p) => p.persona))],
-    quotes: [...new Set(g.map((p) => p.thought))].slice(0, 4),
-    evidence: g.slice(0, 3),
-  }));
-
-  // Heat: where ghosts spent their time (one sample per recorded frame)
-  const heat = traces.flatMap((t) =>
-    t.frames.filter((f) => Number.isFinite(f.state?.x)).map((f) => ({ x: Math.round(f.state.x), y: Math.round(f.state.y), persona: t.persona })),
-  );
+  const milestones = declaredMilestones.map((m) => ({ ...m, reachedBy: ghosts.filter((g) => g.milestones.includes(m.name)).map((g) => g.persona) }));
 
   return {
     worldW,
@@ -148,12 +287,11 @@ export function analyze(traces, { gapPx = 70 } = {}) {
     hasPositions,
     ghostsTotal,
     ghosts,
-    hotspots: hotspots
-      .sort((a, b) => (b.type === 'blocker') - (a.type === 'blocker') || b.share - a.share || b.count - a.count)
-      .map((h, i) => ({ ...h, rank: i + 1 })),
+    findings,
+    hotspots: findings, // backwards-compatible name used by older reports
+    milestones,
     deaths: deaths.map(({ persona, x, y, step }) => ({ persona, x, y, step })),
     quits,
-    confusion,
-    heat,
+    heat: traces.flatMap((t) => t.frames.filter((f) => f.state && Number.isFinite(f.state.x)).map((f) => ({ ...posOf(f), persona: t.persona }))),
   };
 }

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
+export const TYPE_LABEL = { blocker: 'Blocker', friction: 'Friction', missed: 'Missed objective', stuck: 'Stuck', confusion: 'Confusing' };
+
 const SCREEN_W = 640;
 const SCREEN_H = 360;
 const HUD_BAND = 34; // top strip with the game's fixed HUD; left out of the stitched level
@@ -97,20 +99,23 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect })
     <div className="heatmap" style={{ aspectRatio: `${W} / ${H}` }}>
       <canvas ref={baseRef} width={W} height={H} className={stitched ? 'ready' : ''} />
       <canvas ref={heatRef} width={W} height={H} />
-      {report.hotspots.map((h) => (
-        <button
-          key={h.id}
-          type="button"
-          className={`hot-band ${h.type} ${selected === h.id ? 'selected' : ''}`}
-          style={{ left: `${((h.x0 - 30) / W) * 100}%`, width: `${((h.x1 - h.x0 + 60) / W) * 100}%` }}
-          onClick={() => onSelect(h.id)}
-          aria-label={`${h.type} ${h.id}: ${h.count} deaths`}
-        >
-          <span className="hot-tag">
-            {h.type === 'blocker' ? 'Blocker' : 'Friction'} · {h.ghosts.length}/{report.ghostsTotal}
-          </span>
-        </button>
-      ))}
+      {(report.findings ?? report.hotspots).map((h) => {
+        const r = h.region ?? { x0: h.x0 - 30, x1: h.x1 + 30, y0: 0, y1: H };
+        return (
+          <button
+            key={h.id}
+            type="button"
+            className={`hot-band ${h.type} ${selected === h.id ? 'selected' : ''}`}
+            style={{ left: `${(r.x0 / W) * 100}%`, width: `${((r.x1 - r.x0) / W) * 100}%`, top: `${(r.y0 / H) * 100}%`, height: `${((r.y1 - r.y0) / H) * 100}%` }}
+            onClick={() => onSelect(h.id)}
+            aria-label={`${TYPE_LABEL[h.type] ?? h.type}: ${h.ghosts.length} of ${report.ghostsTotal} ghosts`}
+          >
+            <span className="hot-tag">
+              {TYPE_LABEL[h.type] ?? h.type} · {h.ghosts.length}/{report.ghostsTotal}
+            </span>
+          </button>
+        );
+      })}
       {!stitched && <div className="heatmap-loading">Rebuilding the level from the ghosts' frames…</div>}
     </div>
   );

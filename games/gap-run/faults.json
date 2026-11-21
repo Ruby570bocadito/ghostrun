@@ -1,0 +1,9 @@
+{
+  "gap": {
+    "label": "Gap 3 is too wide to jump",
+    "type": "blocker",
+    "region": { "x0": 880, "y0": 150, "x1": 1180, "y1": 360 },
+    "milestone": null,
+    "description": "The third gap is 200 px wide but a running jump only covers about 150 px, so nobody can cross it."
+  }
+}

@@ -19,12 +19,13 @@ export async function runSwarm({
   controlsHint,
   outDir,
   onEvent = () => {},
+  bulletTime = true,
   signal,
 }) {
   await mkdir(outDir, { recursive: true });
   const browser = await chromium.launch();
   const started = Date.now();
-  const config = { url, personas, steps, brain, model, fallbackModel, reasoning };
+  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
@@ -47,6 +48,7 @@ export async function runSwarm({
           persona,
           maxSteps: steps,
           outDir: join(outDir, id),
+          bulletTime,
           signal,
           onFrame: (f) => onEvent({ type: 'frame', ghost: id, t: f.t, file: `${id}/${f.file}`, state: f.state }),
           onStep: (s) => onEvent({ type: 'step', ghost: id, step: s }),

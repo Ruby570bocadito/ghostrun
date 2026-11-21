@@ -15,6 +15,8 @@
     "serve": "node scripts/serve.mjs",
     "ghost": "node src/cli.mjs",
     "swarm": "node src/swarm-cli.mjs",
+    "bench": "node bench/run.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
     "spike": "node src/spike-clock.mjs"
   },
   "dependencies": {

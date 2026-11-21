@@ -51,8 +51,10 @@ export async function runGhost({
   onStep = () => {},
   onFrame = () => {},
   stopOnWin = true,
+  bulletTime = true, // false = the game keeps running while the brain thinks (baseline for the A2 experiment)
   signal,
 }) {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await mkdir(join(outDir, 'frames'), { recursive: true });
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   const page = await context.newPage();
@@ -87,7 +89,8 @@ export async function runGhost({
     let left = ms;
     while (left > 0) {
       const slice = Math.min(frameEveryMs, left);
-      await page.clock.runFor(slice);
+      if (bulletTime) await page.clock.runFor(slice);
+      else await sleep(slice); // real time: the game runs on its own
       gameMs += slice;
       left -= slice;
       await capture();
@@ -106,6 +109,8 @@ export async function runGhost({
     const now = await page.evaluate(() => Date.now());
     await page.clock.pauseAt(now + 10);
     await page.clock.runFor(1500); // let the game boot inside game time
+    if (!bulletTime) await page.clock.resume(); // from now on game time flows in real time
+    trace.bulletTime = bulletTime;
 
     const canvas = await page.evaluate(() => {
       const c = document.querySelector('canvas');
@@ -127,7 +132,9 @@ export async function runGhost({
       }
       const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
       const before = (await readState(page)).state;
+      const thinkStart = performance.now();
       const decision = await brain.decide({ screenshot: shot, history, step });
+      if (!bulletTime) gameMs += Math.round(performance.now() - thinkStart); // the game kept running meanwhile
       const move = sanitizeMove(decision.move);
       const t0 = gameMs;
       const frameFrom = trace.frames.length;

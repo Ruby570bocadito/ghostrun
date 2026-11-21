@@ -27,8 +27,8 @@ const MOVE_SCHEMA = {
     },
     tap: {
       type: 'array',
-      description: 'Keys to tap once at the start of the action (for example Space to jump).',
-      items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter'] },
+      description: 'Keys to tap once at the start of the action (for example Space to jump, or a letter key the game tells you to use).',
+      items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ'] },
     },
     duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms.' },
     confused: { type: 'boolean', description: 'True if you do not understand what to do or why something happened.' },

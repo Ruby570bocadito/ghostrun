@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GhostIcon, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
-import { Heatmap } from './Heatmap.jsx';
+import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
+
+const CRITICAL = ['blocker', 'missed', 'stuck'];
 
 function useTraces(runId, personaIds) {
   const [traces, setTraces] = useState([]);
@@ -23,18 +25,55 @@ function clipFrames(runId, trace, [from, to]) {
   return trace.frames.slice(from, to + 1).map((f) => `/runs/${runId}/${trace.persona}/${f.file}`);
 }
 
-function Finding({ h, card, report, runId, byPersona, personas, selected }) {
-  const [who, setWho] = useState(h.evidence[0]?.persona);
-  const ev = h.evidence.find((e) => e.persona === who) ?? h.evidence[0];
+function statLine(f, report) {
+  const n = `${f.ghosts.length}/${report.ghostsTotal} ghosts`;
+  switch (f.type) {
+    case 'blocker':
+    case 'friction':
+      return `${n} died here · ${f.count} deaths · ${f.passed.length}/${f.reached.length} got past`;
+    case 'missed':
+      return `Objective “${f.milestone}” reached by ${f.reachedBy.length}/${report.ghostsTotal} ghosts`;
+    case 'stuck':
+      return `${n} spent their last moves circling here`;
+    case 'confusion':
+      return `${n} said they were confused here (${f.count} times)`;
+    default:
+      return n;
+  }
+}
+
+function provenance(f) {
+  switch (f.type) {
+    case 'blocker':
+    case 'friction':
+      return `Found from ${f.count} death events the game reported, no AI involved.`;
+    case 'missed':
+      return `Found from the game's objective events: ${f.ghosts.length} ghost(s) never triggered “${f.milestone}”. No AI involved.`;
+    case 'stuck':
+      return 'Found from where the ghosts spent their last moves, no AI involved.';
+    case 'confusion':
+      return "Found from the ghosts' own “confused” flags, grouped by position.";
+    default:
+      return '';
+  }
+}
+
+function Finding({ f, card, report, runId, byPersona, personas, selected }) {
+  const [who, setWho] = useState(f.evidence[0]?.persona);
+  const ev = f.evidence.find((e) => e.persona === who) ?? f.evidence[0];
   const frames = useMemo(() => clipFrames(runId, byPersona[ev?.persona], ev?.clip ?? [0, 0]), [runId, byPersona, ev]);
-  const blocker = h.type === 'blocker';
+  const extra = [
+    f.stuckGhosts?.length ? `${f.stuckGhosts.length} ended their run stuck here` : null,
+    f.confusedGhosts?.length ? `${f.confusedGhosts.length} said they were confused here` : null,
+  ].filter(Boolean);
   return (
-    <article id={`f-${h.id}`} className={`finding ${h.type} ${selected ? 'selected' : ''}`}>
+    <article id={`f-${f.id}`} className={`finding ${f.type} ${selected ? 'selected' : ''}`}>
       <div className="finding-main">
-        <span className={`badge ${h.type}`}>{blocker ? 'Blocker' : 'Friction'}</span>
-        <h3>{card?.title ?? `${h.count} deaths around x=${h.x}`}</h3>
+        <span className={`badge ${f.type}`}>{TYPE_LABEL[f.type] ?? f.type}</span>
+        <h3>{card?.title ?? `${TYPE_LABEL[f.type]} around (${f.center.x}, ${f.center.y})`}</h3>
         <p className="stat-line mono">
-          {h.ghosts.length}/{report.ghostsTotal} ghosts died here · {h.count} deaths · {h.passed.length}/{h.reached.length} got past
+          {statLine(f, report)}
+          {extra.length ? ` · ${extra.join(' · ')}` : ''}
         </p>
         {card && (
           <dl className="card-fields">
@@ -47,17 +86,20 @@ function Finding({ h, card, report, runId, byPersona, personas, selected }) {
           </dl>
         )}
         <ul className="quotes">
-          {h.evidence.slice(0, 3).map((e) => (
-            <li key={e.persona}>
-              <GhostIcon color={personas[e.persona]?.color} size={16} />
-              <span>“{e.thought}”</span>
-            </li>
-          ))}
+          {f.evidence
+            .filter((e) => e.thought)
+            .slice(0, 3)
+            .map((e) => (
+              <li key={e.persona}>
+                <GhostIcon color={personas[e.persona]?.color} size={16} />
+                <span>“{e.thought}”</span>
+              </li>
+            ))}
         </ul>
       </div>
       <div className="finding-clip">
         <div className="clip-tabs" role="tablist" aria-label="Whose replay">
-          {h.evidence.map((e) => (
+          {f.evidence.map((e) => (
             <button
               key={e.persona}
               role="tab"
@@ -70,10 +112,10 @@ function Finding({ h, card, report, runId, byPersona, personas, selected }) {
             </button>
           ))}
         </div>
-        <Clip frames={frames} label={`Replay of ${personas[ev?.persona]?.name} at ${h.id}`} />
+        <Clip frames={frames} label={`Replay of ${personas[ev?.persona]?.name} for ${f.id}`} />
       </div>
       <p className="provenance">
-        Found from {h.count} death events the game reported, no AI involved. {card ? `Explanation written by ${card.model} from the ghosts' words and the screen.` : ''}
+        {provenance(f)} {card ? `Explanation written by ${card.model} from the ghosts' words and the screen.` : ''}
       </p>
     </article>
   );
@@ -81,16 +123,18 @@ function Finding({ h, card, report, runId, byPersona, personas, selected }) {
 
 export function Report({ run, runId, personas, onHome, onRerun }) {
   const report = run.report;
+  const findings = report.findings ?? report.hotspots;
   const personaIds = report.ghosts.map((g) => g.persona);
   const traces = useTraces(runId, personaIds);
   const byPersona = useMemo(() => Object.fromEntries(traces.map((t) => [t.persona, t])), [traces]);
-  const [selected, setSelected] = useState(report.hotspots[0]?.id ?? null);
+  const [selected, setSelected] = useState(findings[0]?.id ?? null);
   const [rerunError, setRerunError] = useState(null);
   const url = report.config?.url ?? '';
-  const host = url ? new URL(url).host + new URL(url).pathname + new URL(url).search : '';
+  const target = url ? new URL(url) : null;
+  const host = target ? target.host + target.pathname + target.search : '';
 
-  const blockers = report.hotspots.filter((h) => h.type === 'blocker').length;
-  const friction = report.hotspots.length - blockers;
+  const critical = findings.filter((f) => CRITICAL.includes(f.type) && f.severity === 'high').length;
+  const minor = findings.length - critical;
   const finished = report.ghosts.filter((g) => g.outcome === 'won').length;
 
   const select = (id) => {
@@ -115,7 +159,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       <section className="panel center">
         <h2>The ghosts could not play this game</h2>
         <p className="muted">{report.failure.message}</p>
-        <p className="muted small">Nothing was charged for gameplay. Check that the link opens a playable web game (HTML5 canvas).</p>
+        <p className="muted small">Check that the link opens a playable web game (HTML5 canvas).</p>
         <button className="btn-primary" onClick={onHome}>
           Try another link
         </button>
@@ -142,13 +186,13 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       {rerunError && <p className="form-error">{rerunError}</p>}
 
       <div className="summary">
-        <div className={`stat ${blockers ? 'bad' : 'good'}`}>
-          <b>{blockers}</b>
-          <span>blocker{blockers === 1 ? '' : 's'}</span>
+        <div className={`stat ${critical ? 'bad' : 'good'}`}>
+          <b>{critical}</b>
+          <span>critical issue{critical === 1 ? '' : 's'}</span>
         </div>
         <div className="stat">
-          <b>{friction}</b>
-          <span>friction spot{friction === 1 ? '' : 's'}</span>
+          <b>{minor}</b>
+          <span>other finding{minor === 1 ? '' : 's'}</span>
         </div>
         <div className="stat">
           <b>
@@ -170,11 +214,30 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </div>
       </div>
 
+      {report.milestones?.length > 0 && (
+        <ol className="milestones">
+          {report.milestones.map((m) => (
+            <li key={m.name} className={m.reachedBy.length ? '' : 'none'}>
+              <span className="mono">{m.name}</span>
+              <b>
+                {m.reachedBy.length}/{report.ghostsTotal}
+              </b>
+            </li>
+          ))}
+          <li className={finished ? '' : 'none'}>
+            <span className="mono">finish</span>
+            <b>
+              {finished}/{report.ghostsTotal}
+            </b>
+          </li>
+        </ol>
+      )}
+
       {report.hasPositions ? (
         <div className="heat-wrap">
           <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} onSelect={select} />
           <p className="legend small muted">
-            Level rebuilt from the ghosts' frames · red glow = where ghosts spent time · ✕ = deaths (ghost color) · click a band to see its replay
+            Level rebuilt from the ghosts' frames · red glow = where ghosts spent time · ✕ = deaths (ghost color) · click a box to see its replay
           </p>
         </div>
       ) : (
@@ -182,17 +245,17 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       )}
 
       <div className="findings">
-        {report.hotspots.length === 0 && <p className="panel">No hotspots: no ghost died twice in the same place.</p>}
-        {report.hotspots.map((h) => (
+        {findings.length === 0 && <p className="panel">No findings: no place where ghosts died repeatedly, got stuck or got confused.</p>}
+        {findings.map((f) => (
           <Finding
-            key={h.id}
-            h={h}
-            card={report.cards?.find((c) => c.hotspot === h.id)}
+            key={f.id}
+            f={f}
+            card={report.cards?.find((c) => c.hotspot === f.id)}
             report={report}
             runId={runId}
             byPersona={byPersona}
             personas={personas}
-            selected={selected === h.id}
+            selected={selected === f.id}
           />
         ))}
         {report.quits.map((q) => (
@@ -241,8 +304,9 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       </div>
 
       <p className="method small muted">
-        How this was made: each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). Deaths and positions come from the game;
-        hotspots are grouped by position without AI. A hotspot is a blocker when no ghost that reached it got past.
+        How this was made: each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). Deaths, objectives and positions
+        come from the game; findings are grouped by position without AI. A blocker is a spot no ghost that reached it got past. The AI only writes the explanation of each
+        finding.
       </p>
     </section>
   );
