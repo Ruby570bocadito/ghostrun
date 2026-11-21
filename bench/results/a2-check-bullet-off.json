@@ -1,0 +1,73 @@
+{
+  "summary": {
+    "label": "a2-check-bullet-off",
+    "model": "muse-ember-1.0",
+    "bulletTime": false,
+    "personas": [
+      "newbie",
+      "speedrunner",
+      "reader",
+      "impatient"
+    ],
+    "steps": 40,
+    "runs": 1,
+    "recall": 0,
+    "recallAny": 0,
+    "cleanRunsWithFalseAlarm": 0,
+    "cleanFinishRate": 0.75,
+    "avgCostUsd": 0.023638000000000003,
+    "totalCostUsd": 0.023638000000000003,
+    "avgSeconds": 65,
+    "finishedAt": "2026-11-21T17:19:07.692Z"
+  },
+  "results": [
+    {
+      "game": "gap-run",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 3,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 3,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 983,
+            "y": 360
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 667,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "medium",
+          "center": {
+            "x": 358,
+            "y": 360
+          },
+          "ghosts": 1
+        }
+      ],
+      "deaths": 35,
+      "errors": [],
+      "costUsd": 0.023638000000000003,
+      "seconds": 65,
+      "dir": "runs\\bench-a2-check-bullet-off-2026-11-21T17-18-02-801Z\\gap-run-clean-1"
+    }
+  ]
+}

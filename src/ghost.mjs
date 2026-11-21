@@ -85,12 +85,24 @@ export async function runGhost({
   };
 
   const advance = async (ms) => {
-    // Step the frozen clock in small slices so we can record frames for clips and heatmaps.
+    if (!bulletTime) {
+      // Real time: the game runs on its own. Measure the real clock so the keys are held for exactly
+      // `ms` (taking screenshots also takes time, which must count).
+      const start = performance.now();
+      for (;;) {
+        const left = ms - (performance.now() - start);
+        if (left <= 0) break;
+        await sleep(Math.min(frameEveryMs, left));
+        await capture();
+      }
+      gameMs += Math.round(performance.now() - start);
+      return;
+    }
+    // Bullet time: step the frozen clock in small slices so we can record frames for clips and heatmaps.
     let left = ms;
     while (left > 0) {
       const slice = Math.min(frameEveryMs, left);
-      if (bulletTime) await page.clock.runFor(slice);
-      else await sleep(slice); // real time: the game runs on its own
+      await page.clock.runFor(slice);
       gameMs += slice;
       left -= slice;
       await capture();
@@ -106,8 +118,17 @@ export async function runGhost({
       throw Object.assign(new Error(`Could not open the game: ${err.message.split('\n')[0]}`), { kind: 'game_unreachable' });
     }
     if (res && !res.ok()) throw Object.assign(new Error(`The game URL answered HTTP ${res.status()}`), { kind: 'game_unreachable' });
-    const now = await page.evaluate(() => Date.now());
-    await page.clock.pauseAt(now + 10);
+    // Freeze the game clock. The fake clock keeps flowing until paused, so pause a little ahead of
+    // "now" (with several browsers busy, reading the time and pausing can be >10 ms apart).
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const now = await page.evaluate(() => Date.now());
+        await page.clock.pauseAt(now + 500 * attempt);
+        break;
+      } catch (err) {
+        if (attempt >= 4 || !/past/i.test(err.message)) throw err;
+      }
+    }
     await page.clock.runFor(1500); // let the game boot inside game time
     if (!bulletTime) await page.clock.resume(); // from now on game time flows in real time
     trace.bulletTime = bulletTime;
@@ -133,7 +154,9 @@ export async function runGhost({
       const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
       const before = (await readState(page)).state;
       const thinkStart = performance.now();
+      const pageThinkStart = bulletTime ? null : await page.evaluate(() => performance.now());
       const decision = await brain.decide({ screenshot: shot, history, step });
+      const pageThinkEnd = bulletTime ? null : await page.evaluate(() => performance.now());
       if (!bulletTime) gameMs += Math.round(performance.now() - thinkStart); // the game kept running meanwhile
       const move = sanitizeMove(decision.move);
       const t0 = gameMs;
@@ -152,7 +175,11 @@ export async function runGhost({
       const after = (await readState(page)).state;
       const events = await readEvents(page, eventCount);
       eventCount += events.length;
-      for (const e of events) trace.events.push({ ...e, step, persona: persona.id });
+      for (const e of events) {
+        // In real-time mode, a death between pageThinkStart and pageThinkEnd happened while the AI was still deciding.
+        const duringThink = pageThinkStart != null && e.t >= pageThinkStart && e.t <= pageThinkEnd;
+        trace.events.push({ ...e, step, persona: persona.id, ...(duringThink ? { duringThink: true } : {}) });
+      }
 
       const record = {
         step,

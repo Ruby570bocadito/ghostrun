@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "label": "a2-check-bullet-on",
+    "model": "muse-ember-1.0",
+    "bulletTime": true,
+    "personas": [
+      "newbie",
+      "speedrunner",
+      "reader",
+      "impatient"
+    ],
+    "steps": 40,
+    "runs": 1,
+    "recall": 0,
+    "recallAny": 0,
+    "cleanRunsWithFalseAlarm": 0,
+    "cleanFinishRate": 0.5,
+    "avgCostUsd": 0.0197582,
+    "totalCostUsd": 0.0197582,
+    "avgSeconds": 53,
+    "finishedAt": "2026-11-21T17:18:01.568Z"
+  },
+  "results": [
+    {
+      "game": "gap-run",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 2,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 2,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 692,
+            "y": 360
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 366,
+            "y": 360
+          },
+          "ghosts": 2
+        }
+      ],
+      "deaths": 26,
+      "errors": [],
+      "costUsd": 0.0197582,
+      "seconds": 53,
+      "dir": "runs\\bench-a2-check-bullet-on-2026-11-21T17-17-08-592Z\\gap-run-clean-1"
+    }
+  ]
+}

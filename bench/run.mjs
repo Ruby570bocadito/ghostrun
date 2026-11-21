@@ -68,6 +68,8 @@ async function worker() {
         ...s,
         findings: report.findings.map((f) => ({ id: f.id, type: f.type, severity: f.severity, center: f.center, ghosts: f.ghosts.length })),
         deaths: report.ghosts.reduce((a, g) => a + g.deaths, 0),
+        deathsWhileThinking: traces.reduce((a, t) => a + t.events.filter((e) => e.type === 'death' && e.duringThink).length, 0),
+        steps: traces.reduce((a, t) => a + t.steps.length, 0),
         errors: report.ghosts.filter((g) => g.outcome === 'error').map((g) => g.error?.message),
         costUsd: cost,
         seconds: Math.round((Date.now() - t0) / 1000),
