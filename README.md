@@ -1,4 +1,4 @@
-# Ghost Players (working name)
+# Ghostrun
 
 > AI ghost players with different personalities playtest your web game and show you where real players will get stuck, before the jam deadline.
 

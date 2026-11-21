@@ -1,5 +1,5 @@
 {
-  "name": "ghost-players",
+  "name": "ghostrun",
   "version": "0.1.0",
   "private": true,
   "description": "AI ghost players that playtest your web game before the deadline.",

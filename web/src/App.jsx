@@ -5,7 +5,7 @@ import { Haunting } from './Haunting.jsx';
 import { Report } from './Report.jsx';
 import { useRun } from './useRun.js';
 
-export const APP_NAME = 'Ghost Players';
+export const APP_NAME = 'Ghostrun';
 
 const runIdFromHash = () => (location.hash.match(/^#\/run\/([\w-]+)/) ?? [])[1] ?? null;
 
@@ -42,7 +42,7 @@ export default function App() {
       <header className="topbar">
         <button className="brand" onClick={goHome} aria-label={`${APP_NAME} home`}>
           <GhostIcon size={26} />
-          <span>{APP_NAME}</span>
+          <span className="wordmark">{APP_NAME}</span>
         </button>
         {config && !config.error && (
           <div className="topbar-meta">

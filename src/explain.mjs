@@ -97,7 +97,7 @@ function factsFor(f, report, tracesByPersona = {}) {
     if (talk.length) lines.push(`What these ghosts said about controls or confusion during the whole run: ${talk.join(' ')}`);
   }
   if (report.positionSource === 'ghosts')
-    lines.push('This game has no Ghost Players SDK: positions and deaths are what the ghosts reported seeing on screen, not events from the game.');
+    lines.push('This game has no Ghostrun SDK: positions and deaths are what the ghosts reported seeing on screen, not events from the game.');
   return lines.join('\n');
 }
 

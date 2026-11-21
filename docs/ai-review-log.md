@@ -1,6 +1,6 @@
 # AI review log
 
-Ghost Players was built with heavy AI assistance (Claude Code wrote most of the code; Claude subagents built the four extra test games). This log records where **a person** (Rafael Gálvez) checked specific AI-made work, what the check found, and what was decided. Checks done only by the AI itself are listed separately at the end.
+Ghostrun was built with heavy AI assistance (Claude Code wrote most of the code; Claude subagents built the four extra test games). This log records where **a person** (Rafael Gálvez) checked specific AI-made work, what the check found, and what was decided. Checks done only by the AI itself are listed separately at the end.
 
 | # | Date | AI contribution checked | How it was checked | What the check found | Decision |
 |---|---|---|---|---|---|

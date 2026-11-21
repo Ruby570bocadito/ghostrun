@@ -1,4 +1,4 @@
-// Ghost Players — optional one-line SDK.
+// Ghostrun — optional one-line SDK.
 // Add <script src=".../ghost-sdk.js"></script> to your game and call ghost.pos(x, y)
 // every frame (world coordinates) to get exact heatmaps. Everything else is optional.
 // Without it, the ghosts still play using pixels only.

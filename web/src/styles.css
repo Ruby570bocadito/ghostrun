@@ -31,7 +31,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* Top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; gap: 12px; }
-.brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; font-weight: 700; font-size: 1.15rem; padding: 0; }
+.brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; }
+.wordmark { font-family: 'Silkscreen', var(--mono); font-size: 1.25rem; letter-spacing: 0.06em; text-transform: uppercase; }
 .topbar-meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .chip { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 0.78rem; color: var(--muted); }
 
