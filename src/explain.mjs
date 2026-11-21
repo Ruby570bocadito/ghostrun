@@ -33,12 +33,27 @@ const SYSTEM = [
   // person found easy, and the card blamed the platform height.
   'The ghosts are AI players: they read the screen well but can be clumsy at precise jumps and timing. When their failure could be their own lack of skill, say so in likely_cause and lower the confidence. When the ghosts said a control or mechanic did nothing or made no sense, consider whether the game explains it.',
   'BLOCKER: nobody who reached the spot got past it, so treat it as a likely bug or design error.',
-  'FRICTION: ghosts died but some got past; it may be intended challenge, so suggest a gentle change (a hint, a checkpoint, clearer visuals) rather than removing the challenge.',
+  // Tightened after a review agent playing a teacher (21 Nov): cards told students to narrow gaps that 4 of 4 ghosts
+  // had crossed, which teaches removing challenge without evidence.
+  'FRICTION: ghosts died but some got past. When most of the ghosts that reached it got past, it is probably intended challenge: do NOT suggest making it easier (narrowing a gap, removing or moving hazards, slowing anything down); suggest at most clearer feedback (a visual cue, a checkpoint nearby), or say that no change is needed. Only when few of them got past may you suggest easing it, and then say why.',
+  'Check the cause against the ghosts\' own words: if their words show a control or mechanic working (they jump, they move, they reach things), do not claim it is missing, broken or unexplained.',
+  // Added after the Read Me cards blamed the width of a pit whose real flaw was instructions naming the wrong key.
+  'Compare the keys the ghosts pressed with the controls the game shows on screen: if they pressed the key the game names for an action and that action did not seem to happen, say that the key or the instructions may be wrong rather than blaming the level.',
   'MISSED: most ghosts never reached an objective (for example they never found an item); focus on why it was not noticed or understood.',
   'STUCK: several ghosts spent their last moves circling the same area; focus on what they could not figure out.',
   'CONFUSION: several ghosts said they did not understand something here; focus on what is unclear.',
   'HARD TO SEE: an objective players must notice is drawn with too little contrast against its background (measured, WCAG asks at least 3:1). AI ghosts can spot faint shapes that people miss, so ghosts reaching it does not mean people will see it; focus on how to make it stand out.',
 ].join('\n');
+
+/** A friction spot that most of the ghosts that reached it got past: probably intended challenge. */
+export const fairChallenge = (f) => f.type === 'friction' && f.reached?.length > 0 && f.passed.length * 2 >= f.reached.length;
+
+// Suggestions that take challenge away. The FRICTION rule above forbids them on a fair challenge, but the
+// small model still wrote "narrow the gap slightly" on 1 of the 4 gallery runs (21 Nov), so the card is checked.
+export const MAKES_EASIER = /\b(narrow|shorten|shrink|smaller|reduc|lower|remov|fewer|slow|widen|easier|ease\b|(middle|extra|additional) platform)/i;
+const RETRY_FAIR =
+  'Your suggested_fix makes this spot easier, but most of the ghosts that reached it got past, so it is probably intended challenge. Write the card again: suggest at most clearer feedback (a visual cue, a checkpoint nearby) or say that no change is needed.';
+export const FAIR_FIX = 'No change needed: most ghosts got past, so this looks like intended challenge. If people struggle here too, add a clearer cue rather than making it easier.';
 
 // A control or mechanic that "did nothing" is the strongest sign of something the game does not explain.
 const NOTHING_HAPPENED = /(did ?n.t|does ?n.t|doesn.t|not working|has ?n.t worked|no effect|nothing happen|did nothing|does nothing|won.t|can.t|unexplained|no instructions)/i;
@@ -69,6 +84,16 @@ function controlTalk(f, tracesByPersona, max = 6) {
     .map((c) => `${c.p}: "${c.thought}"`);
 }
 
+/** "held ArrowRight, tapped Space, 400 ms": the keys of one ghost move, in words. */
+function describeMove(m) {
+  const parts = [];
+  if (m.hold?.length) parts.push(`held ${m.hold.join(' + ')}`);
+  if (m.tap?.length) parts.push(`tapped ${m.tap.join(', ')}`);
+  if (m.click?.length) parts.push('clicked');
+  if (!parts.length) parts.push('waited');
+  return `${parts.join(', ')} for ${m.duration_ms} ms`;
+}
+
 function factsFor(f, report, tracesByPersona = {}) {
   const who = `${f.ghosts.length} of ${report.ghostsTotal} ghosts (${f.ghosts.join(', ')})`;
   const lines = [];
@@ -77,8 +102,17 @@ function factsFor(f, report, tracesByPersona = {}) {
     lines.push(
       f.type === 'blocker'
         ? `None of the ${f.reached.length} ghosts that reached this spot ever got past it.`
-        : `${f.passed.length} of ${f.reached.length} ghosts that reached this spot got past it eventually.`,
+        : `${f.passed.length} of ${f.reached.length} ghosts that reached this spot got past it eventually${fairChallenge(f) ? ': most did, so treat it as a fair challenge and do not suggest making it easier' : ''}.`,
     );
+    // Deaths at the bottom edge of a side-scroller are falls. Ghosts sometimes thought they stood in a pit they
+    // could climb out of, and a card blamed "pit walls taller than the jump" for a gap that was too wide (21 Nov).
+    if (report.worldW > 700 && report.positionSource !== 'ghosts' && f.center.y >= report.worldH - 4)
+      lines.push('The deaths are at the bottom edge of the level: the ghosts died by falling into it, so it is not a pit they could climb out of.');
+    const moves = f.evidence
+      .map((e) => [e.persona, tracesByPersona[e.persona]?.steps.find((s) => s.step === e.step)?.move])
+      .filter(([, m]) => m)
+      .map(([p, m]) => `${p}: ${describeMove(m)}`);
+    if (moves.length) lines.push(`The move each ghost made when it first died here: ${moves.join('; ')}.`);
   } else if (f.type === 'missed') {
     lines.push(`MISSED: the objective "${f.milestone}" was reached by ${f.reachedBy.length} of ${report.ghostsTotal} ghosts. ${who} never reached it.`);
     const closest = f.evidence.filter((e) => e.closest != null).map((e) => `${e.persona} came within ${e.closest}px`);
@@ -115,6 +149,27 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
   const usage = { input: 0, cached: 0, output: 0, reasoning: 0 };
   const findings = (report.findings ?? report.hotspots).filter((f) => f.severity !== 'low').slice(0, max);
 
+  async function ask(messages) {
+    const res = await api.chat.completions.create({
+      model,
+      reasoning_effort: reasoning,
+      max_tokens: 3000,
+      prompt_cache_key: 'ghostrun-analyst-v1', // the instructions and the card schema repeat on every card
+      messages,
+      response_format: { type: 'json_schema', json_schema: { name: 'finding_card', schema: CARD_SCHEMA } },
+    });
+    usage.input += res.usage?.prompt_tokens ?? 0;
+    usage.cached += res.usage?.prompt_tokens_details?.cached_tokens ?? 0;
+    usage.output += res.usage?.completion_tokens ?? 0;
+    usage.reasoning += res.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+    const raw = res.choices?.[0]?.message?.content ?? '';
+    try {
+      return { raw, card: JSON.parse(raw) };
+    } catch {
+      return { raw, card: null }; // fall back to the plain finding below
+    }
+  }
+
   const cards = await Promise.all(
     findings.map(async (f) => {
       const ev = f.evidence[0];
@@ -122,32 +177,23 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
       // The screen at the key moment (60% into the clip: just before a death, or the closest approach).
       const frame = trace.frames[ev.clip[0] + Math.max(0, Math.floor((ev.clip[1] - ev.clip[0]) * 0.6))] ?? trace.frames.at(-1);
       const img = await readFile(join(runDir, ev.persona, frame.file));
-      const res = await api.chat.completions.create({
-        model,
-        reasoning_effort: reasoning,
-        max_tokens: 3000,
-        prompt_cache_key: 'ghostrun-analyst-v1', // the instructions and the card schema repeat on every card
-        messages: [
-          { role: 'system', content: SYSTEM },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: `${factsFor(f, report, byPersona)}\n\nThe image shows the game at the key moment for this finding. Write the finding card.` },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${img.toString('base64')}` } },
-            ],
-          },
-        ],
-        response_format: { type: 'json_schema', json_schema: { name: 'finding_card', schema: CARD_SCHEMA } },
-      });
-      usage.input += res.usage?.prompt_tokens ?? 0;
-      usage.cached += res.usage?.prompt_tokens_details?.cached_tokens ?? 0;
-      usage.output += res.usage?.completion_tokens ?? 0;
-      usage.reasoning += res.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
-      let card = null;
-      try {
-        card = JSON.parse(res.choices?.[0]?.message?.content ?? '');
-      } catch {
-        /* fall back to the plain finding below */
+      const messages = [
+        { role: 'system', content: SYSTEM },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: `${factsFor(f, report, byPersona)}\n\nThe image shows the game at the key moment for this finding. Write the finding card.` },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${img.toString('base64')}` } },
+          ],
+        },
+      ];
+      let { raw, card } = await ask(messages);
+      // A card must not contradict its own evidence: on a fair challenge, ask once more with the reason,
+      // and if it still makes the spot easier, keep the card but replace that suggestion with a fixed one.
+      if (card && fairChallenge(f) && MAKES_EASIER.test(card.suggested_fix)) {
+        const again = await ask([...messages, { role: 'assistant', content: raw }, { role: 'user', content: RETRY_FAIR }]);
+        if (again.card) card = again.card;
+        if (MAKES_EASIER.test(card.suggested_fix)) card = { ...card, suggested_fix: FAIR_FIX };
       }
       return { hotspot: f.id, finding: f.id, ...(card ?? { title: `${f.type} around (${f.center.x}, ${f.center.y})`, what_happens: '', likely_cause: 'unclear', suggested_fix: '' }), model };
     }),
