@@ -1,12 +1,16 @@
 // How well does the model see its own character? Each move, a ghost reports where it thinks its
 // character is on screen (0-1000 grid). The game reports where it really is. No extra API cost:
 // this reads the traces of an existing benchmark run.
-// node bench/perception.mjs <label>
+// node bench/perception.mjs <label> [pixels|grid]
+// The optional second argument overrides the units recorded in the traces. Needed for runs made between
+// the pixel-prompt change (1a9c8b2) and the fix that records it through the fallback wrapper: those
+// traces say "grid1000" although the prompt asked for pixels.
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const label = process.argv[2] ?? 'baseline';
+const unitsOverride = process.argv[3];
 const { results } = JSON.parse(await readFile(join('bench', 'results', `${label}.json`), 'utf8'));
 const SCREEN_W = 640;
 const SCREEN_H = 360;
@@ -39,7 +43,7 @@ for (const row of results.filter((r) => r.dir)) {
       const asPixels = Math.hypot(s.player.x - truth.screenX, s.player.y - truth.screenY);
       // v1 asked for a 0-1000 grid (but also said "640x360"); v2 asks for pixels. Score each answer in the
       // units it was asked for, and also record which reading fits better (the convention mix-up rate).
-      const askedPixels = t.coords === 'pixels';
+      const askedPixels = (unitsOverride ?? t.coords) === 'pixels';
       g.visible.push(askedPixels ? asPixels : asGrid);
       g.best = g.best ?? [];
       g.best.push(Math.min(asGrid, asPixels));

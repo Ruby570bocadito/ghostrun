@@ -8,6 +8,9 @@ export function withFallback(primary, makeBackup, { onSwitch = () => {} } = {}) 
     get model() {
       return active.model;
     },
+    get coords() {
+      return active.coords;
+    },
     async decide(input) {
       try {
         return await active.decide(input);
