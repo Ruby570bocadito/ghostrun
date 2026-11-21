@@ -1,0 +1,58 @@
+[
+  {
+    "label": "full request (640x360 image)",
+    "input": 1088,
+    "cached": 372,
+    "output": 151,
+    "reasoning": 67
+  },
+  {
+    "label": "same again (cache?)",
+    "input": 1088,
+    "cached": 1012,
+    "output": 185,
+    "reasoning": 98
+  },
+  {
+    "label": "same, third time (cache?)",
+    "input": 1088,
+    "cached": 500,
+    "output": 118,
+    "reasoning": 32
+  },
+  {
+    "label": "no image",
+    "input": 787,
+    "cached": 500,
+    "output": 143,
+    "reasoning": 76
+  },
+  {
+    "label": "no image, no schema",
+    "input": 300,
+    "cached": 0,
+    "output": 220,
+    "reasoning": 148
+  },
+  {
+    "label": "no image, no schema, no history",
+    "input": 121,
+    "cached": 0,
+    "output": 159,
+    "reasoning": 98
+  },
+  {
+    "label": "image 480x270",
+    "input": 969,
+    "cached": 756,
+    "output": 189,
+    "reasoning": 123
+  },
+  {
+    "label": "image 320x180",
+    "input": 855,
+    "cached": 756,
+    "output": 213,
+    "reasoning": 145
+  }
+]

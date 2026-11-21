@@ -1,0 +1,642 @@
+[
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 8.279828232249463,
+    "input": 945,
+    "cached": 0,
+    "output": 156
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 2,
+    "input": 1064,
+    "cached": 628,
+    "output": 156
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 19.09333798882625,
+    "input": 945,
+    "cached": 628,
+    "output": 123
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 2,
+    "input": 1064,
+    "cached": 628,
+    "output": 132
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 4.123105625617661,
+    "input": 1064,
+    "cached": 628,
+    "output": 113
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 36.333333333333314,
+    "input": 945,
+    "cached": 628,
+    "output": 163
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 3,
+    "input": 1064,
+    "cached": 628,
+    "output": 157
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 4.53382350291179,
+    "input": 945,
+    "cached": 628,
+    "output": 131
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 6.960204339273691,
+    "input": 1064,
+    "cached": 628,
+    "output": 110
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 1.4142135623730951,
+    "input": 1064,
+    "cached": 628,
+    "output": 76
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 7,
+    "input": 945,
+    "cached": 628,
+    "output": 174
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 0.9999999999999716,
+    "input": 945,
+    "cached": 628,
+    "output": 132
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 19.66666666666663,
+    "input": 945,
+    "cached": 628,
+    "output": 135
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 4.123105625617661,
+    "input": 1064,
+    "cached": 628,
+    "output": 165
+  },
+  {
+    "game": "gap-run",
+    "size": "640x360",
+    "err": 4.123105625617661,
+    "input": 1064,
+    "cached": 628,
+    "output": 151
+  },
+  {
+    "game": "gap-run",
+    "size": "480x270",
+    "err": 2.3333333333333144,
+    "input": 945,
+    "cached": 628,
+    "output": 153
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 1,
+    "input": 1064,
+    "cached": 628,
+    "output": 137
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 16.34155069928864,
+    "input": 1064,
+    "cached": 628,
+    "output": 205
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 9.706813185707356,
+    "input": 945,
+    "cached": 628,
+    "output": 158
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 10.35883575607673,
+    "input": 945,
+    "cached": 628,
+    "output": 206
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 4.48092407979434,
+    "input": 945,
+    "cached": 628,
+    "output": 193
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 2.714007650679138,
+    "input": 1064,
+    "cached": 628,
+    "output": 204
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 5.5901699437494745,
+    "input": 1064,
+    "cached": 628,
+    "output": 324
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 6.718548123582152,
+    "input": 945,
+    "cached": 628,
+    "output": 119
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 7.211102550927979,
+    "input": 1064,
+    "cached": 628,
+    "output": 160
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 13.274871834493265,
+    "input": 945,
+    "cached": 628,
+    "output": 127
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 4.901118429755558,
+    "input": 1064,
+    "cached": 628,
+    "output": 144
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 40.08709962145263,
+    "input": 945,
+    "cached": 628,
+    "output": 139
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 11.080513425729794,
+    "input": 945,
+    "cached": 628,
+    "output": 112
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 2.0564312987692985,
+    "input": 1064,
+    "cached": 628,
+    "output": 218
+  },
+  {
+    "game": "key-hunt",
+    "size": "640x360",
+    "err": 3.6055512754639896,
+    "input": 1064,
+    "cached": 628,
+    "output": 147
+  },
+  {
+    "game": "key-hunt",
+    "size": "480x270",
+    "err": 9.030016618434923,
+    "input": 945,
+    "cached": 628,
+    "output": 215
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 2.8284271247461903,
+    "input": 1064,
+    "cached": 628,
+    "output": 165
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 10.137937550497032,
+    "input": 1064,
+    "cached": 628,
+    "output": 153
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 7,
+    "input": 945,
+    "cached": 628,
+    "output": 187
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 3,
+    "input": 1064,
+    "cached": 628,
+    "output": 151
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 11.392004993756727,
+    "input": 945,
+    "cached": 628,
+    "output": 156
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 20.336065390226175,
+    "input": 945,
+    "cached": 628,
+    "output": 100
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 4.630814663149939,
+    "input": 1064,
+    "cached": 628,
+    "output": 124
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 1,
+    "input": 1064,
+    "cached": 628,
+    "output": 154
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 2.9999999999999716,
+    "input": 945,
+    "cached": 628,
+    "output": 201
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 12,
+    "input": 1064,
+    "cached": 628,
+    "output": 134
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 32.2490309931942,
+    "input": 1064,
+    "cached": 628,
+    "output": 151
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 19.846634195472216,
+    "input": 945,
+    "cached": 628,
+    "output": 184
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 12.292725943057167,
+    "input": 945,
+    "cached": 628,
+    "output": 174
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 35.59182178222658,
+    "input": 945,
+    "cached": 884,
+    "output": 182
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 9,
+    "input": 1064,
+    "cached": 628,
+    "output": 120
+  },
+  {
+    "game": "lever-room",
+    "size": "480x270",
+    "err": 32.66156422735713,
+    "input": 945,
+    "cached": 884,
+    "output": 175
+  },
+  {
+    "game": "lever-room",
+    "size": "640x360",
+    "err": 1,
+    "input": 1064,
+    "cached": 1012,
+    "output": 170
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 7.753135566408672,
+    "input": 945,
+    "cached": 628,
+    "output": 161
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 4.333333333333343,
+    "input": 1064,
+    "cached": 628,
+    "output": 141
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 52.1291132136779,
+    "input": 945,
+    "cached": 628,
+    "output": 147
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 4.242640687119286,
+    "input": 1064,
+    "cached": 628,
+    "output": 207
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 1.2018504251546578,
+    "input": 1064,
+    "cached": 628,
+    "output": 172
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 7.781745019952493,
+    "input": 945,
+    "cached": 628,
+    "output": 188
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 12.004628736912768,
+    "input": 945,
+    "cached": 628,
+    "output": 167
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 2,
+    "input": 1064,
+    "cached": 628,
+    "output": 111
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 7.34090518184841,
+    "input": 945,
+    "cached": 628,
+    "output": 157
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 4.47213595499958,
+    "input": 1064,
+    "cached": 628,
+    "output": 142
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 2.8284271247461903,
+    "input": 1064,
+    "cached": 628,
+    "output": 168
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 7.156970184527944,
+    "input": 945,
+    "cached": 628,
+    "output": 174
+  },
+  {
+    "game": "read-me",
+    "size": "640x360",
+    "err": 2.8284271247461903,
+    "input": 1064,
+    "cached": 628,
+    "output": 149
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 25.044405008349095,
+    "input": 945,
+    "cached": 628,
+    "output": 135
+  },
+  {
+    "game": "read-me",
+    "size": "480x270",
+    "err": 31.00179206289712,
+    "input": 945,
+    "cached": 628,
+    "output": 176
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 2,
+    "input": 1064,
+    "cached": 628,
+    "output": 132
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 23.73932508635316,
+    "input": 945,
+    "cached": 628,
+    "output": 169
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 7.729037622046729,
+    "input": 1064,
+    "cached": 628,
+    "output": 228
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 5.385164807134451,
+    "input": 1064,
+    "cached": 628,
+    "output": 137
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 4.535930887437686,
+    "input": 945,
+    "cached": 628,
+    "output": 190
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 8.353309390761094,
+    "input": 945,
+    "cached": 628,
+    "output": 157
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 27.84879809894693,
+    "input": 945,
+    "cached": 628,
+    "output": 170
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 9.21954445729081,
+    "input": 1064,
+    "cached": 628,
+    "output": 216
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 7.3786478737261945,
+    "input": 1064,
+    "cached": 628,
+    "output": 174
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 7.086763875156474,
+    "input": 945,
+    "cached": 628,
+    "output": 177
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 16.492422502470657,
+    "input": 945,
+    "cached": 628,
+    "output": 147
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 9.219544457292889,
+    "input": 1064,
+    "cached": 628,
+    "output": 238
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 2.5537007441142583,
+    "input": 1064,
+    "cached": 628,
+    "output": 239
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 19.324710720847676,
+    "input": 945,
+    "cached": 628,
+    "output": 94
+  },
+  {
+    "game": "spike-maze",
+    "size": "640x360",
+    "err": 4.013864859597432,
+    "input": 1064,
+    "cached": 628,
+    "output": 140
+  },
+  {
+    "game": "spike-maze",
+    "size": "480x270",
+    "err": 11.402246704002522,
+    "input": 945,
+    "cached": 628,
+    "output": 217
+  }
+]

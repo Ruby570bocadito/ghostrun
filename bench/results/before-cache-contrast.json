@@ -1,0 +1,432 @@
+{
+  "summary": {
+    "label": "before-cache-contrast",
+    "model": "muse-ember-1.0",
+    "bulletTime": true,
+    "personas": [
+      "newbie",
+      "speedrunner",
+      "reader",
+      "impatient"
+    ],
+    "steps": 40,
+    "runs": 10,
+    "recall": 1,
+    "recallAny": 1,
+    "cleanRunsWithFalseAlarm": 0,
+    "cleanFinishRate": 0.6,
+    "avgCostUsd": 0.02441229,
+    "totalCostUsd": 0.2441229,
+    "avgSeconds": 44,
+    "finishedAt": "2026-11-21T19:48:46.690Z",
+    "rescoredFrom": "before-cache"
+  },
+  "results": [
+    {
+      "game": "gap-run",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 2,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 3,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 691,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 1016,
+            "y": 360
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 376,
+            "y": 360
+          },
+          "ghosts": 2
+        }
+      ],
+      "deaths": 17,
+      "deathsWhileThinking": 0,
+      "steps": 91,
+      "errors": [],
+      "costUsd": 0.017267499999999998,
+      "seconds": 44,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\gap-run-clean-1"
+    },
+    {
+      "game": "gap-run",
+      "variant": "gap",
+      "fault": {
+        "type": "blocker",
+        "label": "Gap 3 is too wide to jump"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 1060,
+            "y": 360
+          },
+          "ghosts": 3
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 698,
+            "y": 360
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 376,
+            "y": 360
+          },
+          "ghosts": 3
+        }
+      ],
+      "deaths": 37,
+      "deathsWhileThinking": 0,
+      "steps": 132,
+      "errors": [],
+      "costUsd": 0.025755499999999997,
+      "seconds": 48,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\gap-run-gap-1"
+    },
+    {
+      "game": "key-hunt",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 4,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 0,
+      "findings": [],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 91,
+      "errors": [],
+      "costUsd": 0.019746600000000003,
+      "seconds": 36,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\key-hunt-clean-1"
+    },
+    {
+      "game": "key-hunt",
+      "variant": "hidden-key",
+      "fault": {
+        "type": "missed",
+        "label": "The key is nearly invisible"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 2,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "hard_to_see"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "hard_to_see",
+          "severity": "high",
+          "center": {
+            "x": 568,
+            "y": 296
+          },
+          "ghosts": 2
+        }
+      ],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 136,
+      "errors": [],
+      "costUsd": 0.028883600000000002,
+      "seconds": 47,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\key-hunt-hidden-key-1"
+    },
+    {
+      "game": "lever-room",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 3,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 0,
+      "findings": [],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 76,
+      "errors": [],
+      "costUsd": 0.014927800000000001,
+      "seconds": 44,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\lever-room-clean-1"
+    },
+    {
+      "game": "read-me",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 3,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 1,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 401,
+            "y": 322
+          },
+          "ghosts": 3
+        }
+      ],
+      "deaths": 9,
+      "deathsWhileThinking": 0,
+      "steps": 45,
+      "errors": [],
+      "costUsd": 0.00855,
+      "seconds": 16,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\read-me-clean-1"
+    },
+    {
+      "game": "lever-room",
+      "variant": "no-hint",
+      "fault": {
+        "type": "missed",
+        "label": "Hidden lever, no use-key hint"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "missed",
+        "confusion"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 64,
+            "y": 226
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "confusion",
+          "severity": "high",
+          "center": {
+            "x": 500,
+            "y": 261
+          },
+          "ghosts": 3
+        }
+      ],
+      "deaths": 0,
+      "deathsWhileThinking": 0,
+      "steps": 145,
+      "errors": [],
+      "costUsd": 0.031934,
+      "seconds": 53,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\lever-room-no-hint-1"
+    },
+    {
+      "game": "read-me",
+      "variant": "wrong-key",
+      "fault": {
+        "type": "confusion",
+        "label": "Instructions name the wrong dash key"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker",
+        "missed"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 312,
+            "y": 322
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 240,
+            "y": 286
+          },
+          "ghosts": 4
+        }
+      ],
+      "deaths": 37,
+      "deathsWhileThinking": 0,
+      "steps": 130,
+      "errors": [],
+      "costUsd": 0.0260496,
+      "seconds": 41,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\read-me-wrong-key-1"
+    },
+    {
+      "game": "spike-maze",
+      "variant": "clean",
+      "fault": null,
+      "rep": 1,
+      "kind": "clean",
+      "finished": 0,
+      "falseAlarms": 0,
+      "alarmTypes": [],
+      "friction": 3,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 506,
+            "y": 87
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F2",
+          "type": "friction",
+          "severity": "high",
+          "center": {
+            "x": 155,
+            "y": 312
+          },
+          "ghosts": 2
+        },
+        {
+          "id": "F3",
+          "type": "friction",
+          "severity": "medium",
+          "center": {
+            "x": 427,
+            "y": 100
+          },
+          "ghosts": 1
+        }
+      ],
+      "deaths": 6,
+      "deathsWhileThinking": 0,
+      "steps": 160,
+      "errors": [],
+      "costUsd": 0.042174500000000004,
+      "seconds": 58,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\spike-maze-clean-1"
+    },
+    {
+      "game": "spike-maze",
+      "variant": "hidden-spikes",
+      "fault": {
+        "type": "deaths",
+        "label": "Invisible spikes"
+      },
+      "rep": 1,
+      "kind": "fault",
+      "finished": 0,
+      "detected": true,
+      "detectedStrict": true,
+      "matched": [
+        "blocker",
+        "missed"
+      ],
+      "rank": 1,
+      "otherAlarms": 0,
+      "findings": [
+        {
+          "id": "F1",
+          "type": "blocker",
+          "severity": "high",
+          "center": {
+            "x": 155,
+            "y": 312
+          },
+          "ghosts": 4
+        },
+        {
+          "id": "F2",
+          "type": "missed",
+          "severity": "high",
+          "center": {
+            "x": 304,
+            "y": 312
+          },
+          "ghosts": 4
+        }
+      ],
+      "deaths": 75,
+      "deathsWhileThinking": 0,
+      "steps": 125,
+      "errors": [],
+      "costUsd": 0.028833800000000003,
+      "seconds": 53,
+      "dir": "runs\\bench-before-cache-2026-11-21T19-44-52-591Z\\spike-maze-hidden-spikes-1"
+    }
+  ]
+}

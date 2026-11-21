@@ -15,11 +15,20 @@ The run ends cleanly with a message and a "Try another link" button. No AI calls
 
 ## 2. The AI provider fails in the middle of a run (a problem with a service)
 
-- The Meta Model API client retries each call up to 3 times (`src/brains/meta.mjs`).
+- The Meta Model API client retries each call twice with growing waits, with a timeout per model (Ember 20 s, Spark 60 s, Wonder 90 s; Spark took over 30 s on 11% of its moves in our model comparison) (`src/brains/meta.mjs`).
 - If the ghost's model still fails, that ghost **switches to a backup model** (`muse-ember-1.0` → `muse-spark-1.3`) and keeps playing from the same moment, so no moves are lost (`src/brains/fallback.mjs`).
 - The live view logs the switch, and the report shows it under "What went wrong during the run, and how it was handled".
 
 **Demonstrated** with a simulated outage: Advanced options → "simulate an AI outage", which makes the first ghost's model fail from its 6th move. The run and its report are labelled as a test run. The Newbie's Ember "failed" at move 6, it switched to Spark, the run finished and still found the planted blocker (3/4 ghosts).
+
+## 3. The AI answers, but the answer is unusable (a problem with the output)
+
+Structured output makes broken JSON rare, but an answer can still be cut off by the token limit or come back empty.
+
+- The ghost **asks again once** with the same screen. The tokens of the failed answer are still counted in the cost.
+- If the second answer is unusable too, the ghost **waits 300 ms and keeps playing** instead of being lost, and the report lists it under "What went wrong during the run, and how it was handled".
+- Three unusable answers in a row end that ghost with a clear error (something is wrong with the model, and waiting would only cost money).
+- Covered by tests with a fake model (`test/brain.test.mjs`). In the 20-run benchmark after this change, 6 answers needed the retry and none needed the wait.
 
 ## Other safeguards
 
