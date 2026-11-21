@@ -27,7 +27,7 @@
     <h1>Play the test games yourself</h1>
     <p>Each link opens a game that records your own playtest (where you go, where you die, whether you finish, how long it takes) so it can be compared with the ghosts. Nothing is recorded unless you open a game from this page. Play each one until you finish or until you would give up in real life, then press <b>I give up</b> or just close the tab.</p>
     <label for="player">Your name (only to tell sessions apart)</label>
-    <input id="player" value="rafa" autocomplete="off" />
+    <input id="player" value="" placeholder="your name or a nickname" autocomplete="off" />
     <ol id="list"></ol>
     <p class="hint">Opened links turn grey. Tip: play the version "as designed" first, then the one with the planted flaw.</p>
   </main>
@@ -46,8 +46,8 @@
       const who = encodeURIComponent(player.value.trim() || 'human');
       list.innerHTML = games
         .map((g) => {
-          const clean = `/${g.id}/?human=1&player=${who}`;
-          const flaw = `/${g.id}/?fault=${g.fault}&human=1&player=${who}`;
+          const clean = `./${g.id}/?human=1&player=${who}`;
+          const flaw = `./${g.id}/?fault=${g.fault}&human=1&player=${who}`;
           const cls = (href, base) => `${base}${opened.has(href.split('&player')[0]) ? ' done' : ''}`;
           return `<li><span class="game">${g.name}</span> <span class="hint">(${g.how})</span>
             <div class="links"><a class="${cls(clean, '')}" href="${clean}" target="_blank">As designed</a>

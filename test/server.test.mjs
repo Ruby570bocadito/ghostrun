@@ -62,6 +62,28 @@ test('files outside the runs folder cannot be read', async () => {
   }
 });
 
+test('our test games are playable at the app\'s own address, and the ghosts may open them', async () => {
+  assert.equal((await fetch(`${base}/api/health`)).status, 200);
+  const list = await fetch(`${base}/play/`);
+  assert.equal(list.status, 200);
+  assert.match(await list.text(), /Play the test games yourself/);
+  const game = await (await fetch(`${base}/play/gap-run/`)).text();
+  assert.match(game, /\/vendor\/phaser\.js/);
+  assert.equal((await fetch(`${base}/vendor/phaser.js`)).status, 200);
+  assert.equal((await fetch(`${base}/sdk/ghost-sdk.js`)).status, 200);
+  const escape = await fetch(`${base}/play/..%2F..%2Fpackage.json`); // stays inside games/: not found, nothing leaked
+  assert.ok([403, 404].includes(escape.status));
+  assert.ok(!(await escape.text()).includes('"dependencies"'));
+  const config = await (await fetch(`${base}/api/config`)).json();
+  assert.ok(config.games.every((g) => g.url.startsWith('/play/')));
+  // A link to our own /play/ is opened from the local games server: allowed (here it stops at "no key").
+  const own = await postRun({ url: `${base}/play/gap-run/?fault=gap` });
+  assert.equal((await own.json()).error, 'no_key');
+  // The app itself, or anything else on this machine, is not.
+  const app = await postRun({ url: `${base}/api/config` });
+  assert.equal((await app.json()).error, 'private_url');
+});
+
 test('other people\'s runs and recorded sessions are not listed in the public demo', async () => {
   assert.equal((await fetch(`${base}/api/runs`)).status, 404);
   assert.equal((await fetch(`${base}/api/humans`)).status, 404);

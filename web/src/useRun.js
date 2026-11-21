@@ -8,6 +8,8 @@ function ghost(state, id) {
 
 function reducer(state, e) {
   switch (e.type) {
+    case 'queued':
+      return { ...state, status: 'queued', position: e.position, config: e.config ?? state.config };
     case 'run_started': {
       const ghosts = {};
       for (const id of e.config.personas) ghosts[id] = ghost(state, id);

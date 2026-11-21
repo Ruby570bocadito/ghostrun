@@ -1,16 +1,17 @@
 // Tiny static server for the test games: http://localhost:5174/<game>/
-// Serves games/ and maps /vendor/phaser.js to the installed Phaser build.
+// Serves games/ and maps /vendor/phaser.js to the installed Phaser build. The app server also serves the
+// same files under /play/ (src/server.mjs), so people can play them from the app's own address.
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const gamesDir = join(root, 'games');
+export const gamesDir = join(root, 'games');
 const vendor = {
   '/vendor/phaser.js': join(root, 'node_modules', 'phaser', 'dist', 'phaser.min.js'),
 };
-const types = {
+export const GAME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
@@ -20,19 +21,31 @@ const types = {
   '.svg': 'image/svg+xml',
 };
 
+/** The file behind a games URL path ("/gap-run/", "/vendor/phaser.js"), or an error with code 403/404. */
+export async function gameFile(pathname) {
+  let file = vendor[pathname];
+  if (!file) {
+    let decoded;
+    try {
+      decoded = decodeURIComponent(pathname);
+    } catch {
+      throw Object.assign(new Error('not found'), { code: 404 });
+    }
+    const rel = normalize(decoded).replace(/^([/\\])+/, '');
+    file = join(gamesDir, rel);
+    if (file !== gamesDir && !file.startsWith(gamesDir + sep)) throw Object.assign(new Error('forbidden'), { code: 403 });
+    if ((await stat(file).catch(() => null))?.isDirectory()) file = join(file, 'index.html');
+  }
+  return file;
+}
+
 export function startServer(port = Number(process.env.PORT) || 5174) {
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
-      let file = vendor[url.pathname];
-      if (!file) {
-        const rel = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
-        file = join(gamesDir, rel);
-        if (file !== gamesDir && !file.startsWith(gamesDir + sep)) throw Object.assign(new Error('forbidden'), { code: 403 });
-        if ((await stat(file).catch(() => null))?.isDirectory()) file = join(file, 'index.html');
-      }
+      const file = await gameFile(url.pathname);
       const body = await readFile(file);
-      res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
+      res.writeHead(200, { 'content-type': GAME_TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
       res.end(body);
     } catch (err) {
       res.writeHead(err.code === 403 ? 403 : 404, { 'content-type': 'text/plain' });

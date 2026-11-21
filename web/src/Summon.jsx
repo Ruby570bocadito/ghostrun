@@ -4,9 +4,13 @@ import { HeroScene } from './HeroScene.jsx';
 
 const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
 
+// The test games are served by the app under /play/; turn their paths into full links at this address.
+const here = (path) => new URL(path, window.location.origin).href;
+
 const ERRORS = {
   invalid_url: 'That does not look like a game link. Paste a full address that starts with http:// or https://',
   busy: 'The ghosts are busy with another game right now. Try again when that run finishes.',
+  queue_full: 'Several playtests are already waiting for their turn. Try again in a few minutes.',
   budget: 'The spending cap for this demo has been reached.',
   no_key: 'The server has no Meta Model API key, so the ghosts cannot play.',
 };
@@ -95,11 +99,11 @@ export function Summon({ config, onStarted }) {
                 </option>
               ))}
             </select>
-            <button type="button" className="chip-btn" onClick={() => setUrl(game.url)}>
+            <button type="button" className="chip-btn" onClick={() => setUrl(here(game.url))}>
               As designed
             </button>
             {game.faults.map((f) => (
-              <button key={f.id} type="button" className="chip-btn chip-warn" onClick={() => setUrl(`${game.url}?fault=${f.id}`)}>
+              <button key={f.id} type="button" className="chip-btn chip-warn" onClick={() => setUrl(here(`${game.url}?fault=${f.id}`))}>
                 With a planted flaw: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
               </button>
             ))}

@@ -46,10 +46,25 @@ export function Haunting({ run, runId, personas, onHome }) {
   const host = target ? target.host + target.pathname + target.search : '';
   const playing = run.order.filter((id) => run.ghosts[id]?.status === 'playing').length;
 
+  if (run.status === 'queued') {
+    return (
+      <section className="panel center">
+        <p className="eyebrow">Waiting for your turn</p>
+        <h2 className="mono run-url">{host}</h2>
+        <p className="muted">
+          {run.position === 1 ? 'One playtest is ahead of yours.' : `${run.position} playtests are ahead of yours.`} The ghosts play one game at a time; yours starts by itself.
+        </p>
+        <button className="btn-ghost" onClick={stop}>
+          Cancel
+        </button>
+      </section>
+    );
+  }
+
   if (run.status === 'failed' && !run.report) {
     return (
       <section className="panel center">
-        <h2>The ghosts could not play this game</h2>
+        <h2>{run.failure?.message?.startsWith('Cancelled') ? 'Playtest cancelled' : 'The ghosts could not play this game'}</h2>
         <p className="muted">{run.failure?.message}</p>
         <button className="btn-primary" onClick={onHome}>
           Try another link

@@ -32,7 +32,8 @@
   // objectives, outcome) and compare it with the ghosts'. Off unless asked for; it sends nothing otherwise.
   const params = new URLSearchParams(location.search);
   if (params.get('human') !== '1') return;
-  const endpoint = params.get('report') || 'http://localhost:5180/api/human';
+  // Played from the app (/play/…): send to the same address. Played from the local games server: the app on 5180.
+  const endpoint = params.get('report') || (location.pathname.startsWith('/play/') ? '/api/human' : 'http://localhost:5180/api/human');
   const t0 = performance.now();
   const session = {
     id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
