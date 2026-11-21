@@ -61,14 +61,16 @@ function send(res, status, body, headers = {}) {
   res.end(JSON.stringify(body));
 }
 
-async function readBody(req) {
+async function readBody(req, limit = 100_000) {
   let raw = '';
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > 100_000) throw Object.assign(new Error('Body too large'), { status: 413 });
+    if (raw.length > limit) throw Object.assign(new Error('Body too large'), { status: 413 });
   }
   return raw ? JSON.parse(raw) : {};
 }
+
+const SAFE_ID = /^[a-z0-9-]{1,64}$/i;
 
 function emit(run, event) {
   const e = { ...event, at: Date.now() };
@@ -152,6 +154,36 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const path = url.pathname;
   try {
+    // Human playtests recorded by the SDK (games opened with ?human=1). Sent as a CORS "simple request"
+    // from the games origin, so the response is opaque to the page; it only needs to be stored.
+    if (path === '/api/human') {
+      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type' };
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204, cors);
+        return res.end();
+      }
+      if (req.method === 'POST') {
+        const data = await readBody(req, 400_000);
+        if (!SAFE_ID.test(String(data.id)) || !SAFE_ID.test(String(data.game)) || !SAFE_ID.test(String(data.variant))) {
+          return send(res, 400, { error: 'invalid_session' }, cors);
+        }
+        await mkdir(join(runsDir, 'humans'), { recursive: true });
+        await writeFile(join(runsDir, 'humans', `${data.id}.json`), JSON.stringify({ ...data, receivedAt: new Date().toISOString() }, null, 2));
+        res.writeHead(204, cors);
+        return res.end();
+      }
+    }
+    if (path === '/api/humans' && req.method === 'GET') {
+      const dir = join(runsDir, 'humans');
+      const files = (await readdir(dir).catch(() => [])).filter((f) => f.endsWith('.json'));
+      const list = [];
+      for (const f of files) {
+        const h = JSON.parse(await readFile(join(dir, f), 'utf8'));
+        list.push({ id: h.id, game: h.game, variant: h.variant, player: h.player, outcome: h.outcome, durationMs: h.durationMs, deaths: h.events.filter((e) => e.type === 'death').length, startedAt: h.startedAt });
+      }
+      return send(res, 200, list.sort((a, b) => a.startedAt.localeCompare(b.startedAt)));
+    }
+
     if (path === '/api/config' && req.method === 'GET') {
       const spend = await readSpend();
       return send(res, 200, {
