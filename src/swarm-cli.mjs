@@ -1,5 +1,6 @@
 // Full pipeline from the terminal: ghosts play in parallel → hotspots → AI-written finding cards.
 // node src/swarm-cli.mjs --game gap-run [--fault gap] [--personas newbie,speedrunner,reader,impatient] [--steps 40] [--brain meta|scripted]
+//   [--url http://...] [--viewport 960x540]
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -24,7 +25,8 @@ if (brain === 'meta' && !process.env.MODEL_API_KEY) {
 
 const server = await ensureGamesServer(Number(args.port ?? 5174));
 const url = args.url ?? `http://localhost:${server.port}/${game}/${args.fault ? `?fault=${args.fault}` : ''}`;
-const runDir = join('runs', `${new Date().toISOString().replace(/[:.]/g, '-')}-swarm-${game}${args.fault ? '-' + args.fault : ''}`);
+const slug = args.url ? new URL(args.url).pathname.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'url' : `${game}${args.fault ? '-' + args.fault : ''}`;
+const runDir = join('runs', `${new Date().toISOString().replace(/[:.]/g, '-')}-swarm-${slug}`);
 
 console.log(`Summoning ${personas.length} ghosts on ${url}`);
 const { traces, ms } = await runSwarm({
@@ -33,6 +35,7 @@ const { traces, ms } = await runSwarm({
   steps: Number(args.steps ?? 40),
   brain,
   model: args.model,
+  viewport: args.viewport ? { width: Number(args.viewport.split('x')[0]), height: Number(args.viewport.split('x')[1]) } : undefined,
   outDir: runDir,
   onEvent: (e) => {
     if (e.type === 'step') {

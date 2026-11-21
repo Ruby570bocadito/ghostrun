@@ -23,8 +23,8 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect })
   const baseRef = useRef(null);
   const heatRef = useRef(null);
   const [stitched, setStitched] = useState(false);
-  const W = Math.max(SCREEN_W, report.worldW);
-  const H = Math.max(SCREEN_H, report.worldH);
+  const W = report.positionSource === 'ghosts' ? report.worldW : Math.max(SCREEN_W, report.worldW);
+  const H = report.positionSource === 'ghosts' ? report.worldH : Math.max(SCREEN_H, report.worldH);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +33,19 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect })
       if (!ctx || !traces.length) return;
       ctx.fillStyle = '#141726';
       ctx.fillRect(0, 0, W, H);
+      if (report.positionSource === 'ghosts') {
+        // No SDK: there is no camera information to stitch a level from. Use a screen from the middle of
+        // normal play as the backdrop (positions are on-screen coordinates the ghosts reported).
+        const t = traces.find((tr) => tr.steps.some((s) => s.saw === 'playing')) ?? traces[0];
+        const playing = t.steps.filter((s) => s.saw === 'playing');
+        const s = playing[Math.floor(playing.length / 2)] ?? t.steps.at(-1);
+        const f = t.frames[s?.frames?.[0] ?? 0];
+        const img = f && (await loadImage(`/runs/${runId}/${t.persona}/${f.file}`));
+        if (cancelled) return;
+        if (img) ctx.drawImage(img, 0, 0, W, H);
+        setStitched(true);
+        return;
+      }
       // Least-progressed ghost first, so the ghost that saw most of the level paints last.
       const ordered = [...traces].sort((a, b) => maxX(a) - maxX(b));
       for (const t of ordered) {

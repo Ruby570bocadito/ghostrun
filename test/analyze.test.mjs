@@ -117,6 +117,33 @@ test('stuck needs at least two ghosts circling the same area', () => {
   assert.equal(f.ghosts.length, 2);
 });
 
+test('without the SDK, positions come from the ghosts and ghost-reported deaths become findings', () => {
+  const ghostOnly = (p) => {
+    const frames = [];
+    const steps = [];
+    const events = [];
+    for (let k = 0; k < 6; k++) {
+      const from = frames.length;
+      for (let j = 0; j < 4; j++) frames.push({ i: frames.length, t: frames.length * 100, pageT: frames.length * 100, file: `f${frames.length}.jpg`, state: null });
+      steps.push({ step: k + 1, saw: 'playing', player: { x: 300, y: 200 }, thought: 'here again', frames: [from, frames.length - 1], usage: { input: 0, output: 0 }, latencyMs: 0 });
+      events.push({ type: 'death', source: 'ghost', x: 305, y: 205, t: frames.at(-1).pageT, step: k + 1 });
+    }
+    return { persona: p, outcome: 'out_of_steps', coords: 'pixels', viewport: { width: 640, height: 360 }, frames, events, steps, gameMs: 2400, model: 'test' };
+  };
+  const r = analyze([ghostOnly('a'), ghostOnly('b')]);
+  assert.equal(r.positionSource, 'ghosts');
+  assert.equal(r.hasPositions, true);
+  const f = r.findings.find((x) => x.type === 'blocker');
+  assert.ok(f, 'repeated ghost-reported deaths in one spot should be a blocker');
+  assert.equal(f.ghosts.length, 2);
+});
+
+test('sanitizeMove keeps clicks inside the screen and defaults what the ghost saw', () => {
+  const m = sanitizeMove({ click: [{ x: 700, y: -3 }, { x: 10, y: 10 }, { x: 20, y: 20 }], saw: 'nonsense' }, { width: 640, height: 360 });
+  assert.deepEqual(m.click, [{ x: 639, y: 0 }, { x: 10, y: 10 }]);
+  assert.equal(m.saw, 'playing');
+});
+
 test('score finds a fault in the right region and flags false alarms on clean games', () => {
   const traces = ['a', 'b', 'c'].map((p) => walker(p, { upTo: 940, deathX: 1020, deaths: 3 }));
   const r = analyze(traces);

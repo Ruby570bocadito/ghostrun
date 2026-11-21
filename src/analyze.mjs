@@ -68,7 +68,32 @@ function stepAt(trace, frameIndex) {
   return trace.steps.find((s) => s.frames && frameIndex >= s.frames[0] && frameIndex <= s.frames[1]) ?? null;
 }
 
-export function analyze(traces, { deathRadius = 70, stuckRadius = 90 } = {}) {
+/**
+ * Games without the SDK report no positions. Use where each ghost said its character was (98% within
+ * 40 px in our perception check) for every frame of that move. Screen coordinates, so for scrolling
+ * games the map is approximate. Returns new trace objects; the originals are not changed.
+ */
+export function withEstimatedPositions(traces) {
+  return traces.map((t) => {
+    if (t.frames.some((f) => f.state)) return t;
+    const vp = t.viewport ?? { width: 640, height: 360 };
+    const pixels = t.coords === 'pixels';
+    const frames = t.frames.map((f) => ({ ...f }));
+    for (const s of t.steps) {
+      if (!s.player || !s.frames || s.saw === 'menu' || s.saw === 'died') continue;
+      const x = pixels ? s.player.x : (s.player.x / 1000) * vp.width;
+      const y = pixels ? s.player.y : (s.player.y / 1000) * vp.height;
+      for (let i = s.frames[0]; i <= s.frames[1] && i < frames.length; i++) {
+        frames[i].state = { x, y, screenX: x, screenY: y, worldW: vp.width, worldH: vp.height, estimated: true };
+      }
+    }
+    return { ...t, frames };
+  });
+}
+
+export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90 } = {}) {
+  const positionSource = rawTraces.some((t) => t.frames.some((f) => f.state)) ? 'game' : 'ghosts';
+  const traces = withEstimatedPositions(rawTraces);
   const ghostsTotal = traces.length;
   const states = traces.flatMap((t) => t.frames.map((f) => f.state).filter(Boolean));
   const worldW = Math.max(1, ...states.map((s) => s.worldW ?? 0));
@@ -296,6 +321,7 @@ export function analyze(traces, { deathRadius = 70, stuckRadius = 90 } = {}) {
     worldW,
     worldH,
     hasPositions,
+    positionSource, // 'game' (SDK) or 'ghosts' (estimated from what each ghost said it saw)
     ghostsTotal,
     ghosts,
     findings,
