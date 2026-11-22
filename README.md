@@ -139,7 +139,7 @@ Then pick "No game handy? Try ours" on the home page, or paste any web game's li
 - Ghosts **see faint shapes better than people**. Objectives the game declares are measured for contrast instead; undeclared ones are not.
 - They cannot tell intended difficulty from bad design. They show where players struggle; you decide.
 - Without the SDK, positions are what the ghosts report on screen, so in scrolling games the map is approximate.
-- **The written cause on a card is the least reliable part.** On recorded runs the analyst explained the too-wide gap correctly in 14 of 14 cards, but named the wrong key behind Read Me's flaw in only 6 of 12 ([every card](bench/results/analyst-blockers.md)). Trust the place, the numbers and the replay; read the cause as a guess to check.
+- **The written cause on a card is the least reliable part.** On recorded runs the analyst explained the too-wide gap correctly in 14 of 14 cards, but found the real cause of Read Me's flaw (instructions that name the wrong key) in only 6 of 12 cards ([every card](bench/results/analyst-blockers.md)). Trust the place, the numbers and the replay; read the cause as a guess to check.
 
 More in [the benchmark's limitations](bench/README.md#limitations).
 
