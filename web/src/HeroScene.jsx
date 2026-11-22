@@ -38,7 +38,7 @@ export function HeroScene() {
       <g className="hero-blocker">
         <rect x="282" y="40" width="128" height="128" rx="10" fill="rgba(255,107,107,0.12)" stroke="#ff6b6b" strokeWidth="2" strokeDasharray="6 5" />
         <rect x="294" y="28" width="104" height="24" rx="12" fill="#ff6b6b" />
-        <text x="346" y="45" textAnchor="middle" fontFamily="Space Grotesk, sans-serif" fontWeight="700" fontSize="12" fill="#0b0d17">
+        <text x="346" y="45" textAnchor="middle" fontFamily="Geist, sans-serif" fontWeight="700" fontSize="12" fill="#0b0d17">
           Blocker · 3/4
         </text>
       </g>

@@ -4,6 +4,7 @@ import { Summon } from './Summon.jsx';
 import { Haunting } from './Haunting.jsx';
 import { Report } from './Report.jsx';
 import { Cast } from './Cast.jsx';
+import { gameName } from './game.js';
 import { useRun } from './useRun.js';
 import { DEMO, api } from './demo.js';
 import { DemoGallery } from './DemoGallery.jsx';
@@ -47,7 +48,7 @@ export default function App() {
   // A title per screen, so browser tabs and screen readers say where you are (found by a test agent).
   const host = (() => {
     try {
-      return new URL(run.config?.url).host;
+      return gameName(run.config?.url);
     } catch {
       return '';
     }
@@ -63,21 +64,10 @@ export default function App() {
           <GhostIcon size={26} />
           <span className="wordmark">{APP_NAME}</span>
         </button>
-        {config && !config.error && (
-          <div className="topbar-meta">
-            <span className="chip mono" title="Model the ghosts play with">
-              {config.model}
-            </span>
-            {DEMO ? (
-              <span className="chip mono" title="No server: these playtests were recorded from the real app">
-                Free demo · recorded playtests
-              </span>
-            ) : (
-              <span className="chip mono" title="AI spending of this server so far, against its cap">
-                AI spend ${config.budget.spentUsd.toFixed(2)} / ${config.budget.capUsd}
-              </span>
-            )}
-          </div>
+        {DEMO && (
+          <span className="chip mono" title="No server: these playtests were recorded from the real app">
+            Free demo · recorded playtests
+          </span>
         )}
       </header>
 

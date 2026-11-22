@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { GhostIcon, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
+import { Ghost, GhostIcon, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
 import { DEMO } from './demo.js';
+import { gameName, gameSource } from './game.js';
 import { Compare, useBefore, diffFindings } from './Compare.jsx';
 
 const CRITICAL = ['blocker', 'missed', 'stuck', 'hard_to_see'];
@@ -153,22 +154,6 @@ function Finding({ f, card, report, runId, byPersona, personas, selected, onHove
   );
 }
 
-const OUR_GAMES = { 'gap-run': 'Gap Run', 'key-hunt': 'Key Hunt', 'lever-room': 'Lever Room', 'read-me': 'Read Me', 'spike-maze': 'Spike Maze' };
-const titleCase = (slug) => slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
-/** A name for the game people recognise: ours by name, others from the last part of the address. */
-export function gameName(url) {
-  try {
-    const u = new URL(url);
-    const ours = u.pathname.match(/\/play\/([\w-]+)\/?$/)?.[1] ?? u.pathname.match(/\/([\w-]+)\/?$/)?.[1];
-    if (ours && OUR_GAMES[ours]) return `${OUR_GAMES[ours]}${u.searchParams.get('fault') ? ', with a planted flaw' : ''}`;
-    const last = u.pathname.split('/').filter(Boolean).pop();
-    return last && !/\.(html?|php)$/i.test(last) ? titleCase(last) : u.hostname;
-  } catch {
-    return 'Your game';
-  }
-}
-
 const LEGEND = [
   ['blocker', 'Blocker', 'nobody got past'],
   ['missed', 'Missed objective', 'most ghosts never reached it'],
@@ -196,8 +181,6 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
     () => (before && before.worldW === report.worldW ? diffFindings(before, report).filter((r) => r.status === 'resolved').map((r) => r.before) : []),
     [before, report],
   );
-  const target = url ? new URL(url) : null;
-  const host = target ? target.host + target.pathname + target.search : '';
 
   // One-death spots and other weak signals (severity low) are not shown as findings.
   const shown = findings.filter((f) => f.severity !== 'low');
@@ -249,7 +232,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   if (report.failure) {
     return (
       <section className="panel center state-panel">
-        <img className="state-art" src="/states/error.webp" width="260" height="230" alt="" />
+        <span className="state-art"><Ghost mood="dead" size={120} /></span>
         <h2>The ghosts could not play this game</h2>
         <p className="muted">{report.failure.message}</p>
         <p className="muted small">Check that the link opens a playable web game (HTML5 canvas).</p>
@@ -267,7 +250,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         <div>
           <p className="eyebrow">Playtest report</p>
           <h2 className="report-title">{gameName(url)}</h2>
-          <p className="mono run-url small">{host}</p>
+          <p className="run-url small">{gameSource(url)}</p>
         </div>
         <div className="run-bar-right">
           <button className="btn-ghost" onClick={onHome}>
@@ -316,7 +299,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       )}
 
       <div className={`verdict-row ${allClear ? 'with-art' : ''}`}>
-      {allClear && <img className="verdict-art" src="/states/ok.webp" width="200" height="105" alt="" />}
+      {allClear && <span className="verdict-art"><Ghost mood="happy" size={64} /></span>}
       <p className={`verdict ${critical ? 'bad' : exitWarning ? 'warn' : 'good'}`}>
         {critical
           ? `${critical} critical issue${critical === 1 ? '' : 's'}: ${topCritical}`

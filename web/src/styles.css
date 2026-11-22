@@ -14,8 +14,8 @@
   --orange: #ff9f1c;
   --blue: #4cc9f0;
   --radius: 14px;
-  --font: 'Space Grotesk', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font: 'Geist', system-ui, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, monospace;
   color-scheme: dark;
 }
 
@@ -33,7 +33,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; gap: 12px; }
 .brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; }
-.wordmark { font-family: 'Silkscreen', var(--mono); font-size: 1.25rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.wordmark { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; }
 .topbar-meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .chip { border: 1px solid transparent; border-radius: 999px; padding: 3px 8px; font-size: 0.72rem; color: var(--muted); opacity: 0.8; }
 .chip:hover { opacity: 1; border-color: var(--line); }
@@ -321,7 +321,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes g-sink { to { transform: translateY(6px); opacity: 0.45; } }
 @keyframes g-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
 .persona:hover .ghost:not(.dim) .g-art { transform: translateY(-3px); transition: transform 0.2s; }
-.zzz { position: absolute; right: 2px; top: 0; font-family: 'Silkscreen', var(--mono); color: var(--muted); font-size: 0.9rem; line-height: 1; }
+.zzz { position: absolute; right: 2px; top: 0; font-weight: 700; color: var(--muted); font-size: 0.9rem; line-height: 1; }
 .zzz small { font-size: 0.65rem; position: relative; top: -8px; margin-left: 1px; }
 .persona.asleep .persona-name { color: var(--muted); }
 .persona-quote { font-size: 0.78rem; font-style: italic; color: var(--muted); line-height: 1.35; quotes: '“' '”'; }
@@ -334,7 +334,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .home-band.reverse .band-text { order: 2; }
 .band-text h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.15; margin: 4px 0 14px; letter-spacing: -0.01em; }
 .callouts { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; line-height: 1.45; }
-.callouts li::marker { color: var(--mint); font-family: 'Silkscreen', var(--mono); }
+.callouts li::marker { color: var(--mint); font-weight: 700; }
 .band-shot { margin: 0; }
 .band-shot img { width: 100%; height: auto; display: block; border-radius: 14px; border: 1px solid var(--line-strong); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); }
 .band-shot figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 8px; }
@@ -378,7 +378,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Live: the ghost floats over the character it plays; a stamp when it stops */
 .screen { position: relative; }
 .tile-ghost { position: absolute; transform: translate(-50%, -125%); pointer-events: none; transition: left 0.25s linear, top 0.25s linear; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)); }
-.tile-stamp { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-8deg); padding: 6px 14px; border: 3px solid var(--t, var(--muted)); color: var(--t, var(--muted)); border-radius: 10px; font-family: 'Silkscreen', var(--mono); font-size: 1.1rem; text-transform: uppercase; background: rgba(11, 13, 23, 0.82); white-space: nowrap; }
+.tile-stamp { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-8deg); padding: 6px 14px; border: 3px solid var(--t, var(--muted)); color: var(--t, var(--muted)); border-radius: 10px; font-weight: 700; font-size: 1.1rem; text-transform: uppercase; background: rgba(11, 13, 23, 0.82); white-space: nowrap; }
 .stamp-won { --t: var(--mint); }
 .stamp-quit { --t: var(--coral); }
 .stamp-error { --t: var(--coral); }
@@ -386,11 +386,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* Empty and end states, with the ghost family's illustrations (Muse Image) */
 .state-panel { display: grid; justify-items: center; gap: 8px; }
-.state-art { width: min(260px, 70%); height: auto; margin-bottom: 4px; }
+.state-art { display: grid; place-items: center; margin: 8px 0 12px; }
 .state-cost { color: var(--mint); margin: 0; }
 .verdict-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: center; }
 .verdict-row.with-art { grid-template-columns: auto minmax(0, 1fr); }
-.verdict-art { width: 150px; height: auto; }
+.verdict-art { display: grid; place-items: center; width: 110px; }
 @media (max-width: 560px) { .verdict-row.with-art { grid-template-columns: minmax(0, 1fr); } .verdict-art { width: 120px; } }
 
 /* A finding and its box light up together */

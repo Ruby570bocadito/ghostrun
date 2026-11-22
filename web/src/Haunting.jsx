@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
+import { gameName, gameSource } from './game.js';
+import { Ghost, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 
 function Elapsed({ from, to }) {
   const [now, setNow] = useState(Date.now());
@@ -72,15 +73,13 @@ const LOG_ICON = { death: '✕', win: '⚑', quit: '⏏', confused: '?', fallbac
 
 export function Haunting({ run, runId, personas, onHome }) {
   const stop = () => fetch(`/api/runs/${runId}/stop`, { method: 'POST' });
-  const target = run.config ? new URL(run.config.url) : null;
-  const host = target ? target.host + target.pathname + target.search : '';
   const playing = run.order.filter((id) => run.ghosts[id]?.status === 'playing').length;
 
   if (run.status === 'queued') {
     return (
       <section className="panel center">
         <p className="eyebrow">Waiting for your turn</p>
-        <h2 className="mono run-url">{host}</h2>
+        <h2 className="report-title">{gameName(run.config.url)}</h2>
         <p className="muted">
           {run.position === 1 ? 'One playtest is ahead of yours.' : `${run.position} playtests are ahead of yours.`} The ghosts play one game at a time; yours starts by itself.
         </p>
@@ -94,7 +93,7 @@ export function Haunting({ run, runId, personas, onHome }) {
   if (run.status === 'failed' && !run.report) {
     return (
       <section className="panel center state-panel">
-        <img className="state-art" src="/states/error.webp" width="260" height="230" alt="" />
+        <span className="state-art"><Ghost mood="dead" size={120} /></span>
         <h2>{run.failure?.message?.startsWith('Cancelled') ? 'Playtest cancelled' : 'The ghosts could not play this game'}</h2>
         <p className="muted">{run.failure?.message}</p>
         <button className="btn-primary" onClick={onHome}>
@@ -108,8 +107,9 @@ export function Haunting({ run, runId, personas, onHome }) {
     <section className="haunting">
       <div className="run-bar">
         <div>
-          <p className="eyebrow">Haunting</p>
-          <h2 className="mono run-url">{host || 'Connecting…'}</h2>
+          <p className="eyebrow">Live playtest</p>
+          <h2 className="report-title">{run.config ? gameName(run.config.url) : 'Connecting…'}</h2>
+          {run.config && <p className="run-url small">{gameSource(run.config.url)}</p>}
         </div>
         <div className="run-bar-right">
           <span className="muted">
