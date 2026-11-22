@@ -38,7 +38,7 @@ export function moveSchema(w, h) {
       saw: {
         type: 'string',
         enum: SAW,
-        description: 'What this screenshot shows right now: normal play, a menu or title screen, a death or game-over screen, a level-complete or win screen, or something else.',
+        description: 'What this screenshot shows right now: normal play, a menu or title screen, a death or game-over screen (also when you were suddenly sent back to the start or a checkpoint: that is a death), a level-complete or win screen, or something else.',
       },
       player: {
         ...point,
@@ -58,7 +58,7 @@ export function moveSchema(w, h) {
       },
       tap: {
         type: 'array',
-        description: 'Keys to tap once at the start of the action (for example Space to jump, or a letter key the game tells you to use).',
+        description: 'Keys to tap once at the very start of the action, from where you stand now (for example Space to jump, or a letter key the game tells you to use).',
         items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ', 'KeyR'] },
       },
       duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms.' },
@@ -75,6 +75,16 @@ const SHARED_RULES = [
   'You are a playtester for web games, playing a game you have never seen before. Each turn you get one screenshot.',
   'The game is PAUSED while you think. It only moves forward for the duration_ms you choose, while your keys are held.',
   'You can also click buttons with the mouse, for example to start the game from a menu or to retry after dying.',
+  // From an analysis of 5,761 recorded moves (22 Nov): 69% of deaths at fair gaps were jumps started too early, because
+  // ghosts expected a tap to wait for the edge; jumps prepared by a separate walk to the edge crossed 72% of the time,
+  // against 27% for jumps started while running. And 28 of 58 fatal moves in a maze with no jump were planned jumps.
+  'Taps happen once, at the very START of the action, from where you stand now: nothing waits until you reach an edge. To jump a gap, first walk to the edge in short steps, then jump in the next action while holding the direction. Holding a key longer does not make a jump longer.',
+  'Use the controls this game shows. Not every game has a jump: if it only shows keys to move, go around hazards instead of jumping over them.',
+  // Real jam games by other people (22 Nov): ghosts misread what they controlled and spent moves waiting.
+  'In a game you do not know yet, first find out what you control: try one key at a time in short actions and watch what moves. If keys do nothing, click on the game. While playing, waiting rarely teaches you anything.',
+  // Escape from Death Hole (js13k): Enter started the game after a 1-3 s transition; ghosts pressed it again every 0.5 s.
+  // Also game-over screens: on three real jam games the ghosts reported "restart does nothing" (22 Nov).
+  'On a title, menu or game-over screen, after pressing a key or clicking, give the game a second (1000-1500 ms) to change screens before trying something else.',
   'After each action you are told what happened (how far you moved, if you died or reached something). Use it to judge distances and timing.',
   'Keep actions short (200-800 ms) near danger. When the way ahead is clear, longer actions (up to 1500 ms) are fine.',
   'Your thought must describe something new you notice this turn. Do not repeat earlier thoughts.',

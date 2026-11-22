@@ -136,8 +136,12 @@ function factsFor(f, report, tracesByPersona = {}) {
     const talk = controlTalk(f, tracesByPersona);
     if (talk.length) lines.push(`What these ghosts said about controls or confusion during the whole run: ${talk.join(' ')}`);
   }
-  if (report.positionSource === 'ghosts')
+  if (report.positionSource === 'ghosts') {
     lines.push('This game has no Ghostrun SDK: positions and deaths are what the ghosts reported seeing on screen, not events from the game.');
+    // Real jam games (22 Nov): cards called inputs "broken" when the ghosts had pressed them too early, on a cut-off
+    // screen, or during a transition. Without the game's own events, that is the ghosts' experience, not a fact.
+    lines.push('So when the ghosts say an input or a screen did nothing, write it as their experience ("the ghosts could not get Enter to start the game"), not as a fact about the game, and use low confidence unless several ghosts agree and the screen shows it.');
+  }
   return lines.join('\n');
 }
 
