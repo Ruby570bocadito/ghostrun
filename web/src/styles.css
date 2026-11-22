@@ -425,3 +425,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cast-cell { display: grid; place-items: center; height: 110px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
 .cast-sizes { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
 .cast-size { display: grid; justify-items: center; gap: 6px; }
+
+/* Report: one problem per cause */
+.related { list-style: none; margin: 8px 0 0; padding: 8px 12px; display: grid; gap: 4px; border-left: 2px solid var(--line-strong); color: var(--muted); }
+.related b { color: var(--text); font-weight: 600; }
+.finding.goal { border-left-color: var(--violet); grid-template-columns: minmax(0, 1fr); }
+.badge.goal { background: var(--violet); color: #0b0d17; }
+.fair { margin-top: 18px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; background: var(--surface); }
+.fair summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.fair[open] summary { margin-bottom: 12px; }

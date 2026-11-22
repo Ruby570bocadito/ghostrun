@@ -4,9 +4,9 @@ import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
 import { DEMO } from './demo.js';
 import { gameName, gameSource } from './game.js';
+import { buildIssues } from './issues.js';
 import { Compare, useBefore, diffFindings } from './Compare.jsx';
 
-const CRITICAL = ['blocker', 'missed', 'stuck', 'hard_to_see'];
 
 function useTraces(runId, personaIds) {
   const [traces, setTraces] = useState([]);
@@ -70,7 +70,7 @@ function provenance(f) {
   }
 }
 
-function Finding({ f, card, report, runId, byPersona, personas, selected, onHover = () => {} }) {
+function Finding({ f, card, report, runId, byPersona, personas, selected, onHover = () => {}, also = [], consequences = [] }) {
   const [who, setWho] = useState(f.evidence[0]?.persona);
   const ev = f.evidence.find((e) => e.persona === who) ?? f.evidence[0];
   const frames = useMemo(() => clipFrames(runId, byPersona[ev?.persona], ev?.clip ?? [0, 0]), [runId, byPersona, ev]);
@@ -122,6 +122,21 @@ function Finding({ f, card, report, runId, byPersona, personas, selected, onHove
         {quotes.length > 0 && (
           <p className="quotes-label">{f.type === 'hard_to_see' ? 'What ghosts said near it' : 'What they were planning right before (the replay shows what actually happened)'}</p>
         )}
+        {(also.length > 0 || consequences.length > 0) && (
+          <ul className="related small">
+            {also.map((r) => (
+              <li key={r.id}>
+                <b>Same cause</b>, also seen as {TYPE_LABEL[r.type]?.toLowerCase() ?? r.type}
+                {r.milestone ? ` (“${r.milestone}” reached by ${r.reachedBy?.length ?? 0}/${report.ghostsTotal})` : ''}
+              </li>
+            ))}
+            {consequences.map((r) => (
+              <li key={r.id}>
+                <b>Because of this</b>, {r.ghosts.length}/{report.ghostsTotal} ghosts ended their run stuck further on
+              </li>
+            ))}
+          </ul>
+        )}
         <ul className="quotes">
           {quotes.map((q, i) => (
             <li key={i}>
@@ -163,6 +178,39 @@ const LEGEND = [
   ['friction', 'Friction', 'ghosts died but got past: often a fair challenge'],
 ];
 
+/** The goal nobody worked out: from the exit interviews, the ghosts' own words after playing. */
+function GoalIssue({ issue, report, personas }) {
+  const said = report.ghosts.filter((g) => g.debrief && issue.unclear.includes(g.persona));
+  return (
+    <article className="finding goal">
+      <div className="finding-main">
+        <span className="badge goal">Goal unclear</span>
+        <h3>
+          {issue.unclear.length} of {issue.asked} ghosts never worked out what the game wants them to do
+        </h3>
+        <p className="stat-line mono">
+          From the exit interview · {issue.wouldStop.length}/{issue.asked} would stop playing · the ghosts’ own words after playing, not a measurement
+        </p>
+        <dl className="card-fields">
+          <dt>Try this</dt>
+          <dd>Say the goal on the first screen in a few words, and show the first objective so a new player can see where to go.</dd>
+        </dl>
+        <p className="quotes-label">What they thought the goal was, and what stopped them</p>
+        <ul className="quotes">
+          {said.map((g) => (
+            <li key={g.persona}>
+              <GhostIcon color={personas[g.persona]?.color} size={16} mood="confused" />
+              <span>
+                “{g.debrief.goal}” · {g.debrief.stopped_me}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </article>
+  );
+}
+
 export function Report({ run, runId, personas, onHome, onRerun }) {
   const report = run.report;
   const findings = report.findings ?? report.hotspots;
@@ -184,21 +232,23 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
 
   // One-death spots and other weak signals (severity low) are not shown as findings.
   const shown = findings.filter((f) => f.severity !== 'low');
-  const critical = shown.filter((f) => CRITICAL.includes(f.type) && f.severity === 'high').length;
-  const minor = shown.length - critical;
+  const { issues, fair, other } = useMemo(() => buildIssues(report), [report]);
+  const critical = issues.length;
   const finished = report.ghosts.filter((g) => g.outcome === 'won').length;
-  const firstCritical = shown.find((f) => CRITICAL.includes(f.type) && f.severity === 'high');
-  const topCritical = firstCritical
-    ? (report.cards?.find((c) => c.hotspot === firstCritical.id)?.title ?? `${TYPE_LABEL[firstCritical.type] ?? firstCritical.type}, ${firstCritical.ghosts.length} of ${report.ghostsTotal} ghosts`)
-    : '';
+  const first = issues[0];
+  const topCritical = !first
+    ? ''
+    : first.kind === 'goal'
+      ? `${first.unclear.length} of ${first.asked} ghosts never worked out the goal`
+      : (report.cards?.find((c) => c.hotspot === first.primary.id)?.title ?? `${TYPE_LABEL[first.primary.type] ?? first.primary.type}, ${first.primary.ghosts.length} of ${report.ghostsTotal} ghosts`);
 
   // The exit interviews (the ghosts' own answers after playing): worth a warning when half or more never got it.
   const exit = report.debrief;
   const half = (list) => (exit && list.length * 2 >= exit.asked ? list.length : 0);
   const exitWarning = !exit
     ? ''
-    : half(exit.goalUnclear)
-      ? `${exit.goalUnclear.length} of ${exit.asked} ghosts said afterwards they never worked out the goal.`
+    : issues.some((i) => i.kind === 'goal')
+      ? ''
       : half(exit.controlsUnclear)
         ? `${exit.controlsUnclear.length} of ${exit.asked} ghosts said afterwards they never worked out the controls.`
         : '';
@@ -302,9 +352,9 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       {allClear && <span className="verdict-art"><Ghost mood="happy" size={64} /></span>}
       <p className={`verdict ${critical ? 'bad' : exitWarning ? 'warn' : 'good'}`}>
         {critical
-          ? `${critical} critical issue${critical === 1 ? '' : 's'}: ${topCritical}`
-          : shown.length
-            ? `No critical issues. ${shown.length} hard spot${shown.length === 1 ? '' : 's'} where ghosts died but most got past.`
+          ? `${critical} problem${critical === 1 ? '' : 's'} to fix: ${topCritical}`
+          : fair.length
+            ? `Nothing to fix. ${fair.length} hard spot${fair.length === 1 ? '' : 's'} where ghosts died but most got past: probably a fair challenge.`
             : exitWarning
               ? 'No critical issues in what the game showed: no ghost died again and again or got stuck in one place.'
               : 'No problems found: no ghost died again and again, got stuck or got confused.'}
@@ -321,11 +371,11 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       <div className="summary">
         <div className={`stat ${critical ? 'bad' : 'good'}`}>
           <b>{critical}</b>
-          <span>critical issue{critical === 1 ? '' : 's'}</span>
+          <span>problem{critical === 1 ? '' : 's'} to fix</span>
         </div>
         <div className="stat">
-          <b>{minor}</b>
-          <span>other finding{minor === 1 ? '' : 's'}</span>
+          <b>{fair.length}</b>
+          <span>fair challenge{fair.length === 1 ? '' : 's'}</span>
         </div>
         <div className="stat">
           <b>
@@ -385,24 +435,33 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
               <b>{label}</b> {meaning}
             </li>
           ))}
-          <li className="legend-note muted">Blocker, missed objective, stuck and hard to see are the critical issues.</li>
+          <li className="legend-note muted">Blocker, missed objective, stuck and hard to see are problems to fix; friction is usually a fair challenge.</li>
         </ul>
       )}
       <h3 className="section-title">What to fix first</h3>
       <div className="findings">
-        {shown.length === 0 && <p className="panel">No findings: no place where ghosts died repeatedly, got stuck or got confused.</p>}
-        {shown.map((f) => (
-          <Finding
-            key={f.id}
-            f={f}
-            card={report.cards?.find((c) => c.hotspot === f.id)}
-            report={report}
-            runId={runId}
-            byPersona={byPersona}
-            personas={personas}
-            selected={selected === f.id || hovered === f.id}
-            onHover={setHovered}
-          />
+        {issues.length === 0 && <p className="panel">Nothing to fix: no place where ghosts died again and again, got stuck or never found an objective.</p>}
+        {issues.map((i) =>
+          i.kind === 'goal' ? (
+            <GoalIssue key="goal" issue={i} report={report} personas={personas} />
+          ) : (
+            <Finding
+              key={i.primary.id}
+              f={i.primary}
+              also={i.related}
+              consequences={i.consequences}
+              card={report.cards?.find((c) => c.hotspot === i.primary.id)}
+              report={report}
+              runId={runId}
+              byPersona={byPersona}
+              personas={personas}
+              selected={[i.primary, ...i.related, ...i.consequences].some((f) => selected === f.id || hovered === f.id)}
+              onHover={setHovered}
+            />
+          ),
+        )}
+        {other.map((f) => (
+          <Finding key={f.id} f={f} card={report.cards?.find((c) => c.hotspot === f.id)} report={report} runId={runId} byPersona={byPersona} personas={personas} selected={selected === f.id || hovered === f.id} onHover={setHovered} />
         ))}
         {report.quits.map((q) => (
           <article key={q.persona} className="finding quit">
@@ -424,6 +483,18 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           </article>
         ))}
       </div>
+      {fair.length > 0 && (
+        <details className="fair">
+          <summary>
+            {fair.length} fair challenge{fair.length === 1 ? '' : 's'}: ghosts died here, but most got past
+          </summary>
+          <div className="findings">
+            {fair.map((f) => (
+              <Finding key={f.id} f={f} card={report.cards?.find((c) => c.hotspot === f.id)} report={report} runId={runId} byPersona={byPersona} personas={personas} selected={selected === f.id || hovered === f.id} onHover={setHovered} />
+            ))}
+          </div>
+        </details>
+      )}
 
       {report.ghosts.some((g) => g.debrief) && (
         <section id="exit-interview" className="exit" aria-labelledby="exit-title">
