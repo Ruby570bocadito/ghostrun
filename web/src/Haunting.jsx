@@ -69,6 +69,17 @@ function GhostTile({ runId, g, p, viewport }) {
   );
 }
 
+/** Newest first; a ghost dying again and again in a row is one line ("died ×9") with its latest thought. */
+function groupLog(log) {
+  const out = [];
+  for (const l of [...log].reverse()) {
+    const last = out.at(-1);
+    if (last && l.kind === 'death' && last.kind === 'death' && last.ghost === l.ghost) last.n += 1;
+    else out.push({ ...l, n: 1 });
+  }
+  return out;
+}
+
 const LOG_ICON = { death: '✕', win: '⚑', quit: '⏏', confused: '?', fallback: '↻', exit: '»' };
 
 export function Haunting({ run, runId, personas, onHome }) {
@@ -133,7 +144,7 @@ export function Haunting({ run, runId, personas, onHome }) {
           <h3>What's happening</h3>
           {run.log.length === 0 && <p className="muted small">Deaths, quits and confusion will show up here.</p>}
           <ol>
-            {[...run.log].reverse().map((l, i) => {
+            {groupLog(run.log).map((l, i) => {
               const p = personas[l.ghost];
               return (
                 <li key={`${l.at}-${i}`} className={`log-${l.kind}`}>
@@ -141,7 +152,7 @@ export function Haunting({ run, runId, personas, onHome }) {
                     {LOG_ICON[l.kind]}
                   </span>
                   <span>
-                    <b>{p?.name ?? l.ghost}</b> {l.kind === 'death' ? 'died' : l.kind === 'win' ? 'finished!' : l.kind === 'quit' ? 'quit the game' : l.kind === 'confused' ? 'is confused' : ''}
+                    <b>{p?.name ?? l.ghost}</b> {l.kind === 'death' ? (l.n > 1 ? `died ×${l.n}` : 'died') : l.kind === 'win' ? 'finished!' : l.kind === 'quit' ? 'quit the game' : l.kind === 'confused' ? 'is confused' : ''}
                     {l.text && <em> “{l.text}”</em>}
                   </span>
                 </li>

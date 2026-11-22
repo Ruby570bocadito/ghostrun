@@ -62,11 +62,11 @@ export function HomeBands() {
           <img
             src="/home/report.webp"
             width="1100"
-            height="967"
+            height="745"
             loading="lazy"
-            alt="A real Ghostrun report on Key Hunt: a box on the level map marks a key that is hard to see, next to its finding card with the measured contrast and a replay."
+            alt="A real Ghostrun report on Gap Run with its planted flaw: one problem to fix, a spike gap nobody could cross, with the analyst's card on the left and the replay and level map on the right."
           />
-          <figcaption>A real report on Key Hunt, one of our test games: its key is drawn almost in the floor colour, and the verdict says so first.</figcaption>
+          <figcaption>A real report on Gap Run, one of our test games, with its planted flaw: the third gap is too wide to jump.</figcaption>
         </figure>
       </section>
 
@@ -95,11 +95,11 @@ export function HomeBands() {
           <img
             src="/home/before-after.webp"
             width="1100"
-            height="612"
+            height="223"
             loading="lazy"
-            alt="A real before and after: the gap nobody could cross becomes a fair jump that all four ghosts got past."
+            alt="A real before and after on Gap Run: critical issues 1 to 0, ghosts that finished 0 to 4, deaths 40 to 1; the blocker is marked resolved."
           />
-          <figcaption>A real re-run of Gap Run after fixing the gap nobody could cross.</figcaption>
+          <figcaption>A real re-run of Gap Run after narrowing the gap nobody could cross: the same four ghosts, compared automatically.</figcaption>
         </figure>
       </section>
 
