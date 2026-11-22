@@ -43,11 +43,16 @@ const describe = (id, r) => {
   const shown = (r.findings ?? []).filter((f) => f.severity !== 'low');
   const critical = shown.filter((f) => ['blocker', 'missed', 'stuck', 'hard_to_see'].includes(f.type) && f.severity === 'high').length;
   const finished = (r.ghosts ?? []).filter((g) => g.outcome === 'won').length;
+  // The exit interview, when half or more of the ghosts never worked out the goal (as the report's verdict says).
+  const exit = r.debrief;
+  const unclear = exit && exit.goalUnclear.length * 2 >= exit.asked ? `${exit.goalUnclear.length} of ${exit.asked} ghosts never worked out the goal` : '';
   const shows = r.failure
     ? `Caught before any AI call: "${r.failure.message}"`
     : shown.length
-      ? `Found: ${[...new Set(shown.map((f) => TYPE[f.type] ?? f.type))].join(', ')}`
-      : 'Nothing worth reporting';
+      ? `Found: ${[...new Set(shown.map((f) => TYPE[f.type] ?? f.type))].join(', ')}${unclear ? ` · ${unclear}` : ''}`
+      : unclear
+        ? `No critical issue, but ${unclear}`
+        : 'Nothing worth reporting';
   const stats = r.failure
     ? '$0'
     : `${plural(critical, 'critical issue')} · ${finished}/${r.ghostsTotal} finished · ${Math.round((r.realMs ?? 0) / 1000)} s · $${(r.cost?.total ?? 0).toFixed(3)}`;
