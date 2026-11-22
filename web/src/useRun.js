@@ -71,7 +71,7 @@ function reducer(state, e) {
     case 'failed':
       return { ...state, status: 'failed', failure: { kind: 'server', message: e.message } };
     case 'reset':
-      return initial;
+      return { ...initial, runId: e.runId };
     default:
       return state;
   }
@@ -89,7 +89,7 @@ export function useRun(runId) {
     if (DEMO) {
       // The static demo has no live stream: the run is a recorded one, shown as its report.
       let cancelled = false;
-      dispatch({ type: 'reset' });
+      dispatch({ type: 'reset', runId });
       fetch(api(`/api/runs/${runId}`))
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
         .then((j) => !cancelled && dispatch({ type: 'report', report: j.report }))
@@ -103,7 +103,7 @@ export function useRun(runId) {
     let misses = 0;
     let retry = null;
     const open = () => {
-      dispatch({ type: 'reset' });
+      dispatch({ type: 'reset', runId });
       es = new EventSource(`/api/runs/${runId}/stream`);
       es.onmessage = (msg) => {
         misses = 0;
@@ -129,5 +129,8 @@ export function useRun(runId) {
       es?.close();
     };
   }, [runId]);
-  return state;
+  // Right after the route changes, the state still holds the previous run until the effect resets it: showing
+  // it for that one render made the report ask for the new run's frames with the old run's clip ranges (404s
+  // and a flash of wrong replays when going from one report to another). Only the run it belongs to sees it.
+  return state.runId === runId ? state : initial;
 }
