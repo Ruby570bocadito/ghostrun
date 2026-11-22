@@ -5,8 +5,12 @@
 // Injected design fault (for the benchmark): ?fault=wrong-key makes the instructions and the sign say
 // "Z dash" while the dash still only works with X (Z does nothing), so players who read the controls
 // press Z at the edge, nothing happens and they fall into the pit.
-/* global Phaser, ghost */
+// Art v2 (22 Nov 2026): shared kit (games/shared/kit.js). The sign at the edge is a wooden board with the
+// dash key drawn as a key cap (X, or Z with the fault); dashing leaves a gold trail.
+/* global Phaser, ghost, GhostKit */
 (function () {
+  const K = GhostKit;
+  const P = K.PALETTE;
   const params = new URLSearchParams(location.search);
   const FAULT = params.get('fault');
   const WRONG_KEY = FAULT === 'wrong-key'; // the texts name Z, but the dash is always X
@@ -29,7 +33,6 @@
   const FLAG_X = W - 40;
   const SPIKE_Y = H - 26; // tips of the spikes at the bottom of the pit
   const DEATH_Y = SPIKE_Y - 10; // player center at which its feet touch the spikes
-  const TEXT = { fontFamily: 'monospace', fontSize: '14px', color: '#e7e9ff' };
 
   class Play extends Phaser.Scene {
     constructor() {
@@ -40,49 +43,35 @@
       Object.assign(this, { deaths: 0, won: false, lastOnFloor: -1e9, lastJumpPress: -1e9 });
       Object.assign(this, { canDash: true, dashUntil: -1e9, dashDir: 1, dashUsed: false }); // dash state
 
-      this.makeTextures();
+      K.heroTextures(this);
+      K.heroTrail(this);
+      K.flagTextures(this);
       this.physics.world.setBounds(0, -200, W, H + 400);
-
-      // Background details so the level does not look empty.
-      for (let i = 0; i < 24; i++) {
-        this.add.circle(Phaser.Math.Between(0, W), Phaser.Math.Between(40, 220), Phaser.Math.Between(1, 2), 0x2a2f4a);
-      }
+      K.backdrop(this, { seed: 'read-me', worldW: W, horizonY: GROUND_Y });
 
       // The pit: dark red glow with spikes at the bottom.
-      const pit = this.add.graphics();
-      pit.fillStyle(0x3a1020);
-      pit.fillRect(PIT_X0, SPIKE_Y - 10, PIT_X1 - PIT_X0, H - SPIKE_Y + 10);
-      pit.fillStyle(0xff4d6d);
-      for (let x = PIT_X0; x < PIT_X1; x += 20) pit.fillTriangle(x + 2, H - 6, x + 10, SPIKE_Y, x + 18, H - 6);
-      pit.fillRect(PIT_X0, H - 6, PIT_X1 - PIT_X0, 6);
+      this.add.rectangle((PIT_X0 + PIT_X1) / 2, (SPIKE_Y - 10 + H) / 2, PIT_X1 - PIT_X0, H - SPIKE_Y + 10, K.hex(P.pit)).setDepth(-6);
+      K.spikes(this, PIT_X0, SPIKE_Y + 16, PIT_X1 - PIT_X0); // tips at SPIKE_Y
 
       this.platforms = this.physics.add.staticGroup();
-      PLATFORMS.forEach((s) => {
-        this.platforms.add(this.add.rectangle(s.x + s.w / 2, GROUND_Y + 30, s.w, 60, 0x2ec4b6));
-        this.add.rectangle(s.x + s.w / 2, GROUND_Y + 3, s.w, 6, 0x9bf6ec);
+      PLATFORMS.forEach((s, i) => {
+        this.platforms.add(this.add.rectangle(s.x + s.w / 2, GROUND_Y + 30, s.w, 60).setVisible(false));
+        K.groundBlock(this, s.x, GROUND_Y, s.w, H - GROUND_Y, { left: i === 1, right: i === 0 });
       });
 
-      // Sign post at the edge, for flavour (in the faulty build it names the wrong key too).
-      const signX = PIT_X0 - 44;
-      const signStyle = { ...TEXT, fontSize: '12px', color: '#f6d55c', backgroundColor: '#2a2f4a', padding: { x: 6, y: 4 } };
-      this.add.rectangle(signX, GROUND_Y - 20, 4, 40, 0xdddddd);
-      this.add.text(signX, GROUND_Y - 50, WRONG_KEY ? 'Z: DASH →' : 'DASH →', signStyle).setOrigin(0.5);
+      // Wooden sign at the edge: the dash key drawn as a key cap (the faulty build names the wrong key).
+      this.makeSign(PIT_X0 - 44, WRONG_KEY ? 'Z' : 'X');
 
-      this.flag = this.physics.add.staticImage(FLAG_X, GROUND_Y - 30, 'flag');
+      this.flag = this.physics.add.staticSprite(FLAG_X, GROUND_Y - 30, 'kit-flag', 0);
+      this.flag.play('kit-flag-wave');
 
-      this.player = this.physics.add.sprite(SPAWN_X, GROUND_Y - 20, 'player');
+      this.player = this.physics.add.sprite(SPAWN_X, GROUND_Y - 20, 'hero', 0).setDepth(10);
       this.player.body.setSize(20, 26);
       this.player.setCollideWorldBounds(true);
       this.physics.add.collider(this.player, this.platforms);
       this.physics.add.overlap(this.player, this.flag, () => this.win());
 
-      const help = `← → move     SPACE jump     ${WRONG_KEY ? 'Z' : 'X'} dash`;
-      this.add.text(W / 2, 14, help, TEXT).setOrigin(0.5, 0).setScrollFactor(0);
-      this.deathText = this.add.text(12, 12, 'Deaths: 0', { ...TEXT, color: '#ff8fa3' }).setScrollFactor(0);
-      this.banner = this.add
-        .text(W / 2, H / 2 - 40, '', { ...TEXT, fontSize: '28px', color: '#f6d55c' })
-        .setOrigin(0.5)
-        .setScrollFactor(0);
+      this.hud = K.hud(this, [{ keys: ['←', '→'], label: 'move' }, { keys: ['SPACE'], label: 'jump' }, { keys: [WRONG_KEY ? 'Z' : 'X'], label: 'dash' }]);
 
       this.cursors = this.input.keyboard.createCursorKeys();
       this.space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -97,26 +86,27 @@
       });
     }
 
-    makeTextures() {
-      const g = this.add.graphics();
-      g.fillStyle(0xff6b6b);
-      g.fillRoundedRect(0, 0, 22, 28, 6);
-      g.fillStyle(0xffffff);
-      g.fillRect(11, 7, 6, 7);
-      g.fillStyle(0x141726);
-      g.fillRect(14, 9, 3, 4);
-      g.generateTexture('player', 22, 28);
-      g.clear();
-      g.fillStyle(0xf6d55c);
-      g.fillRoundedRect(0, 0, 22, 28, 6);
-      g.generateTexture('trail', 22, 28);
-      g.clear();
-      g.fillStyle(0xdddddd);
-      g.fillRect(0, 0, 3, 60);
-      g.fillStyle(0xf6d55c);
-      g.fillTriangle(3, 2, 30, 12, 3, 22);
-      g.generateTexture('flag', 32, 60);
-      g.destroy();
+    // A post and a board (wood), with "<key> DASH →" on it; the key is drawn as a cap.
+    makeSign(x, key) {
+      const g = this.add.graphics().setDepth(-2);
+      g.fillStyle(K.hex(P.woodDark));
+      g.fillRect(x - 3, GROUND_Y - 36, 6, 36);
+      g.fillStyle(K.hex(P.woodDark));
+      g.fillRect(x - 44, GROUND_Y - 70, 88, 36);
+      g.fillStyle(K.hex(P.wood));
+      g.fillRect(x - 42, GROUND_Y - 68, 84, 32);
+      g.fillStyle(K.hex(P.woodLight));
+      g.fillRect(x - 42, GROUND_Y - 68, 84, 2);
+      g.fillStyle(K.hex(P.woodDark));
+      g.fillRect(x - 42, GROUND_Y - 56, 84, 1);
+      g.fillRect(x - 42, GROUND_Y - 46, 84, 1);
+      // Key cap
+      g.fillStyle(K.hex(P.capSide));
+      g.fillRoundedRect(x - 36, GROUND_Y - 63, 22, 23, 4);
+      g.fillStyle(K.hex(P.capFace));
+      g.fillRoundedRect(x - 36, GROUND_Y - 63, 22, 20, 4);
+      this.add.text(x - 25, GROUND_Y - 53, key, { fontFamily: 'monospace', fontSize: '16px', fontStyle: 'bold', color: P.ink }).setOrigin(0.5).setDepth(-1);
+      this.add.text(x + 12, GROUND_Y - 52, 'DASH →', { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#2b1608' }).setOrigin(0.5).setDepth(-1);
     }
 
     update(time) {
@@ -144,15 +134,19 @@
         } else {
           body.allowGravity = true;
           p.setVelocityX(dir * SPEED);
-          if (dir !== 0) p.setFlipX(dir < 0);
           const canJump = time - this.lastOnFloor <= COYOTE_MS;
           if (time - this.lastJumpPress <= BUFFER_MS && canJump) {
             p.setVelocityY(-JUMP);
             this.lastJumpPress = -1e9;
             this.lastOnFloor = -1e9;
+            K.dust(this, p.x, body.bottom, 3);
           }
         }
       }
+      if (onFloor && !this.wasOnFloor) K.dust(this, p.x, body.bottom, 4);
+      this.wasOnFloor = onFloor;
+      K.animateHero(p, { onFloor, vx: time < this.dashUntil ? 0 : body.velocity.x, vy: body.velocity.y });
+      if (time < this.dashUntil) p.setFlipX(this.dashDir < 0);
 
       if (p.y > DEATH_Y) this.die();
 
@@ -183,20 +177,23 @@
     }
 
     afterimage() {
-      const img = this.add.image(this.player.x, this.player.y, 'trail').setAlpha(0.6).setDepth(-1);
+      const img = this.add.image(this.player.x, this.player.y, 'hero-trail').setFlipX(this.dashDir < 0).setAlpha(0.7).setDepth(9);
       this.tweens.add({ targets: img, alpha: 0, duration: 250, onComplete: () => img.destroy() });
+      const line = this.add.rectangle(this.player.x - this.dashDir * 16, this.player.y + (this.game.loop.frame % 2 ? -6 : 6), 18, 2, K.hex(P.goldLight), 0.8).setDepth(9);
+      this.tweens.add({ targets: line, alpha: 0, scaleX: 0.3, duration: 200, onComplete: () => line.destroy() });
     }
 
     die() {
       this.deaths += 1;
       ghost.event('death', { deaths: this.deaths, dashed: !this.canDash });
-      this.deathText.setText('Deaths: ' + this.deaths);
+      this.hud.setDeaths(this.deaths);
+      K.burst(this, this.player.x, Math.min(this.player.y, SPIKE_Y - 6));
       this.dashUntil = -1e9;
       this.canDash = true;
       this.player.body.allowGravity = true;
       // body.reset moves the physics body and the sprite together (setPosition alone leaves the body in the pit).
       this.player.body.reset(SPAWN_X, GROUND_Y - 20);
-      this.cameras.main.flash(120, 255, 80, 100);
+      this.wasOnFloor = true;
     }
 
     win() {
@@ -205,7 +202,8 @@
       this.dashUntil = -1e9;
       this.player.setVelocity(0, 0);
       this.player.body.allowGravity = false;
-      this.banner.setText('LEVEL COMPLETE!');
+      K.sparkle(this, FLAG_X, GROUND_Y - 40);
+      this.hud.banner('LEVEL COMPLETE!');
       ghost.event('win', { deaths: this.deaths });
     }
   }
@@ -215,7 +213,7 @@
     parent: 'game',
     width: W,
     height: H,
-    backgroundColor: '#141726',
+    backgroundColor: P.sky,
     pixelArt: true,
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
     scene: [Play],

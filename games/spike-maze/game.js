@@ -4,8 +4,11 @@
 // start to the checkpoint is spiked; a slightly longer safe detour runs just above it.
 // Injected design fault (for the benchmark): ?fault=hidden-spikes stops drawing the spikes on that
 // straight corridor. They still kill, so players keep dying on hazards they cannot see.
-/* global Phaser, ghost */
+// Art v2 (22 Nov 2026): shared kit (games/shared/kit.js), the same dungeon as Key Hunt. Geometry unchanged.
+/* global Phaser, ghost, GhostKit */
 (function () {
+  const K = GhostKit;
+  const P = K.PALETTE;
   const params = new URLSearchParams(location.search);
   const FAULT = params.get('fault');
   const HIDE_STRAIGHT = FAULT === 'hidden-spikes';
@@ -48,7 +51,6 @@
     { key: 'up', dx: 0, dy: -1 },
     { key: 'down', dx: 0, dy: 1 },
   ];
-  const TEXT = { fontFamily: 'monospace', fontSize: '14px', color: '#e7e9ff' };
 
   class Play extends Phaser.Scene {
     constructor() {
@@ -64,46 +66,37 @@
       this.makeTextures();
       this.walls = this.physics.add.staticGroup();
       this.spikes = this.physics.add.staticGroup();
-      const g = this.add.graphics();
+      K.dungeonFloor(this, 0, TOP, W, MAP.length * T);
+      K.groundTextures(this);
+      K.spikeTile(this);
+      const g = this.add.graphics().setDepth(-4);
       MAP.forEach((row, r) => {
         [...row].forEach((ch, c) => {
           const x = cx(c);
           const y = cy(r);
           if (ch === '#') {
-            g.fillStyle(0x2ec4b6).fillRect(c * T, TOP + r * T, T, T);
-            if (r > 0 && tileAt(c, r - 1) !== '#') g.fillStyle(0x9bf6ec).fillRect(c * T, TOP + r * T, T, 4);
+            this.add.tileSprite(c * T, TOP + r * T, T, T, 'kit-ground').setOrigin(0, 0).setDepth(-5);
+            if (r > 0 && tileAt(c, r - 1) !== '#') g.fillStyle(K.hex(P.groundLight)).fillRect(c * T, TOP + r * T, T, 6);
             this.walls.add(this.add.zone(x, y, T, T));
             return;
           }
-          g.fillStyle(0x2a2f4a).fillRect(x - 1, y - 1, 2, 2); // faint floor dot
           if (ch === '^' || ch === 'h') {
-            if (!(HIDE_STRAIGHT && ch === 'h')) this.add.image(x, y, 'spike');
+            if (!(HIDE_STRAIGHT && ch === 'h')) this.add.image(x, y, 'kit-spike-td').setDepth(-3);
             this.spikes.add(this.add.zone(x, y, SPIKE_HIT, SPIKE_HIT));
           }
         });
       });
 
-      this.flag = this.physics.add.staticImage(CHECKPOINT.x, CHECKPOINT.y, 'checkpoint').setAlpha(0.45);
-      this.exit = this.physics.add.staticImage(EXIT.x, EXIT.y, 'exit');
+      this.flag = this.physics.add.staticImage(CHECKPOINT.x, CHECKPOINT.y, 'checkpoint', 0);
+      this.exit = this.physics.add.staticImage(EXIT.x, EXIT.y, K.exitTile(this, T));
 
-      this.player = this.physics.add.sprite(START.x, START.y, 'player');
+      this.player = this.physics.add.sprite(START.x, START.y, K.heroTopDown(this), 0).setDepth(10);
       this.physics.add.collider(this.player, this.walls);
       this.physics.add.overlap(this.player, this.spikes, () => this.die());
       this.physics.add.overlap(this.player, this.flag, () => this.reachCheckpoint());
       this.physics.add.overlap(this.player, this.exit, () => this.win());
 
-      this.add.text(W / 2, 14, '← ↑ → ↓ move     avoid the spikes     reach the exit', TEXT).setOrigin(0.5, 0);
-      this.deathText = this.add.text(12, 12, 'Deaths: 0', { ...TEXT, color: '#ff8fa3' });
-      this.banner = this.add
-        .text(W / 2, H / 2 - 20, 'LEVEL COMPLETE!', {
-          ...TEXT,
-          fontSize: '28px',
-          color: '#f6d55c',
-          backgroundColor: '#141726',
-          padding: { x: 14, y: 8 },
-        })
-        .setOrigin(0.5)
-        .setVisible(false);
+      this.hud = K.hud(this, [{ keys: ['←', '↑', '→', '↓'], label: 'move' }, { label: 'avoid the spikes' }, { label: 'reach the exit' }]);
 
       this.cursors = this.input.keyboard.createCursorKeys();
       // Remember the order the arrows were pressed in (event timestamps tie while the game clock is frozen).
@@ -120,30 +113,17 @@
     }
 
     makeTextures() {
-      const g = this.add.graphics();
-      // Player: coral block with one eye (faces right, flipped when walking left).
-      g.fillStyle(0xff6b6b).fillRoundedRect(0, 0, PLAYER, PLAYER, 5);
-      g.fillStyle(0xffffff).fillRect(10, 5, 6, 6);
-      g.fillStyle(0x141726).fillRect(13, 7, 3, 3);
-      g.generateTexture('player', PLAYER, PLAYER);
-      g.clear();
-      // Spikes: red triangles on a dark red tile.
-      g.fillStyle(0x3a1020).fillRect(0, 0, T, T);
-      g.fillStyle(0xff4d6d);
-      [[2, 3], [17, 3], [2, 17], [17, 17]].forEach(([x, y]) => g.fillTriangle(x, y + 12, x + 6.5, y, x + 13, y + 12));
-      g.generateTexture('spike', T, T);
-      g.clear();
-      // Checkpoint flag (dim until reached).
-      g.fillStyle(0xdddddd).fillRect(9, 4, 3, 24);
-      g.fillStyle(0xf6d55c).fillTriangle(12, 5, 26, 11, 12, 17);
-      g.generateTexture('checkpoint', T, T);
-      g.clear();
-      // Exit: yellow pad.
-      g.fillStyle(0xf6d55c).fillRect(1, 1, T - 2, T - 2);
-      g.fillStyle(0x141726).fillRect(6, 6, T - 12, T - 12);
-      g.fillStyle(0xf6d55c).fillRect(11, 11, T - 22, T - 22);
-      g.generateTexture('exit', T, T);
-      g.destroy();
+      // Checkpoint flag (32×32): frame 0 lowered (not reached yet), frame 1 raised (reached). Gold both times.
+      const pole = (cloth, at) => {
+        const rows = [];
+        for (let y = 0; y < 16; y++) {
+          const c = cloth[y - at];
+          rows.push('....' + (y === 1 ? 'LL' : y > 1 && y < 15 ? '.P' : y === 15 ? 'PPP' : '..') + (c && y > 1 && y < 15 ? c : ''));
+        }
+        return rows;
+      };
+      const cloth = ['GGGGGG', 'GgGGGGGG', 'GggGGGGGG', 'GgGGGGGG', 'GGGGGG'];
+      K.pixels(this, 'checkpoint', [pole(cloth, 8), pole(cloth, 2)], { P: P.text, L: P.goldLight, G: P.gold, g: P.goldDark });
     }
 
     update() {
@@ -164,10 +144,10 @@
           // Pull the player to the middle of its lane so side corridors are easy to enter.
           vx = dir.dx ? dir.dx * SPEED : Phaser.Math.Clamp((cx(c) - x) * 10, -SPEED, SPEED);
           vy = dir.dy ? dir.dy * SPEED : Phaser.Math.Clamp((cy(r) - y) * 10, -SPEED, SPEED);
-          if (dir.dx) p.setFlipX(dir.dx < 0);
         }
       }
       p.setVelocity(vx, vy);
+      K.animateHero(p, { onFloor: null, vx, vy });
 
       ghost.pos(x, y, {
         vx,
@@ -185,18 +165,18 @@
       if (this.won) return;
       this.deaths += 1;
       ghost.event('death', { deaths: this.deaths, respawn: this.reached ? 'checkpoint' : 'start' });
-      this.deathText.setText('Deaths: ' + this.deaths);
+      this.hud.setDeaths(this.deaths);
+      K.burst(this, this.player.body.center.x, this.player.body.center.y);
       // body.reset moves the physics body and the sprite together (setPosition alone would desync them).
       this.player.body.reset(this.respawn.x, this.respawn.y);
-      this.cameras.main.flash(120, 255, 80, 100);
     }
 
     reachCheckpoint() {
       if (this.reached) return;
       this.reached = true;
       this.respawn = CHECKPOINT;
-      this.flag.setAlpha(1);
-      this.tweens.add({ targets: this.flag, scale: 1.35, duration: 120, yoyo: true });
+      this.flag.setFrame(1);
+      K.sparkle(this, CHECKPOINT.x, CHECKPOINT.y);
       ghost.event('milestone', { name: 'checkpoint' });
     }
 
@@ -204,7 +184,8 @@
       if (this.won) return;
       this.won = true;
       this.player.setVelocity(0, 0);
-      this.banner.setVisible(true);
+      K.sparkle(this, EXIT.x, EXIT.y);
+      this.hud.banner('LEVEL COMPLETE!');
       ghost.event('win', { deaths: this.deaths });
     }
   }
@@ -214,7 +195,7 @@
     parent: 'game',
     width: W,
     height: H,
-    backgroundColor: '#141726',
+    backgroundColor: P.sky,
     pixelArt: true,
     physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
     scene: [Play],
