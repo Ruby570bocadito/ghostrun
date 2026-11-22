@@ -20,6 +20,10 @@ const IDLE_CELL_PX = 80;
 // What a ghost does when the model's answer is unusable twice in a row: wait a moment, keep playing.
 export const SAFE_MOVE = { thought: '', saw: 'other', player: null, click: [], hold: [], tap: [], duration_ms: 300, confused: false, quit: false };
 const MAX_SAFE_MOVES_IN_A_ROW = 3;
+// How long a click keeps the button down, in game time (games that check the button each frame need to see it).
+const CLICK_PRESS_MS = 90;
+// Longest real time to wait for a game to create its canvas after the page has loaded.
+const CANVAS_WAIT_MS = 6000;
 
 const readEvents = (page, from) => page.evaluate((n) => (window.__ghost ? window.__ghost.events.slice(n) : []), from);
 const readState = (page) =>
@@ -73,6 +77,46 @@ export async function decideRobustly(brain, input, { onBadOutput = () => {} } = 
  * frameEveryMs of game time) and events (reported by the game through the SDK or, for games
  * without it, from what the ghost saw on screen).
  */
+/**
+ * Size of a screenshot of an empty page at this size (JPEG quality 70, as the ghosts' own screenshots). In a page of
+ * its own: the game's context closes any extra page.
+ */
+async function blankShotSize(browser, viewport) {
+  const blank = await browser.newPage({ viewport, deviceScaleFactor: 1 });
+  try {
+    await blank.setContent('<body style="margin:0;background:#000"></body>');
+    return (await blank.screenshot({ type: 'jpeg', quality: 70 })).length;
+  } finally {
+    await blank.close().catch(() => {});
+  }
+}
+
+/**
+ * Public demo: every request a game page makes (the page itself, redirects, scripts, images, fetch, WebSockets)
+ * goes through the guard first. Contexts that use it must also be created with serviceWorkers: 'block'.
+ */
+export async function protectContext(context, guard, onBlocked = () => {}) {
+  await context.route('**/*', async (route) => {
+    try {
+      if (await guard(route.request().url())) return await route.continue();
+      onBlocked();
+      return await route.abort('blockedbyclient');
+    } catch {
+      // The page or the browser closed while the request was being checked: nothing left to do.
+    }
+  });
+  // WebSockets do not pass through context.route: check them too (found by a test agent).
+  await context.routeWebSocket(/.*/, async (ws) => {
+    try {
+      if (await guard(ws.url())) return ws.connectToServer();
+      onBlocked();
+      await ws.close({ code: 1008, reason: 'blocked' });
+    } catch {
+      // closed meanwhile
+    }
+  });
+}
+
 export async function runGhost({
   browser,
   url,
@@ -97,28 +141,7 @@ export async function runGhost({
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1, ...(guard ? { serviceWorkers: 'block' } : {}) });
   const page = await context.newPage();
   let blockedRequests = 0;
-  if (guard) {
-    // Every request the game makes (the page itself, redirects, scripts, images, fetch) is checked.
-    await context.route('**/*', async (route) => {
-      try {
-        if (await guard(route.request().url())) return await route.continue();
-        blockedRequests += 1;
-        return await route.abort('blockedbyclient');
-      } catch {
-        // The page or the browser closed while the request was being checked: nothing left to do.
-      }
-    });
-    // WebSockets do not pass through context.route: check them too (found by a test agent).
-    await context.routeWebSocket(/.*/, async (ws) => {
-      try {
-        if (await guard(ws.url())) return ws.connectToServer();
-        blockedRequests += 1;
-        await ws.close({ code: 1008, reason: 'blocked' });
-      } catch {
-        // closed meanwhile
-      }
-    });
-  }
+  if (guard) await protectContext(context, guard, () => (blockedRequests += 1));
   // A game must not open more windows (ads, external links): close them.
   context.on('page', (p) => {
     if (p !== page) p.close().catch(() => {});
@@ -205,12 +228,24 @@ export async function runGhost({
     if (!bulletTime) await page.clock.resume(); // from now on game time flows in real time
     trace.bulletTime = bulletTime;
 
-    const canvas = await page.evaluate(() => {
-      const c = document.querySelector('canvas');
-      return c ? { w: c.width, h: c.height } : null;
-    });
+    // Some games create their canvas only after loading their images or sounds, which the frozen clock does not
+    // wait for: give them up to CANVAS_WAIT_MS of real time, moving game time on a little meanwhile (Dead Again, a
+    // js13k game, made its canvas 1-3 s after "load" and was refused as "no canvas", 22 Nov).
+    const findCanvas = () =>
+      page.evaluate(() => {
+        const c = document.querySelector('canvas');
+        return c ? { w: c.width, h: c.height } : null;
+      });
+    let canvas = await findCanvas();
+    for (let waited = 0; !canvas && waited < CANVAS_WAIT_MS; waited += 250) {
+      await sleep(250);
+      await page.clock.runFor(250);
+      canvas = await findCanvas();
+    }
     const first = await capture();
-    if (!canvas || first.length < 4000) {
+    // "Blank" = barely bigger than a screenshot of an empty page of the same size. A fixed 4,000-byte line refused
+    // Big Champ (a js13k game) whose dark start screen only says "Tap" (2.8 KB, against 2.1 KB for an empty page).
+    if (!canvas || first.length < (await blankShotSize(browser, viewport)) + 250) {
       throw Object.assign(
         new Error(canvas ? 'The game screen looks blank after loading, so there is nothing to play.' : 'No game canvas found on this page.'),
         { kind: 'game_not_playable' },
@@ -278,7 +313,17 @@ export async function runGhost({
       }
       if (!decision.safe) lastSaw = move.saw;
 
-      for (const c of move.click) await page.mouse.click(c.x, c.y);
+      // A click is a press, a short wait in game time, and a release, like a finger. An instant click (down and up
+      // before the game's next frame) was invisible to games that check the button each frame: on Big Champ, a real
+      // js13k game, every ghost clicked "Tap" and nothing happened, and the report blamed the game (22 Nov).
+      let clickedMs = 0;
+      for (const c of move.click) {
+        await page.mouse.move(c.x, c.y);
+        await page.mouse.down();
+        await advance(CLICK_PRESS_MS);
+        await page.mouse.up();
+        clickedMs += CLICK_PRESS_MS;
+      }
       for (const k of move.hold) await page.keyboard.down(k);
       for (const k of move.tap) await page.keyboard.down(k);
       const tapMs = move.tap.length ? Math.min(120, move.duration_ms) : 0;
@@ -286,7 +331,7 @@ export async function runGhost({
         await advance(tapMs);
         for (const k of move.tap) await page.keyboard.up(k);
       }
-      await advance(move.duration_ms - tapMs);
+      await advance(Math.max(0, move.duration_ms - tapMs - clickedMs));
       for (const k of move.hold) await page.keyboard.up(k);
 
       const after = (await readState(page)).state;

@@ -256,7 +256,11 @@ async function play(run) {
     report.cost = { ghosts: ghostCost, analyst: analystCost, total: ghostCost + analystCost };
     report.realMs = ms;
     report.id = run.id;
-    report.config = run.config;
+    // The window the ghosts really used: it is made bigger when the game's canvas does not fit (src/fit.mjs).
+    const used = traces.find((t) => t.viewport)?.viewport;
+    const asked = run.config.viewport;
+    const resized = used && asked && (used.width !== asked.width || used.height !== asked.height);
+    report.config = resized ? { ...run.config, viewport: used, requestedViewport: asked } : run.config;
     await writeFile(join(outDir, 'report.json'), JSON.stringify(report, null, 2));
     await addSpend(report.cost.total);
 

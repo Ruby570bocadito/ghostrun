@@ -2,7 +2,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { runGhost } from './ghost.mjs';
+import { protectContext, runGhost } from './ghost.mjs';
+import { fitSize, measureCanvas } from './fit.mjs';
 import { PERSONAS } from './personas.mjs';
 import { createMetaBrain } from './brains/meta.mjs';
 import { createScriptedBrain } from './brains/scripted.mjs';
@@ -40,7 +41,17 @@ export async function runSwarm({
   await mkdir(outDir, { recursive: true });
   const browser = await chromium.launch();
   const started = Date.now();
-  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, simulateOutage, compareTo };
+  // A game whose canvas does not fit the window gets a bigger window, so the ghosts see all of it (src/fit.mjs).
+  const requestedViewport = viewport;
+  if (brain !== 'scripted') {
+    const rect = await measureCanvas(browser, url, viewport, {
+      protect: guard ? (context) => protectContext(context, guard) : undefined,
+      contextOptions: guard ? { serviceWorkers: 'block' } : {},
+    });
+    viewport = fitSize(viewport, rect);
+  }
+  const resized = viewport.width !== requestedViewport.width || viewport.height !== requestedViewport.height;
+  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, ...(resized ? { requestedViewport } : {}), simulateOutage, compareTo };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
