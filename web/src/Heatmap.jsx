@@ -87,39 +87,17 @@ export function Heatmap({ runId, report, traces, personas, selected, hovered = n
     const ctx = heatRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
-    // Time spent, as a capped glow: summed off screen, then painted with a ceiling, so the busiest spots stay a
-    // see-through red instead of burning to white over the level (found by a design-review agent).
-    const off = document.createElement('canvas');
-    off.width = W;
-    off.height = H;
-    const o = off.getContext('2d');
-    o.globalCompositeOperation = 'lighter';
-    for (const p of report.heat) {
-      const g = o.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
-      g.addColorStop(0, 'rgba(255, 255, 255, 0.035)');
-      g.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      o.fillStyle = g;
-      o.fillRect(p.x - 18, p.y - 18, 36, 36);
-    }
-    const img = o.getImageData(0, 0, W, H);
-    const px = img.data;
-    for (let i = 0; i < px.length; i += 4) {
-      const v = Math.min(1, px[i + 3] / 255) ** 0.7; // density is in the alpha channel (colour channels come back unpremultiplied)
-      px[i] = 255;
-      px[i + 1] = 107;
-      px[i + 2] = 107;
-      px[i + 3] = Math.round(v * 0.42 * 255);
-    }
-    ctx.putImageData(img, 0, 0);
+    // Only where each ghost died, in its colour: the glow of time spent read as stains on the level, like an error
+    // (three critical user agents and Rafa, 22 Nov).
     for (const d of report.deaths) {
       const c = personas[d.persona]?.color ?? '#fff';
       const y = Math.min(H - 12, d.y);
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 6;
       ctx.strokeStyle = '#0b0d17';
-      cross(ctx, d.x, y);
-      ctx.lineWidth = 2.5;
+      cross(ctx, d.x, y, 7);
+      ctx.lineWidth = 3;
       ctx.strokeStyle = c;
-      cross(ctx, d.x, y);
+      cross(ctx, d.x, y, 7);
     }
   }, [report, personas, W, H]);
 

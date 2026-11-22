@@ -503,8 +503,8 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} hovered={hovered} onHover={setHovered} onSelect={select} resolved={resolved} />
           <p className="legend small muted">
             {report.positionSource === 'ghosts'
-              ? "This game has no Ghostrun SDK: positions and deaths are what each ghost reported seeing on screen · red glow = where they were · ✕ = deaths · click a box to see its replay"
-              : "Level rebuilt from the ghosts' screenshots · red glow = where ghosts spent time · ✕ = deaths (ghost color) · click a box to see its replay"}
+              ? "This game has no Ghostrun SDK: positions and deaths are what each ghost reported seeing on screen · ✕ = where a ghost died, in its colour · click a box to see its replay"
+              : "Level rebuilt from the ghosts' screenshots · ✕ = where a ghost died, in its colour · click a box to see its replay"}
           </p>
         </div>
       ) : (
