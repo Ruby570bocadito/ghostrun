@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { GhostIcon, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
+import { DEMO } from './demo.js';
 import { Compare, useBefore, diffFindings } from './Compare.jsx';
 
 const CRITICAL = ['blocker', 'missed', 'stuck', 'hard_to_see'];
@@ -213,11 +214,13 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </div>
         <div className="run-bar-right">
           <button className="btn-ghost" onClick={onHome}>
-            New game
+            {DEMO ? 'All playtests' : 'New game'}
           </button>
-          <button className="btn-primary" onClick={() => setShowRerun((v) => !v)} aria-expanded={showRerun}>
-            Re-run after a fix
-          </button>
+          {!DEMO && (
+            <button className="btn-primary" onClick={() => setShowRerun((v) => !v)} aria-expanded={showRerun}>
+              Re-run after a fix
+            </button>
+          )}
         </div>
       </div>
       {showRerun && (

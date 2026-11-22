@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from 'react';
+import { DEMO, api } from './demo.js';
 
 const initial = { status: 'connecting', config: null, order: [], ghosts: {}, log: [], report: null, failure: null, startedAt: null, finishedAt: null };
 
@@ -72,6 +73,18 @@ export function useRun(runId) {
   const [state, dispatch] = useReducer(reducer, initial);
   useEffect(() => {
     if (!runId) return undefined;
+    if (DEMO) {
+      // The static demo has no live stream: the run is a recorded one, shown as its report.
+      let cancelled = false;
+      dispatch({ type: 'reset' });
+      fetch(api(`/api/runs/${runId}`))
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
+        .then((j) => !cancelled && dispatch({ type: 'report', report: j.report }))
+        .catch(() => !cancelled && dispatch({ type: 'failed', message: 'This playtest is not part of the demo.' }));
+      return () => {
+        cancelled = true;
+      };
+    }
     let es = null;
     let ended = false;
     let misses = 0;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TYPE_LABEL } from './Heatmap.jsx';
+import { api } from './demo.js';
 
 const CRITICAL = ['blocker', 'missed', 'stuck'];
 const intersects = (a, b) => a && b && a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1;
@@ -47,7 +48,7 @@ export function useBefore(compareTo) {
   useEffect(() => {
     if (!compareTo) return undefined;
     let cancelled = false;
-    fetch(`/api/runs/${compareTo}`)
+    fetch(api(`/api/runs/${compareTo}`))
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => !cancelled && setBefore(j?.report ?? null))
       .catch(() => {});

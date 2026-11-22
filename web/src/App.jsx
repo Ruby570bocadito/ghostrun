@@ -4,6 +4,8 @@ import { Summon } from './Summon.jsx';
 import { Haunting } from './Haunting.jsx';
 import { Report } from './Report.jsx';
 import { useRun } from './useRun.js';
+import { DEMO, api } from './demo.js';
+import { DemoGallery } from './DemoGallery.jsx';
 
 export const APP_NAME = 'Ghostrun';
 
@@ -21,7 +23,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/config')
+    fetch(api('/api/config'))
       .then((r) => r.json())
       .then(setConfig)
       .catch(() => setConfig({ error: true }));
@@ -61,15 +63,21 @@ export default function App() {
             <span className="chip mono" title="Model the ghosts play with">
               {config.model}
             </span>
-            <span className="chip mono" title="AI spending of this server so far, against its cap">
-              AI spend ${config.budget.spentUsd.toFixed(2)} / ${config.budget.capUsd}
-            </span>
+            {DEMO ? (
+              <span className="chip mono" title="No server: these playtests were recorded from the real app">
+                Free demo · recorded playtests
+              </span>
+            ) : (
+              <span className="chip mono" title="AI spending of this server so far, against its cap">
+                AI spend ${config.budget.spentUsd.toFixed(2)} / ${config.budget.capUsd}
+              </span>
+            )}
           </div>
         )}
       </header>
 
       <main>
-        {!runId && <Summon config={config} onStarted={openRun} />}
+        {!runId && (DEMO ? <DemoGallery config={config} /> : <Summon config={config} onStarted={openRun} />)}
         {runId && !showReport && <Haunting run={run} runId={runId} personas={personas} onHome={goHome} />}
         {runId && showReport && <Report run={run} runId={runId} personas={personas} onHome={goHome} onRerun={openRun} />}
       </main>

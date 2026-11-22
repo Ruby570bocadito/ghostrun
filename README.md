@@ -6,6 +6,8 @@
 
 **Evidence:** [benchmark with known answers](bench/README.md) · [AI design decisions, measured](bench/README.md#experiments-on-our-ai-design-decisions) · [people vs ghosts](bench/README.md#people-vs-ghosts) · [what happens when things fail](docs/failure-handling.md) · [where a person checked the AI's work](docs/ai-review-log.md)
 
+**Try it without installing anything:** [free demo with 9 real playtests, recorded](https://huggingface.co/spaces/Ruby570/ghostrun) (reports, replays and before/after; new playtests need the app and your own API key).
+
 Built by Rafael Gálvez (solo, student) for the [Global AI Builder's Challenge](https://global-ai-builders-challenge.devpost.com/), 21–28 November 2026.
 
 ## The problem
@@ -120,7 +122,7 @@ npm start                   # http://localhost:5180
 
 Then pick "No game handy? Try ours" on the home page, or paste any web game's link. The test games are also playable by people at <http://localhost:5180/play/>.
 
-- `npm test`: 32 tests (analysis, ghost feedback, failure handling, public-demo protections), no API key needed.
+- `npm test`: 46 tests (analysis, ghost feedback, failure handling, public-demo protections), no API key needed.
 - `npm run bench -- --label mine --reps 2`: the benchmark (about $0.30 with Ember).
 - Public deployment (Docker, protections for strangers' links): [docs/deploy.md](docs/deploy.md).
 
@@ -143,7 +145,7 @@ More in [the benchmark's limitations](bench/README.md#limitations).
 
 ## What's next
 
-- Public demo (ready to deploy: [docs/deploy.md](docs/deploy.md)) and a blind test with people who have never seen the games.
+- A live public demo where anyone can start a playtest (ready to deploy: [docs/deploy.md](docs/deploy.md); today the [free demo](https://huggingface.co/spaces/Ruby570/ghostrun) shows recorded runs) and a blind test with people who have never seen the games.
 - More genres: point-and-click, puzzle, mobile-size games.
 - Run the ghosts on every build (CI), and a local model option for unreleased games.
 
