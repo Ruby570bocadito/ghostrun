@@ -91,6 +91,77 @@ So the ghosts are now told that a tap happens at the start of the move (walk to 
 
 Fewer deaths at fair spots, the same detection, slightly more cost (the instructions are longer). The finish rate did not improve: Spike Maze stays at 0%, and one ghost fewer finished in three games, within the noise of 40 ghosts.
 
+### Ghosts that play with their heads (criteria written before measuring, 22 Nov)
+
+Watching the traces, the ghosts still looked clumsy, and a judge would blame the AI, not the game. [play-quality.mjs](play-quality.mjs) measures it on recorded traces, without the API, against the level's real geometry (which the ghosts are never told): `node bench/play-quality.mjs optimized-v6 optimized-v7`.
+
+What changed (rediseno/PLAN.md, section F):
+
+1. **Facts about each death** (`src/feedback.mjs`, `JumpLog` and `jumpFacts`), measured from the game's own state: where the ghost took off compared with the furthest point it had stood on, how far the jump carried it, whether it walked off the edge, and where it reappears ("at a checkpoint, not the start"). After repeated deaths at one spot: its last takeoffs, its longest jump and the keys that did nothing there (`keys.mjs › deadKeysNear`). The old hint ("try … another key") is gone: 78 of the 206 keys tapped in mid-air came right after it.
+2. **"Run N px, then tap"** (`tap_after_px`, games with the SDK only): the ghost judges by eye how far the edge is; the harness keeps its keys held, checks the distance every 20 ms of game time and taps there, about 40 ms early or late like a person. The distance is the model's estimate, so it can still misjudge it. A scripted test on the real Gap Run takes off within ±10 px of the planned point (`test/runup.test.mjs`).
+3. **No decisions while falling**: if a move ends with the character falling below every floor it has stood on, its keys stay held until it lands or dies (at most 1.5 s).
+4. Thoughts are asked "in the words of a player: no milliseconds, no pixels". New prompt cache key (`ghostrun-ghost-v3`).
+
+The ghosts are still not told where gaps are or how wide: an impossible gap must stay impossible, and a fair one can still be misjudged.
+
+| Measured by play-quality.mjs | Before (v6 + v7, 40 runs) | Target |
+|---|---|---|
+| Deaths per ghost, clean Gap Run | 1.31 | **≤ 0.5** |
+| Jumps at Gap Run's first gap taking off more than 40 px before the edge | 78% (median 81 px)¹ | **≤ 25%** |
+| Keys tapped in mid-air that do nothing there, per Gap Run run with the flaw | 18.3 | **≤ 5** |
+| Decisions taken while falling below the floor (platformers) | 96 of 2,099 | **0** (except a fall longer than 1.5 s) |
+| Ghosts with ≥ 2 clean attempts at the impossible gap (≤ 15 px from the edge, holding →) | 38% | **≥ 75%** |
+| "Back at the start" thoughts after reappearing at a checkpoint | 17 | close to 0 |
+| Exit interviews that blame the wrong thing (Gap Run) | 2 of 4 (live run 16-31-09; v6/v7 had no interviews) | **none** |
+
+¹ The diagnosis said 82%, which is what the same jumps give with a 30 px line instead of 40 px (distance from the character's centre to the edge).
+
+**Must not get worse** (`node bench/compare.mjs optimized-v6+optimized-v7 <after>`, per game): the planted flaw found in every Gap Run, Read Me and Lever Room run where v6/v7 found it (the impossible gap stays a blocker); 0 false alarms on the clean versions; ghosts that finish the clean games ≥ 74%, and clean Read Me ≥ 6 of 8 (jump, then dash in mid-air); ≤ $0.018 billed per run. If better play makes a "hard but possible" flaw disappear, we say so per game.
+
+**F5, the measurement** (needs `MODEL_API_KEY`; 20 runs × 4 ghosts, about $0.32):
+
+```
+node bench/run.mjs --label f5-gap-run --games gap-run --reps 4
+node bench/run.mjs --label f5-readme-lever --games read-me,lever-room --reps 3
+node bench/play-quality.mjs f5-gap-run f5-readme-lever
+node bench/compare.mjs optimized-v6+optimized-v7 f5-gap-run+f5-readme-lever
+```
+
+Run it on the games as they were for v6 and v7 (games v1): the new art moves Gap Run's edges and makes its pits shallower, so a round on it is not a before/after of the ghosts alone. The plan measured Gap Run after the facts and the other two after the run-up; the code has all of it at once, so this round measures the whole change, not each part. Results go here, next to this table, whatever they say.
+
+**F5 results** (22 Nov, games v1; [f5-gap-run](results/f5-gap-run.md): Gap Run ×4, [f5-readme-lever](results/f5-readme-lever.md): Read Me and Lever Room ×3; 20 runs, $0.24). Mixed: half the targets met, the jumping itself did not improve.
+
+| | Before (v6 + v7) | F5 | Target | |
+|---|---|---|---|---|
+| Decisions taken while falling below the floor | 96 of 2,099 | 5 of 1,394 | 0 | ✓ (almost) |
+| "Back at the start" thoughts after a checkpoint | 17 | 0 | ~0 | ✓ |
+| Exit interviews that blame the wrong thing | 2 of 4 (live run) | 0 of 32 | none | ✓ |
+| Flaws found / false alarms (these three games) | — | 10/10 · 0/10 | no worse | ✓ |
+| Billed cost per run | ≤ $0.018 limit | $0.0136 Gap Run, $0.0110 Read Me + Lever Room | ≤ $0.018 | ✓ |
+| Ghosts that finished the clean version | Gap Run 100%, Lever Room 94%, Read Me 81% | 94%, 92%, 92% | ≥ 74%; Read Me ≥ 6/8 | ✓ (about the same) |
+| Takeoffs more than 40 px before Gap Run's first gap | 78% (median 81 px) | 67% (median 89 px) | ≤ 25% | ✗ |
+| Deaths per ghost, clean Gap Run | 1.31 | 1.44 | ≤ 0.5 | ✗ |
+| Keys tapped in mid-air per Gap Run run with the flaw | 18.3 | 31.3 pressed in the air (39.3 counted when the move was decided, as before) | ≤ 5 | ✗ (worse) |
+| Ghosts with ≥ 2 clean attempts at the impossible gap | 38% | 25% | ≥ 75% | ✗ |
+
+The finish rate over all games went from 74% to 93%, but that compares five games with three: Spike Maze, where no ghost finishes, was not in this round. Per game it is about the same.
+
+**Why the jumps did not improve** (from the F5 traces, no API): the ghosts used the run-up in 611 of 1,394 moves, and their estimate of the distance to the edge was not the problem (median 0.94 of the real distance; half of them within 0.83–1.03). The harness was: the run-up came out of `duration_ms`, so a 240 px run in an 800 ms action stopped after ~140 px and jumped 100 px early. 70 of the 157 run-ups at Gap Run's gaps were cut short that way. It also left little time after the tap (median 240 ms, while a jump lasts ~830 ms), so the ghost was asked again in the middle of its jump and tapped Space in the air: 128 of the 221 moves with a mid-air tap came right after such a move. The metric also needed a correction: it judged a tap by the state when the move was decided, but after a run-up the tap comes later, sometimes after landing (71 of those 221 taps were pressed on the floor).
+
+**The fix** (one change, `src/ghost.mjs`): the run-up has its own time budget (up to 3.5 s, enough for 600 px) and `duration_ms` counts from the tap, so the run reaches the distance the ghost chose and the jump has the whole action to land. The rule and the schema say so; prompt cache key `ghostrun-ghost-v4`. `test/runup.test.mjs`: a ~190 px run-up in a 900 ms action takes off within ±10 px, runs on for 900 ms after the tap and has landed before the next decision. **After the fix** ([f5b-gap-run](results/f5b-gap-run.md): Gap Run ×4, games v1, 8 runs, $0.08; `node bench/play-quality.mjs f5b-gap-run`). Read Me and Lever Room were not re-measured: their numbers above are from F5, before this fix.
+
+| Gap Run | Before (v6 + v7) | F5 | After the fix | Target | |
+|---|---|---|---|---|---|
+| Takeoffs more than 40 px before the first gap | 78% (median 81 px) | 67% (89 px) | **19%** (21 px) | ≤ 25% | ✓ |
+| Ghosts with ≥ 2 clean attempts at the impossible gap | 38% | 25% | **75%** | ≥ 75% | ✓ |
+| Keys tapped in mid-air per run with the flaw (pressed in the air) | 18.3 | 31.3 | 21.0 | ≤ 5 | ✗ |
+| Deaths per ghost, clean Gap Run | 1.31 | 1.44 | 1.69 | ≤ 0.5 | ✗ (16/16 finished) |
+| Decisions taken while falling below the floor | 96 of 2,099 | 5 of 1,394 | 6 of 407 | 0 | almost |
+| "Back at the start" thoughts / wrong-blame interviews | 17 / — | 0 / 0 of 32 | 1 / 0 of 32 | ~0 / none | ✓ |
+| Flaw found · false alarms · clean finished · billed per run | — | 4/4 · 0/4 · 94% · $0.0136 | 4/4 · 0/4 · 16/16 · $0.0095 | no worse | ✓ |
+
+Met: the ghosts now jump at the edge, and at the impossible gap three in four make at least two clean attempts, which is the proof that the gap, not the ghost, is the problem. Not met: they still tap keys in mid-air about as often as before the whole change, and they die a little more in the clean Gap Run (all of them finish it anyway). With 4 runs per variant these are small samples.
+
 **Across all five rounds** (100 runs): **44/50** flaws found (76–94%), **0/50** false alarms (at most 7%); 34 found by what the ghosts did, 10 by the contrast measurement (`node bench/compare.mjs before-cache-v5 optimized-v3-gapfix+optimized-v3-holdout-gapfix+optimized-v5-gapfix+optimized-v6+optimized-v7`).
 
 ## Real jam games made by other people

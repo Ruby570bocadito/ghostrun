@@ -12,7 +12,11 @@ import OpenAI from 'openai';
 export { PRICES, costOf } from './prices.mjs';
 
 export const SAW = ['playing', 'menu', 'died', 'level_complete', 'other'];
-export const CACHE_KEY = 'ghostrun-ghost-v2';
+// v3 (F3, 22 Nov): "run N px, then tap" (tap_after_px) for games with the SDK, and thoughts in a player's words.
+// v4 (after F5): with tap_after_px, duration_ms counts from the tap.
+export const CACHE_KEY = 'ghostrun-ghost-v4';
+// Longest run-up before a delayed tap, in px.
+export const MAX_TAP_AFTER_PX = 600;
 
 // Per-model timeouts: Spark took over 30 s on 11% of its moves in the A1 comparison.
 const TIMEOUT_MS = { 'muse-ember-1.0': 20_000, 'muse-spark-1.3': 60_000, 'muse-wonder-1.0': 90_000 };
@@ -24,17 +28,28 @@ const TIMEOUT_MS = { 'muse-ember-1.0': 20_000, 'muse-spark-1.3': 60_000, 'muse-w
  * got a false alarm (0 of 8 with it). Asking where it is makes the model reason about where it is
  * (bench/README.md, "Tried and rejected").
  */
-export function moveSchema(w, h) {
+export function moveSchema(w, h, { sdk = false } = {}) {
   const point = {
     type: 'object',
     properties: { x: { type: 'integer' }, y: { type: 'integer' } },
     required: ['x', 'y'],
     additionalProperties: false,
   };
+  // With the SDK the game can tell where the character is while it runs, so the tap can wait for a distance the
+  // ghost chose by eye (ghost.mjs). Without it there is no way to know when that distance is reached.
+  const tapAfter = sdk
+    ? {
+        tap_after_px: {
+          type: 'integer',
+          description: `How far to keep moving, holding your keys, before the tap happens, in pixels of the screenshot as you judge them by eye (0 = tap at once, up to ${MAX_TAP_AFTER_PX}). Use it to jump right at an edge: the distance from you to the edge. The run takes the time it needs; duration_ms then counts from the tap.`,
+        },
+      }
+    : {};
   return {
     type: 'object',
     properties: {
-      thought: { type: 'string', description: 'What you notice or feel right now, first person, in character, at most 15 words.' },
+      // Thoughts are shown to people in the report: they read like a player, not like our interface ("600ms jump").
+      thought: { type: 'string', description: 'What you notice or feel right now, first person, in character, at most 15 words, in the words of a player: no milliseconds, no pixels.' },
       saw: {
         type: 'string',
         enum: SAW,
@@ -61,11 +76,12 @@ export function moveSchema(w, h) {
         description: 'Keys to tap once at the very start of the action, from where you stand now (for example Space to jump, or a letter key the game tells you to use).',
         items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ', 'KeyR'] },
       },
+      ...tapAfter,
       duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms.' },
       confused: { type: 'boolean', description: 'True if you do not understand what to do or why something happened.' },
       quit: { type: 'boolean', description: 'True only if, in character, you would stop playing this game right now and never come back.' },
     },
-    required: ['thought', 'saw', 'player', 'click', 'hold', 'tap', 'duration_ms', 'confused', 'quit'],
+    required: ['thought', 'saw', 'player', 'click', 'hold', 'tap', ...Object.keys(tapAfter), 'duration_ms', 'confused', 'quit'],
     additionalProperties: false,
   };
 }
@@ -88,15 +104,21 @@ export const DEBRIEF_SCHEMA = {
   additionalProperties: false,
 };
 
-// Identical for every ghost and every game, so it is the start of the cached prefix.
-const SHARED_RULES = [
+// Identical for every ghost and every game of one kind (with or without the SDK), so it is the start of the cached prefix.
+const rules = (sdk) => [
   'You are a playtester for web games, playing a game you have never seen before. Each turn you get one screenshot.',
   'The game is PAUSED while you think. It only moves forward for the duration_ms you choose, while your keys are held.',
   'You can also click buttons with the mouse, for example to start the game from a menu or to retry after dying.',
   // From an analysis of 5,761 recorded moves (22 Nov): 69% of deaths at fair gaps were jumps started too early, because
   // ghosts expected a tap to wait for the edge; jumps prepared by a separate walk to the edge crossed 72% of the time,
   // against 27% for jumps started while running. And 28 of 58 fatal moves in a maze with no jump were planned jumps.
-  'Taps happen once, at the very START of the action, from where you stand now: nothing waits until you reach an edge. To jump a gap, first walk to the edge in short steps, then jump in the next action while holding the direction. Holding a key longer does not make a jump longer.',
+  sdk
+    ? // F3 (22 Nov): even after that rule, 82% of the jumps at Gap Run's first gap took off more than 40 px before the
+      // edge. A person runs and presses at the edge; now the ghost can too, judging the distance by eye.
+      'Taps happen once. With tap_after_px 0 the tap happens at the very START of the action, from where you stand now. To jump at an edge, hold the direction and set tap_after_px to the distance from you to the edge as you see it: you keep running that far and the tap happens there, and duration_ms counts from that tap. Holding a key longer does not make a jump longer.'
+    : 'Taps happen once, at the very START of the action, from where you stand now: nothing waits until you reach an edge. To jump a gap, first walk to the edge in short steps, then jump in the next action while holding the direction. Holding a key longer does not make a jump longer.',
+  // F4: the ghost used to decide while already falling into a pit ("jump straight up"): the game now waits for it.
+  ...(sdk ? ['If an action ends while you are falling, the game keeps your keys held until you land or die, so you never have to decide in mid-fall.'] : []),
   'Use the controls this game shows. Not every game has a jump: if it only shows keys to move, go around hazards instead of jumping over them.',
   // Real jam games by other people (22 Nov): ghosts misread what they controlled and spent moves waiting.
   'In a game you do not know yet, first find out what you control: try one key at a time in short actions and watch what moves. If keys do nothing, click on the game. While playing, waiting rarely teaches you anything.',
@@ -108,10 +130,11 @@ const SHARED_RULES = [
   'Your thought must describe something new you notice this turn. Do not repeat earlier thoughts.',
   'Answer only with the JSON object.',
 ].join('\n');
+const SHARED_RULES = { false: rules(false), true: rules(true) };
 
-export function systemPrompt(persona, controlsHint, w, h) {
+export function systemPrompt(persona, controlsHint, w, h, { sdk = false } = {}) {
   return [
-    SHARED_RULES,
+    SHARED_RULES[Boolean(sdk)],
     '',
     `Screenshots are ${w}x${h} pixels.`,
     `Your personality: you are ${persona.name}. ${persona.style}`,
@@ -192,15 +215,19 @@ export function createMetaBrain({
       timeout: TIMEOUT_MS[model] ?? 30_000,
     });
   const { width: w, height: h } = viewport;
-  const system = systemPrompt(persona, controlsHint, w, h);
-  const schema = moveSchema(w, h);
+  // Games with the SDK get the "run N px, then tap" field and its rule (the ghost tells us with each move).
+  const prompts = {};
+  const promptFor = (sdk) => (prompts[Boolean(sdk)] ??= { system: systemPrompt(persona, controlsHint, w, h, { sdk }), schema: moveSchema(w, h, { sdk }) });
+  let lastSdk = false;
 
   return {
     id: 'meta',
     model,
     coords: 'pixels', // units of move.player and move.click
-    /** history: finished lines describing earlier moves and what happened; notes: hints for this turn only. */
-    async decide({ screenshot, history = [], notes = [] }) {
+    /** history: finished lines describing earlier moves and what happened; notes: hints for this turn only; sdk: the game reports its state. */
+    async decide({ screenshot, history = [], notes = [], sdk = false }) {
+      lastSdk = Boolean(sdk);
+      const { system, schema } = promptFor(sdk);
       const t0 = performance.now();
       const res = await api.chat.completions.create({
         model,
@@ -225,7 +252,8 @@ export function createMetaBrain({
       return { move, usage, latencyMs };
     },
     /** The exit interview after the last move: what the ghost understood and what stopped it, about the whole game. */
-    async debrief({ screenshot, history = [], summary = '' }) {
+    async debrief({ screenshot, history = [], summary = '', sdk = lastSdk }) {
+      const { system } = promptFor(sdk);
       const t0 = performance.now();
       const res = await api.chat.completions.create({
         model,

@@ -36,6 +36,14 @@ function walkingSpeed(trace) {
   return walk;
 }
 
+/** The first frame after the tap: the move's first, or later when the ghost ran a distance first ("tap after N px"). */
+export function tapFrame(trace, step) {
+  const ms = step.tapAt?.ms;
+  if (!ms || !Number.isFinite(step.t0)) return step.frames[0];
+  for (let i = step.frames[0]; i <= step.frames[1]; i++) if ((trace.frames[i]?.t ?? -Infinity) > step.t0 + ms) return i;
+  return step.frames[1];
+}
+
 /**
  * Did the key tapped in this move do anything? Yes when, in its first frames, the character started going up
  * from the floor, moved clearly faster than walking (not by falling), a game field other than position changed,
@@ -43,10 +51,11 @@ function walkingSpeed(trace) {
  */
 export function tapHadEffect(trace, step, walk, firstFrames = 3) {
   if (!step.frames) return null;
-  const before = trace.frames[Math.max(0, step.frames[0] - 1)]?.state;
+  const from = tapFrame(trace, step);
+  const before = trace.frames[Math.max(0, from - 1)]?.state;
   if (!before) return null;
   if ((step.events ?? []).some((e) => e === 'milestone' || e === 'win' || e?.type === 'milestone' || e?.type === 'win')) return true;
-  for (let i = step.frames[0]; i <= Math.min(step.frames[1], step.frames[0] + firstFrames - 1); i++) {
+  for (let i = from; i <= Math.min(step.frames[1], from + firstFrames - 1); i++) {
     const st = trace.frames[i]?.state;
     if (!st) continue;
     if (before.onFloor && (st.vy ?? 0) < -100) return true;
@@ -119,4 +128,29 @@ export function keyFact(rows) {
       : `${keyName(r.key)} did something in ${r.effects} of ${r.presses} presses`,
   );
   return `Keys the ghosts tapped near this spot, measured from the game over the whole run (presses where it was the only key tapped): ${parts.join('; ')}.`;
+}
+
+/**
+ * For the ghost itself: keys it tapped on their own in moves that started within `radius` px of a spot and that
+ * never did anything there, split by where it was (on the floor or in the air). A key that did something at least
+ * once in that situation is left out. [{ key, where: 'on the floor' | 'in the air' | 'here', presses }]
+ */
+export function deadKeysNear(trace, center, { radius = 120, minPresses = 2 } = {}) {
+  if (!center || !trace?.frames?.some((f) => f.state)) return [];
+  const walk = walkingSpeed(trace);
+  const rows = new Map();
+  for (const s of trace.steps ?? []) {
+    const k = soloTap(s.move);
+    const p = s.before;
+    if (!k || !p || Math.hypot(p.x - center.x, p.y - center.y) > radius) continue;
+    const effect = tapHadEffect(trace, s, walk);
+    if (effect == null) continue;
+    const st = trace.frames[Math.max(0, tapFrame(trace, s) - 1)]?.state;
+    const where = typeof st?.onFloor === 'boolean' ? (st.onFloor ? 'on the floor' : 'in the air') : 'here';
+    const row = rows.get(`${k}|${where}`) ?? { key: k, where, presses: 0, effects: 0 };
+    row.presses += 1;
+    if (effect) row.effects += 1;
+    rows.set(`${k}|${where}`, row);
+  }
+  return [...rows.values()].filter((r) => r.effects === 0 && r.presses >= minPresses).map(({ key, where, presses }) => ({ key, where, presses }));
 }

@@ -2,7 +2,9 @@
 // while the brain thinks ("bullet time").
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { DeathSpots, historyLine, outcomeOf, turnNotes, walkSpeed } from './feedback.mjs';
+import { DeathSpots, JumpLog, historyLine, jumpFacts, outcomeOf, turnNotes, walkSpeed } from './feedback.mjs';
+import { deadKeysNear } from './keys.mjs';
+import { MAX_TAP_AFTER_PX } from './brains/meta.mjs';
 import { sumUsage } from './brains/prices.mjs';
 
 export const DEFAULT_VIEWPORT = { width: 640, height: 360 };
@@ -24,6 +26,18 @@ const MAX_SAFE_MOVES_IN_A_ROW = 3;
 const CLICK_PRESS_MS = 90;
 // Longest real time to wait for a game to create its canvas after the page has loaded.
 const CANVAS_WAIT_MS = 6000;
+// F3, "run N px, then tap": the run-up advances the frozen clock in slices this long, checking the distance after each.
+const RUN_UP_SLICE_MS = 20;
+// The run-up has its own time budget and duration_ms counts from the tap. F5 (22 Nov): when the run-up came out of
+// duration_ms, 70 of 157 run-ups at Gap Run's gaps were cut short by it (a 240 px run in an 800 ms move: tap 100 px
+// early), and half the jumps left under 240 ms after the tap, so the ghost was asked again mid-jump and tapped Space
+// in the air (128 of 221 mid-air taps came right after such a move). 600 px at walking speed (180 px/s) is ~3.3 s.
+export const MAX_RUN_UP_MS = 3500;
+// A person presses a little early or late: a delayed tap moves by a random time with this standard deviation.
+export const HUMAN_ERROR_MS = 40;
+// F4: while the character falls below every floor it has stood on, the game runs on with the keys held, up to this long.
+export const MAX_FALL_HOLD_MS = 1500;
+const FALL_SLICE_MS = 50;
 
 const readEvents = (page, from) => page.evaluate((n) => (window.__ghost ? window.__ghost.events.slice(n) : []), from);
 const readState = (page) =>
@@ -36,6 +50,7 @@ const point = (p, w = 2000, h = 2000) =>
 export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
   const hold = [...new Set((m?.hold ?? []).filter((k) => typeof k === 'string'))].slice(0, 2);
   const tap = [...new Set((m?.tap ?? []).filter((k) => typeof k === 'string' && !hold.includes(k)))].slice(0, 2);
+  const tapAfter = tap.length ? clamp(Math.round(Number(m?.tap_after_px) || 0), 0, MAX_TAP_AFTER_PX) : 0;
   return {
     thought: String(m?.thought ?? '').slice(0, 160),
     saw: SAW.includes(m?.saw) ? m.saw : 'playing',
@@ -46,6 +61,7 @@ export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
       .slice(0, 2),
     hold,
     tap,
+    ...(tapAfter ? { tap_after_px: tapAfter } : {}),
     duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, 1500),
     confused: Boolean(m?.confused),
     quit: Boolean(m?.quit),
@@ -148,6 +164,8 @@ export async function runGhost({
   guard = null, // async (url) => may the game page load it? Set by the public demo (src/guard.mjs)
   debrief = true, // after its last move, the ghost answers a short exit interview (if its brain can)
   onDebrief = () => {},
+  humanErrorMs = HUMAN_ERROR_MS, // spread of a delayed tap (F3); 0 = exact, for tests
+  rng = Math.random,
   signal,
 }) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -208,12 +226,55 @@ export async function runGhost({
     // Bullet time: step the frozen clock in small slices so we can record frames for clips and heatmaps.
     let left = ms;
     while (left > 0) {
-      const slice = Math.min(frameEveryMs, left);
-      await page.clock.runFor(slice);
-      gameMs += slice;
+      const slice = Math.min(frameEveryMs - sinceCapture, left);
+      await tick(slice);
       left -= slice;
+    }
+  };
+  // Moves the frozen clock on, recording a frame every frameEveryMs of game time (and at the end of a move: flush()).
+  let sinceCapture = 0;
+  const tick = async (ms) => {
+    await page.clock.runFor(ms);
+    gameMs += ms;
+    sinceCapture += ms;
+    if (sinceCapture >= frameEveryMs) {
+      sinceCapture = 0;
       await capture();
     }
+  };
+  const flush = async () => {
+    if (sinceCapture > 0) {
+      sinceCapture = 0;
+      await capture();
+    }
+  };
+  const eventsSoFar = () => page.evaluate(() => (window.__ghost ? window.__ghost.events.length : 0));
+  const gauss = () => Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
+
+  /**
+   * F3: keeps the held keys down until the character has moved `px` (the ghost's own estimate), stops moving, or
+   * `maxMs` runs out. The tap point moves by a human error in time (normal, sd humanErrorMs, at most 2 sd) at the
+   * current speed. Returns the time used, where the tap happens and how far the character ran.
+   */
+  const runUp = async (px, maxMs) => {
+    const errMs = humanErrorMs ? clamp(gauss() * humanErrorMs, -2 * humanErrorMs, 2 * humanErrorMs) : 0;
+    let st = (await readState(page)).state;
+    const x0 = st.x;
+    let ms = 0;
+    let still = 0;
+    let lastX = x0;
+    for (;;) {
+      const speed = Number.isFinite(st.vx) ? Math.abs(st.vx) : 0;
+      if (Math.abs(st.x - x0) >= px + (speed * errMs) / 1000 || ms + RUN_UP_SLICE_MS > maxMs) break;
+      if (ms > 0 && Math.abs(st.x - lastX) < 0.5) {
+        if (++still >= 3) break; // blocked or not moving: a person would press now
+      } else still = 0;
+      lastX = st.x;
+      await tick(RUN_UP_SLICE_MS);
+      ms += RUN_UP_SLICE_MS;
+      st = (await readState(page)).state;
+    }
+    return { ms, x: st.x, y: st.y, run: Math.round(Math.abs(st.x - x0)), errorMs: Math.round(errMs) };
   };
 
   try {
@@ -271,6 +332,7 @@ export async function runGhost({
 
     const history = []; // one finished line per move: what the ghost did and what happened (append-only)
     const spots = new DeathSpots();
+    const jumps = new JumpLog(); // F2: takeoffs, jump lengths and respawns, from the game's own state
     const recent = []; // per move: did it achieve nothing?
     const speedSamples = [];
     const seenCells = new Set();
@@ -288,8 +350,11 @@ export async function runGhost({
       }
       const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
       const { now: shotT, state: before } = await readState(page);
+      // Keys that did nothing where it last died, measured around its last fatal takeoff (or the death itself).
+      const lastTry = jumps.jumps.filter((j) => j.died).at(-1);
+      const keysCenter = lastTry ? { x: lastTry.x, y: lastTry.y } : spots.last && { x: spots.last.x, y: spots.last.y };
       const notes = trace.sdk
-        ? turnNotes({ spots, step, recent, speed: walkSpeed(speedSamples) })
+        ? turnNotes({ spots, step, recent, speed: walkSpeed(speedSamples), jumps, deadKeys: keysCenter ? deadKeysNear(trace, keysCenter) : [] })
         : turnNotes({ step, recent }).concat(
             recentDeathSteps.filter((s) => step - s <= 8).length >= 3 ? ['You have died 3 or more times in your last 8 moves. Try something different.'] : [],
           );
@@ -297,7 +362,7 @@ export async function runGhost({
       const pageThinkStart = bulletTime ? null : await page.evaluate(() => performance.now());
       const decision = await decideRobustly(
         brain,
-        { screenshot: shot, history, notes, step },
+        { screenshot: shot, history, notes, step, sdk: trace.sdk },
         {
           onBadOutput: (err) => {
             notices.push({ type: 'bad_output', step, reason: err.message, handled: 'waited 300 ms and kept playing' });
@@ -340,13 +405,33 @@ export async function runGhost({
         clickedMs += CLICK_PRESS_MS;
       }
       for (const k of move.hold) await page.keyboard.down(k);
+      // F3: "run N px, then tap", only where the game reports positions and the clock is frozen.
+      const delayed = Boolean(move.tap_after_px && trace.sdk && bulletTime);
+      let tapAt = before && Number.isFinite(before.x) ? { x: before.x, y: before.y } : null;
+      if (delayed) {
+        const r = await runUp(move.tap_after_px, MAX_RUN_UP_MS);
+        tapAt = { x: Math.round(r.x), y: Math.round(r.y), run: r.run, errorMs: r.errorMs, ms: clickedMs + r.ms }; // ms: after the move began
+      }
       for (const k of move.tap) await page.keyboard.down(k);
       const tapMs = move.tap.length ? Math.min(120, move.duration_ms) : 0;
       if (tapMs) {
         await advance(tapMs);
         for (const k of move.tap) await page.keyboard.up(k);
       }
-      await advance(Math.max(0, move.duration_ms - tapMs - clickedMs));
+      // After a run-up, duration_ms counts from the tap (MAX_RUN_UP_MS explains why).
+      await advance(Math.max(0, move.duration_ms - tapMs - (delayed ? 0 : clickedMs)));
+      // F4: do not hand the decision back while the character is falling below every floor it has stood on: keep
+      // the keys held until it lands or dies (at most MAX_FALL_HOLD_MS), as a person watches the fall.
+      let fallHoldMs = 0;
+      if (trace.sdk && bulletTime) {
+        let st = (await readState(page)).state;
+        while (fallHoldMs < MAX_FALL_HOLD_MS && jumps.fallingBelowFloors(st) && (await eventsSoFar()) === eventCount) {
+          await tick(FALL_SLICE_MS);
+          fallHoldMs += FALL_SLICE_MS;
+          st = (await readState(page)).state;
+        }
+      }
+      if (bulletTime) await flush();
       for (const k of move.hold) await page.keyboard.up(k);
 
       const after = (await readState(page)).state;
@@ -360,7 +445,12 @@ export async function runGhost({
 
       // What happened, told to the ghost on its next turn (and kept in the trace).
       const screenChanged = trace.sdk ? null : !(lastBuf && lastBuf.equals(shot));
-      const outcome = decision.safe ? 'no answer from the model, you waited' : outcomeOf({ before, after, events, sdk: trace.sdk, screenChanged });
+      const died = events.some((e) => e.type === 'death');
+      const observed = trace.sdk
+        ? jumps.observe([before, ...trace.frames.slice(frameFrom).map((f) => f.state)], { step, died, tapX: move.tap.length ? tapAt?.x : null })
+        : null;
+      const facts = died ? jumpFacts(observed, jumps) : null;
+      const outcome = decision.safe ? 'no answer from the model, you waited' : outcomeOf({ before, after, events, sdk: trace.sdk, screenChanged, jump: facts });
       const acted = move.hold.length + move.tap.length + move.click.length > 0;
       const moved = before && after && Number.isFinite(before.x) && Number.isFinite(after.x) && Math.hypot(after.x - before.x, after.y - before.y) >= 4;
       recent.push({ stuck: acted && !events.length && (trace.sdk ? !moved : screenChanged === false) });
@@ -396,7 +486,10 @@ export async function runGhost({
         confused: move.confused,
         quit: move.quit,
         player: move.player,
-        move: { click: move.click, hold: move.hold, tap: move.tap, duration_ms: move.duration_ms },
+        move: { click: move.click, hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
+        ...(move.tap_after_px && trace.sdk && bulletTime ? { tapAt } : {}),
+        ...(fallHoldMs ? { fallHoldMs } : {}),
+        ...(facts ? { facts } : {}),
         before: before && { x: before.x, y: before.y },
         after: after && { x: after.x, y: after.y, deaths: after.deaths, won: after.won },
         events: [...events.map((e) => e.type), ...trace.events.filter((e) => e.source === 'ghost' && e.step === step).map((e) => e.type)],
@@ -439,7 +532,7 @@ export async function runGhost({
         const deaths = trace.steps.reduce((a, s) => a + (s.events ?? []).filter((e) => e === 'death').length, 0);
         const ending = trace.outcome === 'won' ? ' and finished the level' : trace.outcome === 'quit' ? ' and chose to stop' : '';
         const summary = `You made ${trace.steps.length} moves and died ${deaths} time${deaths === 1 ? '' : 's'}${ending}.`;
-        const d = await brain.debrief({ screenshot: shot, history, summary });
+        const d = await brain.debrief({ screenshot: shot, history, summary, sdk: trace.sdk });
         if (d?.answer) {
           trace.debrief = { ...cleanDebrief(d.answer), model: brain.model, usage: d.usage, latencyMs: Math.round(d.latencyMs ?? 0) };
           await onDebrief(trace.debrief);
