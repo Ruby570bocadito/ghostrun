@@ -160,11 +160,6 @@ export function Summon({ config, onStarted }) {
                 <button type="button" key={p.id} className={`persona ${on ? 'on' : 'asleep'}`} style={{ '--c': p.color }} onClick={() => toggle(p.id)} aria-pressed={on}>
                   <span className="persona-art">
                     <GhostSprite persona={p.id} color={p.color} size={76} dim={!on} />
-                    {!on && (
-                      <span className="zzz" aria-hidden="true">
-                        z<small>z</small>
-                      </span>
-                    )}
                   </span>
                   <span className="persona-name">{p.name}</span>
                   <span className="persona-style">{p.tagline ?? `${p.style.split('. ')[0]}.`}</span>

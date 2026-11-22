@@ -26,7 +26,7 @@ export const PERSONAS = {
     quote: "I'm on the middle platform now, so I'll walk right to explore its edge.", // said by this ghost in a recorded run
     name: 'The Completionist',
     emoji: '🔍',
-    color: '#b5179e',
+    color: '#c77dff',
     style:
       'You explore everything: every corner, every object that looks interactive. You go backwards to check you did not miss anything before moving on.',
   },

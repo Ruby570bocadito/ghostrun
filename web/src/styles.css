@@ -223,7 +223,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .finding.hard_to_see { border-left-color: var(--violet); }
 .finding.stuck { border-left-color: var(--orange); }
 .finding.confusion { border-left-color: var(--blue); }
-.finding.quit { border-left-color: #b5179e; }
+.finding.quit { border-left-color: #c77dff; }
 .finding.selected { box-shadow: 0 0 0 1px var(--muted); }
 .finding h3 { margin: 8px 0 4px; font-size: 1.3rem; }
 .badge { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--amber); color: #0b0d17; }
@@ -232,7 +232,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .badge.hard_to_see { background: var(--violet); }
 .badge.stuck { background: var(--orange); }
 .badge.confusion { background: var(--blue); }
-.badge.quit { background: #b5179e; color: #fff; }
+.badge.quit { background: #c77dff; color: #fff; }
 .stat-line { margin: 0 0 10px; color: var(--muted); font-size: 0.82rem; }
 .confidence { margin: 0 0 8px; font-size: 0.8rem; color: var(--muted); }
 .confidence.conf-high { color: var(--good); }
@@ -295,11 +295,32 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .summon-hint { margin: -8px 0 0; }
 .persona { justify-items: start; position: relative; }
 .persona-art { position: relative; display: block; width: 76px; height: 76px; margin-bottom: 2px; }
-.ghost-sprite { display: block; image-rendering: auto; transition: filter 0.2s, opacity 0.2s, transform 0.2s; }
-.ghost-sprite.dim { filter: grayscale(0.85) brightness(0.75); opacity: 0.75; }
-.ghost-sprite.dead { filter: grayscale(1); opacity: 0.6; }
-.persona.on .ghost-sprite { transform: translateY(-2px); }
-.persona:hover .ghost-sprite:not(.dim) { transform: translateY(-5px) rotate(-3deg); }
+/* The ghosts (design 21): line-art SVG, animated by parts. Each persona moves its own way, each mood has its own motion. */
+.ghost { display: block; overflow: visible; transition: opacity 0.2s, filter 0.2s; }
+.ghost.dim { opacity: 0.5; filter: saturate(0.4); }
+.g-art, .g-float, .g-blink { transform-box: fill-box; transform-origin: 50% 50%; }
+.g-float { animation: g-float var(--g-speed, 3.2s) ease-in-out infinite; }
+.g-blink { animation: g-blink 4.6s infinite; }
+.p-newbie .g-float { animation-name: g-wobble; }
+.p-speedrunner { --g-speed: 1.5s; }
+.p-completionist .g-float { animation-name: g-sway; --g-speed: 4.2s; }
+.p-reader { --g-speed: 4.8s; }
+.p-impatient .g-blink { animation-duration: 2.4s; }
+.m-happy .g-float { animation: g-hop 0.9s ease-in-out infinite; }
+.m-angry .g-float { animation: g-shake 0.5s ease-in-out infinite; }
+.m-dead .g-float { animation: g-sink 1.2s ease-out forwards; }
+.m-sleep .g-float { animation: g-float 5.5s ease-in-out infinite; }
+.m-confused .g-float { animation: g-tilt 2.6s ease-in-out infinite; }
+.ghost.still .g-float, .ghost.still .g-blink { animation: none; }
+@keyframes g-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes g-wobble { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-2px) rotate(3deg); } }
+@keyframes g-sway { 0%, 100% { transform: translate(-2px, 0); } 50% { transform: translate(2px, -2px); } }
+@keyframes g-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes g-hop { 0%, 100% { transform: translateY(0) scale(1, 1); } 15% { transform: translateY(0) scale(1.06, 0.92); } 45% { transform: translateY(-7px) scale(0.96, 1.05); } }
+@keyframes g-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-1.5px) rotate(-2deg); } 75% { transform: translateX(1.5px) rotate(2deg); } }
+@keyframes g-sink { to { transform: translateY(6px); opacity: 0.45; } }
+@keyframes g-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+.persona:hover .ghost:not(.dim) .g-art { transform: translateY(-3px); transition: transform 0.2s; }
 .zzz { position: absolute; right: 2px; top: 0; font-family: 'Silkscreen', var(--mono); color: var(--muted); font-size: 0.9rem; line-height: 1; }
 .zzz small { font-size: 0.65rem; position: relative; top: -8px; margin-left: 1px; }
 .persona.asleep .persona-name { color: var(--muted); }
@@ -330,7 +351,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .proof-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ghost-sprite, .persona:hover .ghost-sprite:not(.dim), .persona.on .ghost-sprite { transition: none; transform: none; }
+  .g-float, .g-blink { animation: none !important; }
+  .persona:hover .ghost:not(.dim) .g-art { transform: none; }
 }
 
 /* Report: verdict first, labelled sections, a legend with colours */
@@ -351,7 +373,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .legend-chip.stuck { --t: var(--orange); }
 .legend-chip.confusion { --t: var(--blue); }
 .legend-note { align-self: center; padding: 0 4px; }
-.roster-row .ghost-sprite { flex: none; }
+.roster-row .ghost { flex: none; }
 
 /* Live: the ghost floats over the character it plays; a stamp when it stops */
 .screen { position: relative; }
@@ -394,3 +416,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .exit-chips li.no { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 50%, transparent); }
 .thought.after { color: var(--text); }
 .after-label { color: var(--c, var(--mint)); font-weight: 600; margin-right: 4px; }
+
+/* #/cast: the character sheet */
+.cast { max-width: 1200px; margin: 0 auto; padding: 24px 0 60px; }
+.cast-grid { display: grid; gap: 10px; align-items: center; margin-top: 20px; }
+.cast-head { font-size: 0.8rem; color: var(--muted); text-align: center; }
+.cast-name { font-weight: 700; }
+.cast-cell { display: grid; place-items: center; height: 110px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.cast-sizes { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+.cast-size { display: grid; justify-items: center; gap: 6px; }

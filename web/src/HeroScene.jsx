@@ -1,6 +1,8 @@
 // The home screen's small story: ghosts run a level, most of them fall into the same gap,
 // and the spot gets marked as a blocker. Pure SVG + CSS; still under prefers-reduced-motion.
-// The four default ghosts, drawn with their character art (web/public/ghosts/, made with Muse Image).
+// The four default ghosts, in their line-art design (Ghost.jsx).
+import { GhostShape } from './Ghost.jsx';
+const COLOR = { newbie: '#ffd166', speedrunner: '#4cc9f0', reader: '#80ed99', impatient: '#ff6b6b' };
 const GHOSTS = [
   // still: where each ghost stands in the still picture shown to people who prefer less motion
   { id: 'newbie', delay: 0, falls: true, still: 250 },
@@ -10,8 +12,12 @@ const GHOSTS = [
 ];
 
 function Ghost({ id }) {
-  // The sprite's square has some air around the ghost: drawn 44 px wide so the ghost itself is about the old 32 px.
-  return <image href={`/ghosts/${id}.webp`} x="-6" y="-8" width="44" height="44" />;
+  // The 64 × 72 ghost box, scaled so the body is about 30 px wide and stands where the old sprite stood.
+  return (
+    <g transform="translate(-11 -19) scale(0.85)">
+      <GhostShape persona={id} color={COLOR[id]} />
+    </g>
+  );
 }
 
 export function HeroScene() {

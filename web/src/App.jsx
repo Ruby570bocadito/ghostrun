@@ -3,6 +3,7 @@ import { GhostIcon } from './Ghost.jsx';
 import { Summon } from './Summon.jsx';
 import { Haunting } from './Haunting.jsx';
 import { Report } from './Report.jsx';
+import { Cast } from './Cast.jsx';
 import { useRun } from './useRun.js';
 import { DEMO, api } from './demo.js';
 import { DemoGallery } from './DemoGallery.jsx';
@@ -14,10 +15,14 @@ const runIdFromHash = () => (location.hash.match(/^#\/run\/([\w-]+)/) ?? [])[1] 
 export default function App() {
   const [config, setConfig] = useState(null);
   const [runId, setRunId] = useState(runIdFromHash);
+  const [hash, setHash] = useState(() => location.hash);
   const run = useRun(runId);
 
   useEffect(() => {
-    const onHash = () => setRunId(runIdFromHash());
+    const onHash = () => {
+      setRunId(runIdFromHash());
+      setHash(location.hash);
+    };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -77,7 +82,8 @@ export default function App() {
       </header>
 
       <main>
-        {!runId && (DEMO ? <DemoGallery config={config} /> : <Summon config={config} onStarted={openRun} />)}
+        {hash === '#/cast' && <Cast personas={personas} />}
+        {!runId && hash !== '#/cast' && (DEMO ? <DemoGallery config={config} /> : <Summon config={config} onStarted={openRun} />)}
         {runId && !showReport && <Haunting run={run} runId={runId} personas={personas} onHome={goHome} />}
         {runId && showReport && <Report run={run} runId={runId} personas={personas} onHome={goHome} onRerun={openRun} />}
       </main>
