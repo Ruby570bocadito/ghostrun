@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { GhostIcon } from './Ghost.jsx';
+import { GhostSprite } from './Ghost.jsx';
 import { HeroScene } from './HeroScene.jsx';
-
-const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
+import { HomeBands } from './HomeBands.jsx';
 
 // The test games are served by the app under /play/; turn their paths into full links at this address.
 const here = (path) => new URL(path, window.location.origin).href;
@@ -91,7 +90,7 @@ export function Summon({ config, onStarted }) {
 
       <form className="summon-card" onSubmit={submit} noValidate>
         <label className="field-label" htmlFor="game-url">
-          Game link
+          Your game's link
         </label>
         <div className="url-row">
           <input
@@ -108,6 +107,9 @@ export function Summon({ config, onStarted }) {
             {sending ? 'Summoning…' : 'Summon the ghosts'}
           </button>
         </div>
+        <p className="summon-hint muted small">
+          {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · about a minute · about $0.02 of AI
+        </p>
         {game && (
           <div className="quick-picks">
             <label className="muted" htmlFor="test-game">
@@ -148,24 +150,36 @@ export function Summon({ config, onStarted }) {
         )}
 
         <fieldset className="personas">
-          <legend className="field-label">Ghosts to summon</legend>
+          <legend className="field-label">
+            Pick your ghosts <span className="muted small">· tap one to wake it up or let it sleep</span>
+          </legend>
           <div className="persona-grid">
             {(config?.personas ?? []).map((p) => {
               const on = selected.includes(p.id);
               return (
-                <button type="button" key={p.id} className={`persona ${on ? 'on' : ''}`} style={{ '--c': p.color }} onClick={() => toggle(p.id)} aria-pressed={on}>
-                  <GhostIcon color={on ? p.color : '#6e74a0'} size={30} />
+                <button type="button" key={p.id} className={`persona ${on ? 'on' : 'asleep'}`} style={{ '--c': p.color }} onClick={() => toggle(p.id)} aria-pressed={on}>
+                  <span className="persona-art">
+                    <GhostSprite persona={p.id} color={p.color} size={76} dim={!on} />
+                    {!on && (
+                      <span className="zzz" aria-hidden="true">
+                        z<small>z</small>
+                      </span>
+                    )}
+                  </span>
                   <span className="persona-name">{p.name}</span>
-                  <span className="persona-style">{p.style.split('. ')[0]}.</span>
+                  <span className="persona-style">{p.tagline ?? `${p.style.split('. ')[0]}.`}</span>
+                  {p.quote && <q className="persona-quote">{p.quote}</q>}
                 </button>
               );
             })}
           </div>
+          <p className="muted small persona-note">The game waits while each ghost thinks, so they can play action games too.</p>
         </fieldset>
 
-        <div className="summon-foot">
-          <label className="steps">
-            <span className="muted">Moves per ghost</span>
+        <details className="advanced">
+          <summary>Advanced options</summary>
+          <label className="adv-row">
+            <span>Moves per ghost</span>
             <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>
               {[20, 40, 60].map((n) => (
                 <option key={n} value={n}>
@@ -174,10 +188,6 @@ export function Summon({ config, onStarted }) {
               ))}
             </select>
           </label>
-          <p className="muted small">The game is paused while each ghost thinks, so they can play real-time games too.</p>
-        </div>
-        <details className="advanced">
-          <summary>Advanced options</summary>
           <label className="adv-row">
             <span>Game window size</span>
             <select value={viewport} onChange={(e) => setViewport(e.target.value)}>
@@ -198,38 +208,7 @@ export function Summon({ config, onStarted }) {
         {config?.error && <p className="form-error">Could not load the app settings. Is the server running?</p>}
       </form>
 
-      <div className="how" aria-label="How it works">
-        <div className="how-step">
-          <span className="how-num">01</span>
-          <b>Paste a link</b>
-          <span>Any web game in a browser. No install. Optional: one line of code in your game gives exact positions.</span>
-        </div>
-        <div className="how-step">
-          <span className="how-num">02</span>
-          <b>Ghosts play it</b>
-          <span>Four AI players with different personalities play at once. The game clock freezes while each one thinks.</span>
-        </div>
-        <div className="how-step">
-          <span className="how-num">03</span>
-          <b>See where players get stuck</b>
-          <span>A map of the level, blockers and confusing spots, each with the replay and the ghosts' own words.</span>
-        </div>
-      </div>
-
-      <p className="proof">
-        <span>
-          <b>27/30</b> planted design flaws found in our benchmark
-        </span>
-        <span>
-          <b>0</b> false alarms in <b>30</b> runs on clean games
-        </span>
-        <span>
-          about <b>$0.02</b> and <b>1 min</b> per playtest
-        </span>
-        <a href={`${REPO}/blob/main/bench/README.md`} target="_blank" rel="noreferrer">
-          See the evidence
-        </a>
-      </p>
+      <HomeBands />
     </section>
   );
 }

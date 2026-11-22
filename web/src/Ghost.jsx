@@ -20,6 +20,24 @@ export function GhostIcon({ color = '#9bf6ec', size = 28, mood = 'calm', title }
   );
 }
 
+// Character art for each persona: pixel sprites made with Muse Image (web/public/ghosts/, one family, chosen by Rafa).
+const SPRITES = new Set(['newbie', 'speedrunner', 'reader', 'impatient', 'completionist']);
+
+/** The persona's character; the plain ghost mark for a persona without art. Decorative: the name is always next to it. */
+export function GhostSprite({ persona, color, size = 64, dim = false, mood = 'calm' }) {
+  if (!SPRITES.has(persona)) return <GhostIcon color={color} size={Math.round(size * 0.6)} mood={mood} />;
+  return (
+    <img
+      className={`ghost-sprite${dim ? ' dim' : ''}${mood === 'dead' ? ' dead' : ''}`}
+      src={`/ghosts/${persona}.webp`}
+      width={size}
+      height={size}
+      alt=""
+      decoding="async"
+    />
+  );
+}
+
 export const OUTCOME_LABEL = {
   playing: 'Playing',
   won: 'Finished',

@@ -1,4 +1,5 @@
 import { HeroScene } from './HeroScene.jsx';
+import { HomeBands } from './HomeBands.jsx';
 
 const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
 
@@ -7,7 +8,7 @@ export function DemoGallery({ config }) {
   const runs = config?.demoRuns ?? [];
   return (
     <section className="summon">
-      <div className="hero">
+      <div className="summon-hero">
         <h1>Who gets stuck in your game?</h1>
         <p className="lede">
           AI ghosts with different personalities play a web game, think out loud, and show you exactly where players will get stuck, before the deadline.
@@ -38,6 +39,8 @@ export function DemoGallery({ config }) {
           </li>
         ))}
       </ul>
+
+      <HomeBands />
     </section>
   );
 }

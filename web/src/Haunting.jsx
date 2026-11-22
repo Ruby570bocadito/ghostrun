@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GhostIcon, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
+import { GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 
 function Elapsed({ from, to }) {
   const [now, setNow] = useState(Date.now());
@@ -13,18 +13,36 @@ function Elapsed({ from, to }) {
   return <span className="mono">{`${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`}</span>;
 }
 
-function GhostTile({ runId, g, p }) {
+const STAMP = { won: 'Cleared!', quit: 'Quit', saturated: 'Seen enough', out_of_steps: 'Out of moves', error: 'Error', stopped: 'Stopped' };
+
+function GhostTile({ runId, g, p, viewport }) {
   const progress = g.x != null && g.worldW ? Math.min(1, g.x / g.worldW) : 0;
+  // Every tile shows the same game, so the ghost floats over the character it plays (where the game or the ghost says it is).
+  const at = Number.isFinite(g.sx) && Number.isFinite(g.sy) ? { x: g.sx, y: g.sy } : Number.isFinite(g.px) && Number.isFinite(g.py) ? { x: g.px, y: g.py } : null;
+  const vw = viewport?.width ?? 640;
+  const vh = viewport?.height ?? 360;
+  const stamp = STAMP[g.status];
   return (
     <article className={`tile status-${g.status}`} style={{ '--c': p.color }}>
       <header className="tile-head">
-        <GhostIcon color={p.color} size={24} mood={moodFor(g.status)} />
+        <GhostSprite persona={p.id} color={p.color} size={34} mood={moodFor(g.status)} />
         <b>{p.name}</b>
         <span className={`pill pill-${g.status}`}>{OUTCOME_LABEL[g.status] ?? g.status}</span>
       </header>
       <div className="screen">
         {g.frame ? <img src={`/runs/${runId}/${g.frame}`} alt={`What ${p.name} sees`} decoding="async" /> : <div className="screen-empty">Loading the game…</div>}
         {g.confused && g.status === 'playing' && <span className="screen-badge">confused</span>}
+        {at && g.frame && g.status === 'playing' && (
+          <span className="tile-ghost" style={{ left: `${(at.x / vw) * 100}%`, top: `${(at.y / vh) * 100}%` }} aria-hidden="true">
+            <GhostSprite persona={p.id} color={p.color} size={30} />
+          </span>
+        )}
+        {stamp && (
+          <span className={`tile-stamp stamp-${g.status}`}>
+            {stamp}
+            {g.status === 'quit' && g.steps ? ` · move ${g.steps}` : ''}
+          </span>
+        )}
       </div>
       <p className="thought">{g.thought ? `“${g.thought}”` : g.status === 'error' ? g.error?.message : '…'}</p>
       <footer className="tile-foot mono">
@@ -63,7 +81,8 @@ export function Haunting({ run, runId, personas, onHome }) {
 
   if (run.status === 'failed' && !run.report) {
     return (
-      <section className="panel center">
+      <section className="panel center state-panel">
+        <img className="state-art" src="/states/error.webp" width="260" height="230" alt="" />
         <h2>{run.failure?.message?.startsWith('Cancelled') ? 'Playtest cancelled' : 'The ghosts could not play this game'}</h2>
         <p className="muted">{run.failure?.message}</p>
         <button className="btn-primary" onClick={onHome}>
@@ -95,7 +114,7 @@ export function Haunting({ run, runId, personas, onHome }) {
       <div className="haunt-layout">
         <div className={`tiles n${run.order.length}`}>
           {run.order.map((id) => (
-            <GhostTile key={id} runId={runId} g={run.ghosts[id] ?? { status: 'waiting' }} p={personas[id] ?? { id, name: id, color: '#9bf6ec' }} />
+            <GhostTile key={id} runId={runId} g={run.ghosts[id] ?? { status: 'waiting' }} p={personas[id] ?? { id, name: id, color: '#9bf6ec' }} viewport={run.config?.viewport} />
           ))}
         </div>
         <aside className="log" aria-live="polite">

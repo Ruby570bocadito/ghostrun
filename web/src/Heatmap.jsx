@@ -19,7 +19,7 @@ function loadImage(src) {
  * The whole level rebuilt from the ghosts' own frames (no game integration needed beyond positions),
  * with where they spent time (heat), where they died (✕) and the hotspots on top.
  */
-export function Heatmap({ runId, report, traces, personas, selected, onSelect, resolved = [] }) {
+export function Heatmap({ runId, report, traces, personas, selected, hovered = null, onHover = () => {}, onSelect, resolved = [] }) {
   const baseRef = useRef(null);
   const heatRef = useRef(null);
   const [stitched, setStitched] = useState(false);
@@ -87,15 +87,30 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect, r
     const ctx = heatRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'lighter';
+    // Time spent, as a capped glow: summed off screen, then painted with a ceiling, so the busiest spots stay a
+    // see-through red instead of burning to white over the level (found by a design-review agent).
+    const off = document.createElement('canvas');
+    off.width = W;
+    off.height = H;
+    const o = off.getContext('2d');
+    o.globalCompositeOperation = 'lighter';
     for (const p of report.heat) {
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
-      g.addColorStop(0, 'rgba(255, 107, 107, 0.05)');
-      g.addColorStop(1, 'rgba(255, 107, 107, 0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(p.x - 18, p.y - 18, 36, 36);
+      const g = o.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
+      g.addColorStop(0, 'rgba(255, 255, 255, 0.035)');
+      g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      o.fillStyle = g;
+      o.fillRect(p.x - 18, p.y - 18, 36, 36);
     }
-    ctx.globalCompositeOperation = 'source-over';
+    const img = o.getImageData(0, 0, W, H);
+    const px = img.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const v = Math.min(1, px[i + 3] / 255) ** 0.7; // density is in the alpha channel (colour channels come back unpremultiplied)
+      px[i] = 255;
+      px[i + 1] = 107;
+      px[i + 2] = 107;
+      px[i + 3] = Math.round(v * 0.42 * 255);
+    }
+    ctx.putImageData(img, 0, 0);
     for (const d of report.deaths) {
       const c = personas[d.persona]?.color ?? '#fff';
       const y = Math.min(H - 12, d.y);
@@ -119,7 +134,9 @@ export function Heatmap({ runId, report, traces, personas, selected, onSelect, r
           <button
             key={h.id}
             type="button"
-            className={`hot-band ${h.type} ${selected === h.id ? 'selected' : ''}`}
+            className={`hot-band ${h.type} ${selected === h.id ? 'selected' : ''} ${hovered === h.id ? 'hover' : ''}`}
+            onMouseEnter={() => onHover(h.id)}
+            onMouseLeave={() => onHover(null)}
             style={{ left: `${(r.x0 / W) * 100}%`, width: `${((r.x1 - r.x0) / W) * 100}%`, top: `${(r.y0 / H) * 100}%`, height: `${((r.y1 - r.y0) / H) * 100}%` }}
             onClick={() => onSelect(h.id)}
             aria-label={

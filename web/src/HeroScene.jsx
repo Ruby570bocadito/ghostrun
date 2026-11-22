@@ -1,20 +1,17 @@
 // The home screen's small story: ghosts run a level, most of them fall into the same gap,
 // and the spot gets marked as a blocker. Pure SVG + CSS; still under prefers-reduced-motion.
+// The four default ghosts, drawn with their character art (web/public/ghosts/, made with Muse Image).
 const GHOSTS = [
-  { color: '#ffd166', delay: 0, falls: true },
-  { color: '#4cc9f0', delay: 0.5, falls: true },
-  { color: '#80ed99', delay: 1.0, falls: false },
-  { color: '#ff6b6b', delay: 1.5, falls: true },
+  // still: where each ghost stands in the still picture shown to people who prefer less motion
+  { id: 'newbie', delay: 0, falls: true, still: 250 },
+  { id: 'speedrunner', delay: 0.5, falls: true, still: 200 },
+  { id: 'reader', delay: 1.0, falls: false, still: 470 },
+  { id: 'impatient', delay: 1.5, falls: true, still: 150 },
 ];
 
-function Ghost({ color }) {
-  return (
-    <g>
-      <path d="M16 2C8.8 2 3 7.8 3 15v17l4.3-3 4.3 3 4.4-3 4.3 3 4.4-3L29 32V15C29 7.8 23.2 2 16 2z" fill={color} />
-      <circle cx="11.5" cy="15" r="2.6" fill="#0b0d17" />
-      <circle cx="20.5" cy="15" r="2.6" fill="#0b0d17" />
-    </g>
-  );
+function Ghost({ id }) {
+  // The sprite's square has some air around the ghost: drawn 44 px wide so the ghost itself is about the old 32 px.
+  return <image href={`/ghosts/${id}.webp`} x="-6" y="-8" width="44" height="44" />;
 }
 
 export function HeroScene() {
@@ -40,9 +37,9 @@ export function HeroScene() {
         </text>
       </g>
       {GHOSTS.map((g, i) => (
-        <g key={i} className={`hero-ghost ${g.falls ? 'falls' : 'makes-it'}`} style={{ animationDelay: `${g.delay}s` }}>
+        <g key={i} className={`hero-ghost ${g.falls ? 'falls' : 'makes-it'}`} style={{ animationDelay: `${g.delay}s`, '--still-x': `${g.still}px` }}>
           <g transform="scale(0.9)">
-            <Ghost color={g.color} />
+            <Ghost id={g.id} />
           </g>
         </g>
       ))}

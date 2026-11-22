@@ -19,7 +19,7 @@ const SIZES = [
 
 // Each page: where, what must be visible, and optional actions before checking.
 const PAGES = [
-  { name: 'home', path: '/', must: [['button', 'Summon the ghosts'], ['textbox', 'Game link'], ['button', 'The Newbie'], ['link', 'See the evidence']] },
+  { name: 'home', path: '/', must: [['button', 'Summon the ghosts'], ['textbox', "Your game's link"], ['button', 'The Newbie'], ['link', 'See the evidence']] },
   {
     name: 'home-advanced',
     path: '/',
@@ -30,7 +30,7 @@ const PAGES = [
     name: 'bad-link',
     path: '/',
     act: async (page) => {
-      await page.getByLabel('Game link').fill('my game');
+      await page.getByLabel("Your game's link").fill('my game');
       await page.getByRole('button', { name: 'Summon the ghosts' }).click();
       await page.waitForTimeout(800);
     },
@@ -46,7 +46,7 @@ const PAGES = [
       await page.getByLabel('No game handy? Try ours:').selectOption('key-hunt');
       await page.waitForTimeout(300);
     },
-    check: async (page) => /\/play\/key-hunt\/$/.test(await page.getByLabel('Game link').inputValue()),
+    check: async (page) => /\/play\/key-hunt\/$/.test(await page.getByLabel("Your game's link").inputValue()),
     must: [['button', 'Summon the ghosts']],
   },
   { name: 'report', path: `/#/run/${opt.report}`, wait: 3500, must: [['button', 'Re-run after a fix'], ['button', 'New game']], css: ['.finding', '.heatmap canvas'] },

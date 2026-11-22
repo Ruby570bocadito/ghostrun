@@ -2,6 +2,8 @@
 export const PERSONAS = {
   newbie: {
     id: 'newbie',
+    tagline: "Has barely played games. Tries keys to see what they do.", // for people; "style" below is what the model reads
+    quote: "There's a striped pole by the flag, maybe up climbs it?", // said by this ghost in a recorded run
     name: 'The Newbie',
     emoji: '🐣',
     color: '#ffd166',
@@ -10,6 +12,8 @@ export const PERSONAS = {
   },
   speedrunner: {
     id: 'speedrunner',
+    tagline: "Plays fast and skips every instruction.", // for people; "style" below is what the model reads
+    quote: "Gap's wider than I thought, jumping toward the right platform anyway.", // said by this ghost in a recorded run
     name: 'The Speedrunner',
     emoji: '⚡',
     color: '#4cc9f0',
@@ -18,6 +22,8 @@ export const PERSONAS = {
   },
   completionist: {
     id: 'completionist',
+    tagline: "Explores every corner and pokes at everything.", // for people; "style" below is what the model reads
+    quote: "I'm on the middle platform now, so I'll walk right to explore its edge.", // said by this ghost in a recorded run
     name: 'The Completionist',
     emoji: '🔍',
     color: '#b5179e',
@@ -26,6 +32,8 @@ export const PERSONAS = {
   },
   reader: {
     id: 'reader',
+    tagline: "Reads everything on screen and does exactly what it says.", // for people; "style" below is what the model reads
+    quote: "Sign says Z dash over spikes to flag. I'll move right first.", // said by this ghost in a recorded run
     name: 'The Reader',
     emoji: '📖',
     color: '#80ed99',
@@ -34,6 +42,8 @@ export const PERSONAS = {
   },
   impatient: {
     id: 'impatient',
+    tagline: "Gets frustrated fast, and quits when it feels unfair.", // for people; "style" below is what the model reads
+    quote: "Deaths counter says 3 now, same gap killed me thrice, I'm done.", // said by this ghost in a recorded run
     name: 'The Impatient',
     emoji: '😤',
     color: '#ff6b6b',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { GhostIcon, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
+import { GhostIcon, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
 import { DEMO } from './demo.js';
@@ -67,7 +67,7 @@ function provenance(f) {
   }
 }
 
-function Finding({ f, card, report, runId, byPersona, personas, selected }) {
+function Finding({ f, card, report, runId, byPersona, personas, selected, onHover = () => {} }) {
   const [who, setWho] = useState(f.evidence[0]?.persona);
   const ev = f.evidence.find((e) => e.persona === who) ?? f.evidence[0];
   const frames = useMemo(() => clipFrames(runId, byPersona[ev?.persona], ev?.clip ?? [0, 0]), [runId, byPersona, ev]);
@@ -80,7 +80,14 @@ function Finding({ f, card, report, runId, byPersona, personas, selected }) {
   const fair = f.type === 'friction' && f.reached?.length && f.passed.length * 2 >= f.reached.length;
   const quotes = f.evidence.some((e) => e.thought) && f.type !== 'hard_to_see' ? f.evidence.filter((e) => e.thought).slice(0, 3).map((e) => ({ persona: e.persona, text: e.thought })) : (f.quotes ?? []).slice(0, 3).map((text) => ({ text }));
   return (
-    <article id={`f-${f.id}`} className={`finding ${f.type} ${selected ? 'selected' : ''}`}>
+    <article
+      id={`f-${f.id}`}
+      className={`finding ${f.type} ${selected ? 'selected' : ''}`}
+      onMouseEnter={() => onHover(f.id)}
+      onMouseLeave={() => onHover(null)}
+      onFocus={() => onHover(f.id)}
+      onBlur={() => onHover(null)}
+    >
       <div className="finding-main">
         <span className={`badge ${f.type}`}>
           {f.id} · {TYPE_LABEL[f.type] ?? f.type}
@@ -142,6 +149,31 @@ function Finding({ f, card, report, runId, byPersona, personas, selected }) {
   );
 }
 
+const OUR_GAMES = { 'gap-run': 'Gap Run', 'key-hunt': 'Key Hunt', 'lever-room': 'Lever Room', 'read-me': 'Read Me', 'spike-maze': 'Spike Maze' };
+const titleCase = (slug) => slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** A name for the game people recognise: ours by name, others from the last part of the address. */
+export function gameName(url) {
+  try {
+    const u = new URL(url);
+    const ours = u.pathname.match(/\/play\/([\w-]+)\/?$/)?.[1] ?? u.pathname.match(/\/([\w-]+)\/?$/)?.[1];
+    if (ours && OUR_GAMES[ours]) return `${OUR_GAMES[ours]}${u.searchParams.get('fault') ? ', with a planted flaw' : ''}`;
+    const last = u.pathname.split('/').filter(Boolean).pop();
+    return last && !/\.(html?|php)$/i.test(last) ? titleCase(last) : u.hostname;
+  } catch {
+    return 'Your game';
+  }
+}
+
+const LEGEND = [
+  ['blocker', 'Blocker', 'nobody got past'],
+  ['missed', 'Missed objective', 'most ghosts never reached it'],
+  ['stuck', 'Stuck', 'ghosts ended up circling here'],
+  ['hard_to_see', 'Hard to see', 'too faint for people to notice'],
+  ['confusion', 'Confusing', 'ghosts said they did not understand'],
+  ['friction', 'Friction', 'ghosts died but got past: often a fair challenge'],
+];
+
 export function Report({ run, runId, personas, onHome, onRerun }) {
   const report = run.report;
   const findings = report.findings ?? report.hotspots;
@@ -149,6 +181,8 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   const traces = useTraces(runId, personaIds);
   const byPersona = useMemo(() => Object.fromEntries(traces.map((t) => [t.persona, t])), [traces]);
   const [selected, setSelected] = useState(findings[0]?.id ?? null);
+  // The finding under the pointer: its box on the map lights up, and the reverse (finding ↔ where it happened).
+  const [hovered, setHovered] = useState(null);
   const [rerunError, setRerunError] = useState(null);
   const url = report.config?.url ?? '';
   const [rerunUrl, setRerunUrl] = useState(url);
@@ -166,6 +200,10 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   const critical = shown.filter((f) => CRITICAL.includes(f.type) && f.severity === 'high').length;
   const minor = shown.length - critical;
   const finished = report.ghosts.filter((g) => g.outcome === 'won').length;
+  const firstCritical = shown.find((f) => CRITICAL.includes(f.type) && f.severity === 'high');
+  const topCritical = firstCritical
+    ? (report.cards?.find((c) => c.hotspot === firstCritical.id)?.title ?? `${TYPE_LABEL[firstCritical.type] ?? firstCritical.type}, ${firstCritical.ghosts.length} of ${report.ghostsTotal} ghosts`)
+    : '';
 
   const select = (id) => {
     setSelected(id);
@@ -194,12 +232,14 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
 
   if (report.failure) {
     return (
-      <section className="panel center">
+      <section className="panel center state-panel">
+        <img className="state-art" src="/states/error.webp" width="260" height="230" alt="" />
         <h2>The ghosts could not play this game</h2>
         <p className="muted">{report.failure.message}</p>
         <p className="muted small">Check that the link opens a playable web game (HTML5 canvas).</p>
+        {!(report.cost?.total > 0) && <p className="state-cost small mono">Caught before any AI call: this cost $0.</p>}
         <button className="btn-primary" onClick={onHome}>
-          Try another link
+          {DEMO ? 'All playtests' : 'Try another link'}
         </button>
       </section>
     );
@@ -210,7 +250,8 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       <div className="run-bar">
         <div>
           <p className="eyebrow">Playtest report</p>
-          <h2 className="mono run-url">{host}</h2>
+          <h2 className="report-title">{gameName(url)}</h2>
+          <p className="mono run-url small">{host}</p>
         </div>
         <div className="run-bar-right">
           <button className="btn-ghost" onClick={onHome}>
@@ -258,6 +299,16 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </div>
       )}
 
+      <div className={`verdict-row ${critical ? '' : 'with-art'}`}>
+      {!critical && <img className="verdict-art" src="/states/ok.webp" width="200" height="105" alt="" />}
+      <p className={`verdict ${critical ? 'bad' : 'good'}`}>
+        {critical
+          ? `${critical} critical issue${critical === 1 ? '' : 's'}: ${topCritical}`
+          : shown.length
+            ? `No critical issues. ${shown.length} hard spot${shown.length === 1 ? '' : 's'} where ghosts died but most got past.`
+            : 'No problems found: no ghost died again and again, got stuck or got confused.'}
+      </p>
+      </div>
       <div className="summary">
         <div className={`stat ${critical ? 'bad' : 'good'}`}>
           <b>{critical}</b>
@@ -277,15 +328,13 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           <b>{report.quits.length}</b>
           <span>quit</span>
         </div>
-        <div className="stat subtle">
-          <b className="mono">{Math.round(report.realMs / 1000)}s</b>
-          <span>to playtest</span>
-        </div>
-        <div className="stat subtle">
-          <b className="mono">${report.cost.total.toFixed(3)}</b>
-          <span>AI cost</span>
-        </div>
       </div>
+      <p className="run-foot small muted mono">
+        Played in {Math.round(report.realMs / 1000)} s · AI cost ${report.cost.total.toFixed(3)} · {report.config?.model ?? report.ghosts[0]?.model}
+        {report.config?.requestedViewport && report.config?.viewport
+          ? ` · window enlarged to ${report.config.viewport.width}×${report.config.viewport.height} to show the whole game`
+          : ''}
+      </p>
 
       {report.milestones?.length > 0 && (
         <ol className="milestones">
@@ -306,9 +355,10 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </ol>
       )}
 
+      <h3 className="section-title">Where they got stuck</h3>
       {report.hasPositions ? (
         <div className="heat-wrap">
-          <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} onSelect={select} resolved={resolved} />
+          <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} hovered={hovered} onHover={setHovered} onSelect={select} resolved={resolved} />
           <p className="legend small muted">
             {report.positionSource === 'ghosts'
               ? "This game has no Ghostrun SDK: positions and deaths are what each ghost reported seeing on screen · red glow = where they were · ✕ = deaths · click a box to see its replay"
@@ -320,12 +370,16 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       )}
 
       {shown.length > 0 && (
-        <p className="legend">
-          <b>Blocker</b>: nobody got past · <b>Missed objective</b>: most ghosts never reached it · <b>Stuck</b>: ghosts ended up circling here · <b>Hard to see</b>: too little
-          contrast to notice · <b>Confusing</b>: ghosts said they did not understand · <b>Friction</b>: ghosts died but got past, often a fair challenge. The first four are the
-          critical issues.
-        </p>
+        <ul className="legend-chips" aria-label="What the boxes mean">
+          {LEGEND.filter(([type]) => shown.some((f) => f.type === type)).map(([type, label, meaning]) => (
+            <li key={type} className={`legend-chip ${type}`}>
+              <b>{label}</b> {meaning}
+            </li>
+          ))}
+          <li className="legend-note muted">Blocker, missed objective, stuck and hard to see are the critical issues.</li>
+        </ul>
       )}
+      <h3 className="section-title">What to fix first</h3>
       <div className="findings">
         {shown.length === 0 && <p className="panel">No findings: no place where ghosts died repeatedly, got stuck or got confused.</p>}
         {shown.map((f) => (
@@ -337,7 +391,8 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
             runId={runId}
             byPersona={byPersona}
             personas={personas}
-            selected={selected === f.id}
+            selected={selected === f.id || hovered === f.id}
+            onHover={setHovered}
           />
         ))}
         {report.quits.map((q) => (
@@ -361,14 +416,14 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         ))}
       </div>
 
-      <h3 className="section-title">The ghosts</h3>
+      <h3 className="section-title">Who played</h3>
       <div className="roster">
         {report.ghosts.map((g) => {
           const p = personas[g.persona] ?? { name: g.persona, color: '#9bf6ec' };
           const last = byPersona[g.persona]?.steps.at(-1)?.thought;
           return (
             <div key={g.persona} className="roster-row" style={{ '--c': p.color }}>
-              <GhostIcon color={p.color} size={26} mood={moodFor(g.outcome)} />
+              <GhostSprite persona={g.persona} color={p.color} size={40} mood={moodFor(g.outcome)} />
               <div className="roster-name">
                 <b>{p.name}</b>
                 <span
@@ -396,6 +451,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         })}
       </div>
 
+      <h3 className="section-title">How this was made</h3>
       <p className="method small muted">
         How this was made: each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). Deaths, objectives and positions
         come from the game; findings are grouped by position without AI. A blocker is a spot no ghost that reached it got past. Objectives the game marks as things to see

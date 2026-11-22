@@ -22,7 +22,11 @@ function reducer(state, e) {
       const g = ghost(state, e.ghost);
       return {
         ...state,
-        ghosts: { ...state.ghosts, [e.ghost]: { ...g, frame: e.file, x: e.state?.x ?? g.x, worldW: e.state?.worldW ?? g.worldW, deaths: e.state?.deaths ?? g.deaths } },
+        ghosts: {
+          ...state.ghosts,
+          // sx/sy: where the character is on this screen (games with the SDK), to float the ghost over it
+          [e.ghost]: { ...g, frame: e.file, x: e.state?.x ?? g.x, worldW: e.state?.worldW ?? g.worldW, deaths: e.state?.deaths ?? g.deaths, sx: e.state?.screenX ?? g.sx, sy: e.state?.screenY ?? g.sy },
+        },
       };
     }
     case 'step': {
@@ -36,7 +40,11 @@ function reducer(state, e) {
       return {
         ...state,
         log: log.slice(-40),
-        ghosts: { ...state.ghosts, [e.ghost]: { ...g, thought: s.thought, steps: s.step, deaths: s.after?.deaths ?? g.deaths, model: s.model, confused: s.confused } },
+        ghosts: {
+          ...state.ghosts,
+          // px/py: where the ghost said its character is (the only position in games without the SDK)
+          [e.ghost]: { ...g, thought: s.thought, steps: s.step, deaths: s.after?.deaths ?? g.deaths, model: s.model, confused: s.confused, px: s.player?.x ?? g.px, py: s.player?.y ?? g.py },
+        },
       };
     }
     case 'model_fallback':

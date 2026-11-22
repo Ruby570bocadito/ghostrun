@@ -3,7 +3,7 @@
 // A run compared with an earlier one brings that one too. No API calls, nothing is played again.
 // node scripts/export-demo.mjs <outDir> <runId>...
 import { execFileSync } from 'node:child_process';
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { PERSONAS } from '../src/personas.mjs';
@@ -17,6 +17,13 @@ const out = resolve(outArg);
 const GAMES = { 'gap-run': 'Gap Run', 'key-hunt': 'Key Hunt', 'lever-room': 'Lever Room', 'read-me': 'Read Me', 'spike-maze': 'Spike Maze' };
 const TYPE = { blocker: 'blocker', missed: 'missed objective', stuck: 'stuck', hard_to_see: 'hard to see', confusion: 'confusing', friction: 'friction' };
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+// Real jam games by other people that the demo may show (open licences), credited by name.
+const CREDITS = {
+  spacetaxi: 'SPACETAXI by Christoph Schansky (js13kGames 2021, GPL-3.0)',
+  'escape-from-death-hole': 'Escape from Death Hole by Santi Herranz (js13kGames 2022, MIT)',
+  'find-all-pages': 'Find All Pages by Stacks Hub (js13kGames 2020, MIT)',
+  'dead-again': 'DEAD AGAIN by Jonas Olmstead (js13kGames 2022, MIT)',
+};
 
 // 1) The web app, built in demo mode straight into the output folder.
 execFileSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--outDir', out, '--emptyOutDir'], { stdio: 'inherit', env: { ...process.env, VITE_DEMO: '1' } });
@@ -30,6 +37,8 @@ const describe = (id, r) => {
     ? 'A link that is not a game'
     : url.includes('nilo')
       ? 'NILO, a real jam game we did not make (no SDK)'
+      : CREDITS[url.split('/').filter(Boolean).pop()]
+        ? `${CREDITS[url.split('/').filter(Boolean).pop()]}: a real jam game, no SDK`
       : `${GAMES[game] ?? url}${fault ? ', with its planted flaw' : ''}${r.config?.compareTo ? ', fixed: compared with the run before' : ''}${r.config?.simulateOutage ? ', during a simulated AI outage' : ''}`;
   const shown = (r.findings ?? []).filter((f) => f.severity !== 'low');
   const critical = shown.filter((f) => ['blocker', 'missed', 'stuck', 'hard_to_see'].includes(f.type) && f.severity === 'high').length;
@@ -62,9 +71,14 @@ for (const id of all) {
     if (!existsSync(dir)) continue;
     await cp(dir, join(out, 'runs', id, g.persona), { recursive: true });
     if (!thumb) {
+      // The frame with the most on it (the biggest JPEG) makes a better thumbnail than a mostly dark one.
       const trace = JSON.parse(await readFile(join(dir, 'trace.json'), 'utf8'));
-      const f = trace.frames[Math.floor(trace.frames.length * 0.4)];
-      if (f) thumb = `/runs/${id}/${g.persona}/${f.file}`;
+      let best = null;
+      for (const f of trace.frames.filter((_, i) => i % 5 === 0)) {
+        const size = (await stat(join(dir, f.file)).catch(() => ({ size: 0 }))).size;
+        if (!best || size > best.size) best = { f, size };
+      }
+      if (best) thumb = `/runs/${id}/${g.persona}/${best.f.file}`;
     }
   }
   if (picked.includes(id)) demoRuns.push({ ...describe(id, report), thumb });
@@ -82,7 +96,12 @@ await writeFile(
     public: true,
     budget: { capUsd: 0, spentUsd: 0 },
     demoRuns,
-    recordedOn: new Date(Math.min(...all.map((id) => Date.parse(id.slice(0, 10))))).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+    recordedOn: (() => {
+      const days = all.map((id) => Date.parse(id.slice(0, 10)));
+      const fmt = (t, o) => new Date(t).toLocaleDateString('en-GB', o);
+      const [a, b] = [Math.min(...days), Math.max(...days)];
+      return a === b ? fmt(a, { day: 'numeric', month: 'long', year: 'numeric' }) : `${fmt(a, { day: 'numeric' })}–${fmt(b, { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    })(),
   }),
 );
 console.log(`demo ready in ${out}: ${demoRuns.length} playtests (+${all.length - demoRuns.length} earlier runs they are compared with)`);
