@@ -44,7 +44,19 @@ function GhostTile({ runId, g, p, viewport }) {
           </span>
         )}
       </div>
-      <p className="thought">{g.thought ? `“${g.thought}”` : g.status === 'error' ? g.error?.message : '…'}</p>
+      <p className={`thought ${g.debrief ? 'after' : ''}`}>
+        {g.debrief ? (
+          <>
+            <span className="after-label">After playing:</span> “{g.debrief.stopped_me}”
+          </>
+        ) : g.thought ? (
+          `“${g.thought}”`
+        ) : g.status === 'error' ? (
+          g.error?.message
+        ) : (
+          '…'
+        )}
+      </p>
       <footer className="tile-foot mono">
         <span>move {g.steps}</span>
         <span className={g.deaths ? 'deaths' : ''}>✕ {g.deaths}</span>
@@ -56,7 +68,7 @@ function GhostTile({ runId, g, p, viewport }) {
   );
 }
 
-const LOG_ICON = { death: '✕', win: '⚑', quit: '⏏', confused: '?', fallback: '↻' };
+const LOG_ICON = { death: '✕', win: '⚑', quit: '⏏', confused: '?', fallback: '↻', exit: '»' };
 
 export function Haunting({ run, runId, personas, onHome }) {
   const stop = () => fetch(`/api/runs/${runId}/stop`, { method: 'POST' });

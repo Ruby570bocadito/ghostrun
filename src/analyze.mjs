@@ -5,8 +5,9 @@
 //  - the ghosts' own "confused" flags    → confusion
 //  - objectives drawn with too little contrast (measured on the screen, contrast.mjs) → hard_to_see
 // The AI only explains findings afterwards (explain.mjs) and can only talk about the ones found here.
-import { costOf } from './brains/prices.mjs';
+import { traceCost } from './brains/prices.mjs';
 import { CONTRAST_INVISIBLE, CONTRAST_MIN } from './contrast.mjs';
+import { keyEffects, keyRowsNear, keysTappedNear } from './keys.mjs';
 
 const mean = (a) => a.reduce((s, v) => s + v, 0) / Math.max(1, a.length);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -166,12 +167,16 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
       tokensCached: t.steps.reduce((a, s) => a + (s.usage?.cached ?? 0), 0),
       tokensOut: t.steps.reduce((a, s) => a + (s.usage?.output ?? 0), 0),
       tokensReasoning: t.steps.reduce((a, s) => a + (s.usage?.reasoning ?? 0), 0),
-      // Priced per move: a ghost can switch to the backup model mid-run.
-      costUsd: t.steps.reduce((a, s) => a + costOf(s.model ?? t.model, s.usage), 0),
-      listCostUsd: t.steps.reduce((a, s) => a + costOf(s.model ?? t.model, s.usage, { listPrice: true }), 0),
+      // Priced per move (a ghost can switch to the backup model mid-run), plus the exit interview.
+      costUsd: traceCost(t),
+      listCostUsd: traceCost(t, { listPrice: true }),
       stopReason: t.stopReason ?? null,
       avgLatencyMs: Math.round(mean(t.steps.map((s) => s.latencyMs))),
       confusedSteps: t.steps.filter((s) => s.confused).length,
+      // What the ghost said in its exit interview after its last move (src/ghost.mjs), if it gave one.
+      debrief: t.debrief
+        ? { goal: t.debrief.goal, understood_goal: t.debrief.understood_goal, understood_controls: t.debrief.understood_controls, stopped_me: t.debrief.stopped_me, keep_playing: t.debrief.keep_playing }
+        : null,
     };
   });
   const active = ghosts.filter((g) => g.outcome !== 'error');
@@ -388,6 +393,23 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
 
   findings.sort((a, b) => TYPE_RANK[a.type] - TYPE_RANK[b.type] || SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.share - a.share || b.count - a.count);
   findings.forEach((f, i) => (f.id = `F${i + 1}`));
+  // Keys tapped near each spot that never did anything, measured from the game (SDK games only).
+  const effects = keyEffects(rawTraces);
+  for (const f of findings) {
+    const rows = f.center ? keyRowsNear(effects, keysTappedNear(rawTraces, f.ghosts, f.center)) : null;
+    if (rows) f.keys = rows;
+  }
+
+  // The exit interviews in numbers: who never worked out the goal or the controls, and who would stop playing.
+  const asked = ghosts.filter((g) => g.debrief);
+  const debrief = asked.length
+    ? {
+        asked: asked.length,
+        goalUnclear: asked.filter((g) => !g.debrief.understood_goal).map((g) => g.persona),
+        controlsUnclear: asked.filter((g) => !g.debrief.understood_controls).map((g) => g.persona),
+        wouldStop: asked.filter((g) => !g.debrief.keep_playing).map((g) => g.persona),
+      }
+    : null;
 
   const quits = traces
     .filter((t) => t.outcome === 'quit')
@@ -408,6 +430,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
     findings,
     hotspots: findings, // backwards-compatible name used by older reports
     milestones,
+    debrief,
     objectives: objectives.map((o) => ({ ...o, ok: o.ratio >= CONTRAST_MIN })), // contrast of each objective players must see
     deaths: deaths.map(({ persona, x, y, step }) => ({ persona, x, y, step })),
     // Failures handled during the run (e.g. a model outage and the switch to the backup model).

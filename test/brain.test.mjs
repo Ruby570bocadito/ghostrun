@@ -2,7 +2,7 @@
 // Run: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildMessages, createMetaBrain, historyWindow, CACHE_KEY } from '../src/brains/meta.mjs';
+import { buildMessages, createMetaBrain, historyWindow, systemPrompt, CACHE_KEY } from '../src/brains/meta.mjs';
 import { costOf } from '../src/brains/prices.mjs';
 import { DeathSpots, historyLine, outcomeOf, turnNotes, walkSpeed } from '../src/feedback.mjs';
 import { decideRobustly, SAFE_MOVE } from '../src/ghost.mjs';
@@ -126,4 +126,21 @@ test('walking speed comes from plain walking moves only', () => {
   assert.equal(walkSpeed([{ dx: 90, dy: 0, ms: 500 }]), null); // one sample is not enough
   assert.equal(walkSpeed([{ dx: 90, dy: 0, ms: 500 }, { dx: 180, dy: 2, ms: 1000 }, { dx: 0, dy: 0, ms: 500 }, { dx: 50, dy: 80, ms: 500 }]), 180);
   assert.match(turnNotes({ step: 3, recent: [], speed: 180 })[0], /180 px per second/);
+});
+
+test('the exit interview reuses the cached prefix and its own schema, and a broken answer is reported', async () => {
+  const answer = JSON.stringify({ goal: 'Reach the flag', understood_goal: true, understood_controls: true, stopped_me: 'nothing', keep_playing: true });
+  const client = fakeClient([{ content: answer }, { content: 'not json' }]);
+  const brain = createMetaBrain({ persona, client });
+  const d = await brain.debrief({ screenshot: shot, history: ['1. held ArrowRight for 400 ms. Thought: "Go"'], summary: 'You made 1 moves and died 0 times.' });
+  const req = client.requests[0];
+  assert.equal(req.prompt_cache_key, CACHE_KEY);
+  assert.equal(req.response_format.json_schema.name, 'ghost_debrief');
+  assert.equal(req.messages[0].content, systemPrompt(persona, undefined, 640, 360)); // the same system prompt as every move
+  const last = req.messages[1].content.at(-1).text;
+  assert.match(last, /You made 1 moves/);
+  assert.match(last, /exit interview/);
+  assert.equal(d.answer.goal, 'Reach the flag');
+  assert.equal(d.usage.cached, 600);
+  await assert.rejects(brain.debrief({ screenshot: shot }), (err) => err.kind === 'bad_output');
 });

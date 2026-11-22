@@ -29,6 +29,10 @@ export function withFallback(primary, makeBackup, { onSwitch = () => {} } = {}) 
         return active.decide(input);
       }
     },
+    // The exit interview goes to whichever model is playing by then; if it fails, the ghost just has no interview.
+    async debrief(input) {
+      return active.debrief ? active.debrief(input) : null;
+    },
   };
 }
 

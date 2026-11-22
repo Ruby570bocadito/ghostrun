@@ -70,6 +70,24 @@ export function moveSchema(w, h) {
   };
 }
 
+/**
+ * The exit interview a ghost answers after its last move, like a person after a playtest. On real jam games
+ * (22 Nov) ghosts that circled for 40 moves without dying or getting stuck left no finding at all, although
+ * they never worked out what the game wanted: only asking them shows it.
+ */
+export const DEBRIEF_SCHEMA = {
+  type: 'object',
+  properties: {
+    goal: { type: 'string', description: 'What you think the goal of the game is, at most 10 words, or "no idea".' },
+    understood_goal: { type: 'boolean', description: 'True if you worked out what the game wants you to do.' },
+    understood_controls: { type: 'boolean', description: 'True if you worked out how to control the game.' },
+    stopped_me: { type: 'string', description: 'The one thing that most stopped or annoyed you in this game, in character, at most 15 words; "nothing" if nothing did.' },
+    keep_playing: { type: 'boolean', description: 'True if, in character, you would keep playing this game.' },
+  },
+  required: ['goal', 'understood_goal', 'understood_controls', 'stopped_me', 'keep_playing'],
+  additionalProperties: false,
+};
+
 // Identical for every ghost and every game, so it is the start of the cached prefix.
 const SHARED_RULES = [
   'You are a playtester for web games, playing a game you have never seen before. Each turn you get one screenshot.',
@@ -123,6 +141,28 @@ export function buildMessages({ system, history, screenshot, notes = [] }) {
         { type: 'text', text: log },
         { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${screenshot.toString('base64')}` } },
         { type: 'text', text: [...notes, 'This is the screen now. Choose your next action.'].join('\n') },
+      ],
+    },
+  ];
+}
+
+/** The same conversation as a move (so the cached prefix is reused), ending with the exit interview. */
+export function buildDebriefMessages({ system, history, screenshot, summary = '' }) {
+  const lines = historyWindow(history);
+  const log = lines.length ? `Your moves so far:\n${lines.join('\n')}` : 'You did not get to make a move.';
+  return [
+    { role: 'system', content: system },
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: log },
+        { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${screenshot.toString('base64')}` } },
+        {
+          type: 'text',
+          text: [summary, 'The playtest is over and this is the last screen. Answer a short exit interview about the whole game, in character, from what you saw and did. Be honest: if you never worked something out, say so.']
+            .filter(Boolean)
+            .join('\n'),
+        },
       ],
     },
   ];
@@ -183,6 +223,29 @@ export function createMetaBrain({
         throw Object.assign(new Error(`Model returned invalid JSON${cut}: ${text.slice(0, 160)}`), { kind: 'bad_output', usage, latencyMs });
       }
       return { move, usage, latencyMs };
+    },
+    /** The exit interview after the last move: what the ghost understood and what stopped it, about the whole game. */
+    async debrief({ screenshot, history = [], summary = '' }) {
+      const t0 = performance.now();
+      const res = await api.chat.completions.create({
+        model,
+        reasoning_effort: reasoning,
+        max_tokens: 600,
+        prompt_cache_key: CACHE_KEY,
+        messages: buildDebriefMessages({ system, history, screenshot, summary }),
+        response_format: { type: 'json_schema', json_schema: { name: 'ghost_debrief', schema: DEBRIEF_SCHEMA } },
+      });
+      const latencyMs = performance.now() - t0;
+      const usage = usageOf(res);
+      const text = res.choices?.[0]?.message?.content ?? '';
+      let answer;
+      try {
+        answer = JSON.parse(text);
+        if (!answer || typeof answer !== 'object') throw new Error('not an object');
+      } catch {
+        throw Object.assign(new Error(`Model returned invalid JSON for the exit interview: ${text.slice(0, 160)}`), { kind: 'bad_output', usage, latencyMs });
+      }
+      return { answer, usage, latencyMs };
     },
   };
 }

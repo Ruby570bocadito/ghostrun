@@ -47,6 +47,11 @@ function reducer(state, e) {
         },
       };
     }
+    case 'debrief': {
+      // The ghost's exit interview, right after its last move: shown in its tile and in the log.
+      const g = ghost(state, e.ghost);
+      return { ...state, log: [...state.log, { at: e.at, ghost: e.ghost, kind: 'exit', text: e.debrief.stopped_me }].slice(-40), ghosts: { ...state.ghosts, [e.ghost]: { ...g, debrief: e.debrief } } };
+    }
     case 'model_fallback':
       return { ...state, log: [...state.log, { at: e.at, ghost: e.ghost, kind: 'fallback', text: `Model ${e.from} failed (${e.reason}); switched to ${e.to}.` }] };
     case 'ghost_done':

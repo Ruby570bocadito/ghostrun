@@ -4,6 +4,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import OpenAI from 'openai';
+import { keyFact } from './keys.mjs';
 
 const CARD_SCHEMA = {
   type: 'object',
@@ -38,7 +39,7 @@ const SYSTEM = [
   'FRICTION: ghosts died but some got past. When most of the ghosts that reached it got past, it is probably intended challenge: do NOT suggest making it easier (narrowing a gap, removing or moving hazards, slowing anything down); suggest at most clearer feedback (a visual cue, a checkpoint nearby), or say that no change is needed. Only when few of them got past may you suggest easing it, and then say why.',
   'Check the cause against the ghosts\' own words: if their words show a control or mechanic working (they jump, they move, they reach things), do not claim it is missing, broken or unexplained.',
   // Added after the Read Me cards blamed the width of a pit whose real flaw was instructions naming the wrong key.
-  'Compare the keys the ghosts pressed with the controls the game shows on screen: if they pressed the key the game names for an action and that action did not seem to happen, say that the key or the instructions may be wrong rather than blaming the level.',
+  'Compare the keys the ghosts pressed with the controls the game shows on screen: if they pressed the key the game names for an action and that action did not seem to happen, say that the key or the instructions may be wrong rather than blaming the level. A key the facts measure as never doing anything, pressed because the screen names it, is strong evidence of exactly that.',
   'MISSED: most ghosts never reached an objective (for example they never found an item); focus on why it was not noticed or understood.',
   'STUCK: several ghosts spent their last moves circling the same area; focus on what they could not figure out.',
   'CONFUSION: several ghosts said they did not understand something here; focus on what is unclear.',
@@ -127,6 +128,9 @@ function factsFor(f, report, tracesByPersona = {}) {
   } else if (f.type === 'confusion') {
     lines.push(`CONFUSION: ${who} flagged confusion ${f.count} times around (${f.center.x}, ${f.center.y}).`);
   }
+  // Measured from the game, not from the ghosts' words (22 Nov): Read Me cards blamed the pit while Z never did anything.
+  const keys = keyFact(f.keys);
+  if (keys) lines.push(keys);
   if (f.stuckGhosts?.length) lines.push(`Ghosts that ended their run stuck here: ${f.stuckGhosts.join(', ')}.`);
   if (f.confusedGhosts?.length) lines.push(`Ghosts that said they were confused here: ${f.confusedGhosts.join(', ')}.`);
   // A human review (docs/ai-review-log.md, R3) found these are the ghosts' plans right before acting, not

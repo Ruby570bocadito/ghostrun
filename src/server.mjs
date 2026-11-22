@@ -16,6 +16,7 @@ import { analyze } from './analyze.mjs';
 import { explainHotspots } from './explain.mjs';
 import { PERSONAS, DEFAULT_PERSONAS } from './personas.mjs';
 import { costOf } from './brains/meta.mjs';
+import { traceCost } from './brains/prices.mjs';
 import { RateLimiter, checkTarget, clientIp, createRequestGuard } from './guard.mjs';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -251,7 +252,7 @@ async function play(run) {
       }
     }
     // Per move, because a ghost can switch to the backup model mid-run.
-    const ghostCost = traces.reduce((a, t) => a + t.steps.reduce((b, st) => b + costOf(st.model ?? t.model, st.usage ?? { input: 0, output: 0 }), 0), 0);
+    const ghostCost = traces.reduce((a, t) => a + traceCost(t), 0); // moves and exit interviews
     const analystCost = report.analystUsage ? costOf('muse-spark-1.3', report.analystUsage) : 0;
     report.cost = { ghosts: ghostCost, analyst: analystCost, total: ghostCost + analystCost };
     report.realMs = ms;

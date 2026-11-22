@@ -117,6 +117,19 @@ export async function protectContext(context, guard, onBlocked = () => {}) {
   });
 }
 
+const clip = (s, n) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
+
+/** The exit interview as stored: short strings and real booleans, whatever the model sent. */
+export function cleanDebrief(a = {}) {
+  return {
+    goal: clip(a.goal, 100) || 'no idea',
+    understood_goal: a.understood_goal === true,
+    understood_controls: a.understood_controls === true,
+    stopped_me: clip(a.stopped_me, 160) || 'nothing',
+    keep_playing: a.keep_playing === true,
+  };
+}
+
 export async function runGhost({
   browser,
   url,
@@ -133,6 +146,8 @@ export async function runGhost({
   bulletTime = true, // false = the game keeps running while the brain thinks (baseline for the A2 experiment)
   notices = [], // failures handled during the run (e.g. model fallback), shared with the caller
   guard = null, // async (url) => may the game page load it? Set by the public demo (src/guard.mjs)
+  debrief = true, // after its last move, the ghost answers a short exit interview (if its brain can)
+  onDebrief = () => {},
   signal,
 }) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -418,6 +433,21 @@ export async function runGhost({
       }
     }
     trace.outcome ??= 'out_of_steps';
+    if (debrief && typeof brain.debrief === 'function' && trace.steps.length >= 3 && trace.outcome !== 'stopped' && !signal?.aborted) {
+      try {
+        const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
+        const deaths = trace.steps.reduce((a, s) => a + (s.events ?? []).filter((e) => e === 'death').length, 0);
+        const ending = trace.outcome === 'won' ? ' and finished the level' : trace.outcome === 'quit' ? ' and chose to stop' : '';
+        const summary = `You made ${trace.steps.length} moves and died ${deaths} time${deaths === 1 ? '' : 's'}${ending}.`;
+        const d = await brain.debrief({ screenshot: shot, history, summary });
+        if (d?.answer) {
+          trace.debrief = { ...cleanDebrief(d.answer), model: brain.model, usage: d.usage, latencyMs: Math.round(d.latencyMs ?? 0) };
+          await onDebrief(trace.debrief);
+        }
+      } catch (err) {
+        notices.push({ type: 'debrief_failed', reason: err.message, handled: 'this ghost has no exit interview; its moves and findings are complete' });
+      }
+    }
   } catch (err) {
     trace.outcome = 'error';
     trace.error = { kind: err.kind ?? (err.status ? `api_${err.status}` : 'error'), message: err.message };

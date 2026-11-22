@@ -22,6 +22,12 @@ export function costOf(model, usage = {}, { listPrice = false } = {}) {
   return ((input - cached) * p.input + cached * p.cached + (usage.output ?? 0) * p.output) / 1e6;
 }
 
+/** What one ghost cost: every move, priced with the model that answered it, plus its exit interview. */
+export function traceCost(t, opts) {
+  const moves = (t?.steps ?? []).reduce((a, s) => a + costOf(s.model ?? t.model, s.usage ?? {}, opts), 0);
+  return moves + (t?.debrief?.usage ? costOf(t.debrief.model ?? t.model, t.debrief.usage, opts) : 0);
+}
+
 /** Adds up the usage of several calls. */
 export function sumUsage(list) {
   const total = { input: 0, cached: 0, output: 0, reasoning: 0 };

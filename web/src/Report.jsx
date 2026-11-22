@@ -27,7 +27,9 @@ function clipFrames(runId, trace, [from, to]) {
   return trace.frames.slice(from, to + 1).map((f) => `/runs/${runId}/${trace.persona}/${f.file}`);
 }
 
-const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : /s$/.test(word) ? 'es' : 's'}`;
+// "KeyZ" → "Z", as the game's own instructions name it.
+const keyLabel = (k) => k.replace(/^Key(?=[A-Z]$)/, '').replace(/^Digit(?=\d$)/, '');
 const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 function statLine(f, report) {
@@ -75,6 +77,8 @@ function Finding({ f, card, report, runId, byPersona, personas, selected, onHove
     f.stuckGhosts?.length ? `${f.stuckGhosts.length} ended their run stuck here` : null,
     f.confusedGhosts?.length ? `${f.confusedGhosts.length} said they were confused here` : null,
     f.type !== 'hard_to_see' && f.contrast ? `measured contrast ${f.contrast}:1 (people need at least 3:1)` : null,
+    // Measured from the game (src/keys.mjs): a key tapped here that never did anything.
+    ...(f.keys ?? []).filter((k) => k.effects === 0 && k.presses >= 3 && !k.movesWhenHeld).map((k) => `${keyLabel(k.key)} did nothing in ${plural(k.presses, 'press')}`),
   ].filter(Boolean);
   // Friction read from the data, not from the AI: most ghosts that reached the spot got past it.
   const fair = f.type === 'friction' && f.reached?.length && f.passed.length * 2 >= f.reached.length;
@@ -205,6 +209,18 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
     ? (report.cards?.find((c) => c.hotspot === firstCritical.id)?.title ?? `${TYPE_LABEL[firstCritical.type] ?? firstCritical.type}, ${firstCritical.ghosts.length} of ${report.ghostsTotal} ghosts`)
     : '';
 
+  // The exit interviews (the ghosts' own answers after playing): worth a warning when half or more never got it.
+  const exit = report.debrief;
+  const half = (list) => (exit && list.length * 2 >= exit.asked ? list.length : 0);
+  const exitWarning = !exit
+    ? ''
+    : half(exit.goalUnclear)
+      ? `${exit.goalUnclear.length} of ${exit.asked} ghosts said afterwards they never worked out the goal.`
+      : half(exit.controlsUnclear)
+        ? `${exit.controlsUnclear.length} of ${exit.asked} ghosts said afterwards they never worked out the controls.`
+        : '';
+  const allClear = !critical && !exitWarning;
+
   const select = (id) => {
     setSelected(id);
     document.getElementById(`f-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -299,15 +315,25 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </div>
       )}
 
-      <div className={`verdict-row ${critical ? '' : 'with-art'}`}>
-      {!critical && <img className="verdict-art" src="/states/ok.webp" width="200" height="105" alt="" />}
-      <p className={`verdict ${critical ? 'bad' : 'good'}`}>
+      <div className={`verdict-row ${allClear ? 'with-art' : ''}`}>
+      {allClear && <img className="verdict-art" src="/states/ok.webp" width="200" height="105" alt="" />}
+      <p className={`verdict ${critical ? 'bad' : exitWarning ? 'warn' : 'good'}`}>
         {critical
           ? `${critical} critical issue${critical === 1 ? '' : 's'}: ${topCritical}`
           : shown.length
             ? `No critical issues. ${shown.length} hard spot${shown.length === 1 ? '' : 's'} where ghosts died but most got past.`
-            : 'No problems found: no ghost died again and again, got stuck or got confused.'}
+            : exitWarning
+              ? 'No critical issues in what the game showed: no ghost died again and again or got stuck in one place.'
+              : 'No problems found: no ghost died again and again, got stuck or got confused.'}
       </p>
+      {exitWarning && (
+        <p className="verdict-note">
+          {exitWarning}{' '}
+          <button type="button" className="text-link" onClick={() => document.getElementById('exit-interview')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+            Read what they said
+          </button>
+        </p>
+      )}
       </div>
       <div className="summary">
         <div className={`stat ${critical ? 'bad' : 'good'}`}>
@@ -415,6 +441,43 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           </article>
         ))}
       </div>
+
+      {report.ghosts.some((g) => g.debrief) && (
+        <section id="exit-interview" className="exit" aria-labelledby="exit-title">
+          <h3 id="exit-title" className="section-title">Exit interview</h3>
+          <p className="small muted exit-intro">
+            After its last move, each ghost answered a few questions about the whole game, in character. These are the ghosts’ own opinions, not measurements: read them as what a
+            first-time player might say.
+          </p>
+          <div className="exit-grid">
+            {report.ghosts
+              .filter((g) => g.debrief)
+              .map((g) => {
+                const p = personas[g.persona] ?? { name: g.persona, color: '#9bf6ec' };
+                const d = g.debrief;
+                const noIdea = /^no idea\b/i.test(d.goal);
+                return (
+                  <article key={g.persona} className="exit-card" style={{ '--c': p.color }}>
+                    <header>
+                      <GhostSprite persona={g.persona} color={p.color} size={32} mood={moodFor(g.outcome)} />
+                      <b>{p.name}</b>
+                    </header>
+                    <p className="exit-quote">“{capital(d.stopped_me)}”</p>
+                    <p className="exit-goal small">
+                      <span className="muted">Thought the goal was: </span>
+                      {noIdea ? 'no idea' : capital(d.goal)}
+                    </p>
+                    <ul className="exit-chips" aria-label="Answers">
+                      <li className={d.understood_goal ? 'yes' : 'no'}>{d.understood_goal ? 'Understood the goal' : 'Never understood the goal'}</li>
+                      <li className={d.understood_controls ? 'yes' : 'no'}>{d.understood_controls ? 'Worked out the controls' : 'Never worked out the controls'}</li>
+                      <li className={d.keep_playing ? 'yes' : 'no'}>{d.keep_playing ? 'Would keep playing' : 'Would stop playing'}</li>
+                    </ul>
+                  </article>
+                );
+              })}
+          </div>
+        </section>
+      )}
 
       <h3 className="section-title">Who played</h3>
       <div className="roster">

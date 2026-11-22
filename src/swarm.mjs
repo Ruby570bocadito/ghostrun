@@ -90,6 +90,7 @@ export async function runSwarm({
           signal,
           onFrame: (f) => onEvent({ type: 'frame', ghost: id, t: f.t, file: `${id}/${f.file}`, state: f.state }),
           onStep: (s) => onEvent({ type: 'step', ghost: id, step: s }),
+          onDebrief: (d) => onEvent({ type: 'debrief', ghost: id, debrief: { goal: d.goal, understood_goal: d.understood_goal, understood_controls: d.understood_controls, stopped_me: d.stopped_me, keep_playing: d.keep_playing } }),
         });
         onEvent({ type: 'ghost_done', ghost: id, outcome: trace.outcome, error: trace.error ?? null });
         return trace;
