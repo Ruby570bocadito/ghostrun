@@ -434,3 +434,19 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .fair { margin-top: 18px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; background: var(--surface); }
 .fair summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .fair[open] summary { margin-bottom: 12px; }
+
+/* Report: the problems on the left; where it happened and its replay fixed on the right */
+.report-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 500px); gap: 24px; align-items: start; margin-top: 8px; }
+.report-side { position: sticky; top: 12px; display: grid; gap: 10px; }
+.report-side .section-title { margin: 0; }
+.report-side .heat-wrap { margin-bottom: 4px; }
+.report-side .heatmap { max-height: 230px; }
+.report-side .legend-chips { display: none; }
+.report-main .finding { grid-template-columns: minmax(0, 1fr); cursor: pointer; }
+.replay { display: grid; gap: 8px; }
+@media (max-width: 1000px) {
+  .report-body { grid-template-columns: minmax(0, 1fr); }
+  .report-side { position: static; order: -1; }
+}
+.summary .stat { padding: 10px 14px; }
+.summary .stat b { font-size: 1.5rem; }

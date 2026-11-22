@@ -70,10 +70,33 @@ function provenance(f) {
   }
 }
 
-function Finding({ f, card, report, runId, byPersona, personas, selected, onHover = () => {}, also = [], consequences = [] }) {
-  const [who, setWho] = useState(f.evidence[0]?.persona);
-  const ev = f.evidence.find((e) => e.persona === who) ?? f.evidence[0];
+/** The replay of the active problem: whose replay (tabs) and the clip. Lives in the report's fixed column. */
+function Replay({ item, runId, byPersona, personas }) {
+  const evidence = item.kind === 'quit' ? [{ persona: item.q.persona, clip: [Math.max(0, item.q.clip[0] - 10), item.q.clip[1]] }] : item.f.evidence;
+  const [who, setWho] = useState(evidence[0]?.persona);
+  const ev = evidence.find((e) => e.persona === who) ?? evidence[0];
   const frames = useMemo(() => clipFrames(runId, byPersona[ev?.persona], ev?.clip ?? [0, 0]), [runId, byPersona, ev]);
+  return (
+    <div className="replay">
+      <div className="clip-tabs" role="group" aria-label="Whose replay">
+        {evidence.map((e) => (
+          <button
+            key={e.persona}
+            aria-pressed={e.persona === ev?.persona}
+            className={e.persona === ev?.persona ? 'on' : ''}
+            style={{ '--c': personas[e.persona]?.color }}
+            onClick={() => setWho(e.persona)}
+          >
+            <GhostIcon color={personas[e.persona]?.color} size={14} /> {personas[e.persona]?.name.replace('The ', '')}
+          </button>
+        ))}
+      </div>
+      <Clip frames={frames} label={`Replay of ${personas[ev?.persona]?.name}`} />
+    </div>
+  );
+}
+
+function Finding({ f, card, report, personas, selected, onHover = () => {}, onSelect = () => {}, also = [], consequences = [] }) {
   const extra = [
     f.stuckGhosts?.length ? `${f.stuckGhosts.length} ended their run stuck here` : null,
     f.confusedGhosts?.length ? `${f.confusedGhosts.length} said they were confused here` : null,
@@ -92,6 +115,7 @@ function Finding({ f, card, report, runId, byPersona, personas, selected, onHove
       onMouseLeave={() => onHover(null)}
       onFocus={() => onHover(f.id)}
       onBlur={() => onHover(null)}
+      onClick={() => onSelect(f.id)}
     >
       <div className="finding-main">
         <span className={`badge ${f.type}`}>
@@ -145,22 +169,6 @@ function Finding({ f, card, report, runId, byPersona, personas, selected, onHove
             </li>
           ))}
         </ul>
-      </div>
-      <div className="finding-clip">
-        <div className="clip-tabs" role="group" aria-label="Whose replay">
-          {f.evidence.map((e) => (
-            <button
-              key={e.persona}
-              aria-pressed={e.persona === ev?.persona}
-              className={e.persona === ev?.persona ? 'on' : ''}
-              style={{ '--c': personas[e.persona]?.color }}
-              onClick={() => setWho(e.persona)}
-            >
-              <GhostIcon color={personas[e.persona]?.color} size={14} /> {personas[e.persona]?.name.replace('The ', '')}
-            </button>
-          ))}
-        </div>
-        <Clip frames={frames} label={`Replay of ${personas[ev?.persona]?.name} for ${f.id}`} />
       </div>
       <p className="provenance">
         {provenance(f)} {card ? `Explanation written by ${card.model} from the ghosts' words and the screen.` : ''}
@@ -217,7 +225,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   const personaIds = report.ghosts.map((g) => g.persona);
   const traces = useTraces(runId, personaIds);
   const byPersona = useMemo(() => Object.fromEntries(traces.map((t) => [t.persona, t])), [traces]);
-  const [selected, setSelected] = useState(findings[0]?.id ?? null);
+  const [selected, setSelected] = useState(() => buildIssues(report).issues.find((i) => i.kind === 'finding')?.primary.id ?? findings.find((f) => f.severity !== 'low')?.id ?? null);
   // The finding under the pointer: its box on the map lights up, and the reverse (finding ↔ where it happened).
   const [hovered, setHovered] = useState(null);
   const [rerunError, setRerunError] = useState(null);
@@ -236,6 +244,11 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
   const critical = issues.length;
   const finished = report.ghosts.filter((g) => g.outcome === 'won').length;
   const first = issues[0];
+  const items = [
+    ...(findings ?? []).map((f) => ({ kind: 'finding', id: f.id, f })),
+    ...report.quits.map((q) => ({ kind: 'quit', id: `Q-${q.persona}`, q })),
+  ];
+  const active = items.find((i) => i.id === hovered) ?? items.find((i) => i.id === selected) ?? null;
   const topCritical = !first
     ? ''
     : first.kind === 'goal'
@@ -414,7 +427,77 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </ol>
       )}
 
-      <h3 className="section-title">Where they got stuck</h3>
+      <div className="report-body">
+      <div className="report-main">
+      <h3 className="section-title">What to fix first</h3>
+      <div className="findings">
+        {issues.length === 0 && <p className="panel">Nothing to fix: no place where ghosts died again and again, got stuck or never found an objective.</p>}
+        {issues.map((i) =>
+          i.kind === 'goal' ? (
+            <GoalIssue key="goal" issue={i} report={report} personas={personas} />
+          ) : (
+            <Finding
+              key={i.primary.id}
+              f={i.primary}
+              also={i.related}
+              consequences={i.consequences}
+              card={report.cards?.find((c) => c.hotspot === i.primary.id)}
+              report={report}
+              personas={personas}
+              selected={[i.primary, ...i.related, ...i.consequences].some((f) => selected === f.id || hovered === f.id)}
+              onHover={setHovered}
+              onSelect={setSelected}
+            />
+          ),
+        )}
+        {other.map((f) => (
+          <Finding key={f.id} f={f} card={report.cards?.find((c) => c.hotspot === f.id)} report={report} personas={personas} selected={selected === f.id || hovered === f.id} onHover={setHovered} onSelect={setSelected} />
+        ))}
+        {report.quits.map((q) => (
+          <article
+            key={q.persona}
+            className={`finding quit ${active?.kind === 'quit' && active.q.persona === q.persona ? 'selected' : ''}`}
+            onClick={() => setSelected(`Q-${q.persona}`)}
+            onMouseEnter={() => setHovered(`Q-${q.persona}`)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <div className="finding-main">
+              <span className="badge quit">Quit</span>
+              <h3>
+                {personas[q.persona]?.name} gave up at move {q.step}
+              </h3>
+              <ul className="quotes">
+                <li>
+                  <GhostIcon color={personas[q.persona]?.color} size={16} mood="angry" />
+                  <span>“{q.thought}”</span>
+                </li>
+              </ul>
+            </div>
+          </article>
+        ))}
+      </div>
+      {fair.length > 0 && (
+        <details className="fair">
+          <summary>
+            {fair.length} fair challenge{fair.length === 1 ? '' : 's'}: ghosts died here, but most got past
+          </summary>
+          <div className="findings">
+            {fair.map((f) => (
+              <Finding key={f.id} f={f} card={report.cards?.find((c) => c.hotspot === f.id)} report={report} personas={personas} selected={selected === f.id || hovered === f.id} onHover={setHovered} onSelect={setSelected} />
+            ))}
+          </div>
+        </details>
+      )}
+
+      </div>
+      <aside className="report-side" aria-label="Where it happened and its replay">
+        {active && (
+          <>
+            <h3 className="section-title">Replay{active.kind === 'quit' ? `: ${personas[active.q.persona]?.name} quits` : `: ${active.f.id}`}</h3>
+            <Replay key={active.id} item={active} runId={runId} byPersona={byPersona} personas={personas} />
+          </>
+        )}
+      <h3 className="section-title">Where it happened</h3>
       {report.hasPositions ? (
         <div className="heat-wrap">
           <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} hovered={hovered} onHover={setHovered} onSelect={select} resolved={resolved} />
@@ -438,63 +521,8 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           <li className="legend-note muted">Blocker, missed objective, stuck and hard to see are problems to fix; friction is usually a fair challenge.</li>
         </ul>
       )}
-      <h3 className="section-title">What to fix first</h3>
-      <div className="findings">
-        {issues.length === 0 && <p className="panel">Nothing to fix: no place where ghosts died again and again, got stuck or never found an objective.</p>}
-        {issues.map((i) =>
-          i.kind === 'goal' ? (
-            <GoalIssue key="goal" issue={i} report={report} personas={personas} />
-          ) : (
-            <Finding
-              key={i.primary.id}
-              f={i.primary}
-              also={i.related}
-              consequences={i.consequences}
-              card={report.cards?.find((c) => c.hotspot === i.primary.id)}
-              report={report}
-              runId={runId}
-              byPersona={byPersona}
-              personas={personas}
-              selected={[i.primary, ...i.related, ...i.consequences].some((f) => selected === f.id || hovered === f.id)}
-              onHover={setHovered}
-            />
-          ),
-        )}
-        {other.map((f) => (
-          <Finding key={f.id} f={f} card={report.cards?.find((c) => c.hotspot === f.id)} report={report} runId={runId} byPersona={byPersona} personas={personas} selected={selected === f.id || hovered === f.id} onHover={setHovered} />
-        ))}
-        {report.quits.map((q) => (
-          <article key={q.persona} className="finding quit">
-            <div className="finding-main">
-              <span className="badge quit">Quit</span>
-              <h3>
-                {personas[q.persona]?.name} gave up at move {q.step}
-              </h3>
-              <ul className="quotes">
-                <li>
-                  <GhostIcon color={personas[q.persona]?.color} size={16} mood="angry" />
-                  <span>“{q.thought}”</span>
-                </li>
-              </ul>
-            </div>
-            <div className="finding-clip">
-              <Clip frames={clipFrames(runId, byPersona[q.persona], [Math.max(0, q.clip[0] - 10), q.clip[1]])} label={`${personas[q.persona]?.name} quitting`} />
-            </div>
-          </article>
-        ))}
+      </aside>
       </div>
-      {fair.length > 0 && (
-        <details className="fair">
-          <summary>
-            {fair.length} fair challenge{fair.length === 1 ? '' : 's'}: ghosts died here, but most got past
-          </summary>
-          <div className="findings">
-            {fair.map((f) => (
-              <Finding key={f.id} f={f} card={report.cards?.find((c) => c.hotspot === f.id)} report={report} runId={runId} byPersona={byPersona} personas={personas} selected={selected === f.id || hovered === f.id} onHover={setHovered} />
-            ))}
-          </div>
-        </details>
-      )}
 
       {report.ghosts.some((g) => g.debrief) && (
         <section id="exit-interview" className="exit" aria-labelledby="exit-title">
