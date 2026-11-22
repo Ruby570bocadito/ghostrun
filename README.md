@@ -57,6 +57,8 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 
 ![A finding card: the key is too faint against the background, with the measured contrast and a replay](docs/img/report-hard-to-see.jpg)
 
+![The exit interview on SPACETAXI, a real jam game: none of the four ghosts worked out the goal, and the Newbie kept crashing into planets, as its players wrote](docs/img/exit-interview.jpg)
+
 ## How the AI is used
 
 **In the product** (all through the [Meta Model API](https://dev.meta.ai/docs)):
@@ -79,6 +81,8 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 | **Measure which keys did anything** and tell the analyst (no AI) | The analyst named Read Me's real flaw (the instructions name a key that does nothing) in 6 of 12 cards | 6 of 6, with the gap cards still 7 of 7 (not held out: designed after reading those cards) |
 | **Ask the ghosts afterwards** (exit interview) | On nine real jam games, the report raised the players' complaint in 4 of 9 and 2 of 9 (two runs); in 3 games of the second run it came back empty | 5 of 9, never empty (judged blind; one run per version); +3.5% cost |
 | **Teach the ghost how its actions work**: a tap happens at the start of the move, so walk to the edge first and jump next; in a new game, try one key at a time (from an analysis of 5,761 recorded moves) | 16 deaths per clean Gap Run run: 69% of deaths at fair gaps were jumps started too early | 5 per run, the same flaws found (17/20) and no false alarm (0/20), for 4% more cost |
+
+![A blocker card on Read Me: the ghosts pressed Z 23 times and it never did anything, so the card blames the key the instructions name, not the pit](docs/img/report-dead-key.jpg)
 
 Together, these made a run 17% cheaper for the ghosts and the analyst's cards 47% cheaper, about 25% less per playtest. We also report what we rejected: smaller screenshots (8% cheaper, worse perception), not asking the ghost for its position (13% cheaper, but twice the deaths next to hazards), shorter memory, stricter stops ([tried and rejected](bench/README.md#cheaper-and-better-ghosts)).
 

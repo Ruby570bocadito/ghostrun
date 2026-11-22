@@ -383,7 +383,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .text-link:hover { color: var(--text); }
 .exit { scroll-margin-top: 16px; }
 .exit-intro { margin: -4px 0 12px; max-width: 70ch; }
-.exit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.exit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .exit-card { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c, var(--mint)); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
 .exit-card header { display: flex; align-items: center; gap: 10px; }
 .exit-quote { margin: 0; font-size: 1rem; line-height: 1.4; }
