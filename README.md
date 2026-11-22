@@ -26,6 +26,7 @@ It is not a small group: the GMTK Game Jam 2025 alone received [more than 9,500 
    - **Stuck**: where ghosts ended up circling.
    - **Confusing**: where they said they did not understand.
    - **Hard to see**: an objective drawn with too little contrast.
+   - **Exit interview**: after playing, each ghost says whether it understood the goal and the controls, and what stopped it most. If half or more never worked out the goal, the verdict says so.
 4. **You fix it and re-run**: the new report is compared with the old one ("critical issues 1 → 0, ghosts that finished 0/4 → 3/4").
 
 ![A playtest report comparing a run before and after a fix, with a map of the level and the findings](docs/img/report-before-after.jpg)
@@ -52,7 +53,7 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 | Normal: Key Hunt, key drawn in the floor colour | "Hard to see" (contrast 1.09:1) in 10/10 runs |
 | Repeat: the same 10 variants, played in five separate rounds | 9/10 flaws in four rounds and 8/10 in one, with 0/10 false alarms in every round |
 | Hard: [NILO](games/third-party/nilo/README.md), a real jam game we did not make, unmodified, no SDK | The ghosts got through its mouse-only menu by themselves, and all four got stuck at the start of level 1. A person confirmed half the diagnosis: the controls are confusing, but the jump was not too hard ([partial success](bench/README.md#hard-case-a-real-jam-game-we-did-not-make)) |
-| Harder: 9 more real jam games by other people (js13kGames), no SDK, compared with what their players wrote | The ghosts agreed with the players in 5 of 9 (1 match, 4 partial), disagreed in 2, failed where people did not in 1 and missed 1 ([table](bench/results/outside-games.md)). They also exposed five Ghostrun bugs, now fixed |
+| Harder: 9 more real jam games by other people (js13kGames), no SDK, compared with what their players wrote | Judged blind by an independent agent: with the exit interview, the report raised the players' complaint in 5 of 9 games (1 match, 4 partial) and never came back empty; without it, 4 of 9 and 2 of 9 in two runs ([table](bench/results/outside-games.md#three-runs-judged-blind)). The games also exposed five Ghostrun bugs, now fixed |
 
 ![A finding card: the key is too faint against the background, with the measured contrast and a replay](docs/img/report-hard-to-see.jpg)
 
@@ -63,7 +64,8 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 - **The ghosts: `muse-ember-1.0`**, reasoning effort `minimal`. Each move, a ghost receives the screenshot and a log of its earlier moves with what each one did ("→ you moved 126 px right and 60 px up", "→ you died"). It answers with structured JSON: keys to hold, keys to tap, clicks, how long, what it saw, where it is, and a thought in character.
   - **Why Ember**: on the same benchmark, Muse Spark and Muse Wonder found the same flaws and did not play better. They cost 11–17× more and decided about 3× slower ([model comparison](bench/README.md#which-model-should-the-ghosts-use-meta-model-api)).
 - **The analyst: `muse-spark-1.3`**, reasoning `minimal`, writes the card for each finding (title, what happens, likely cause, suggested fix, confidence, and whether the ghosts' own clumsiness could explain it). It only explains findings it is given.
-- **What does not use AI.** The findings themselves come from plain rules over what the game reports (deaths, objectives, positions) and over the screen (contrast), so the AI cannot invent a problem.
+- **The exit interview: the same model and conversation**, one more call per ghost after its last move (+3.5% cost): what it thinks the goal is, whether it understood the goal and the controls, what stopped it most, whether it would keep playing. The report shows it as the ghosts' opinion, not as a finding.
+- **What does not use AI.** The findings themselves come from plain rules over what the game reports (deaths, objectives, positions) and over the screen (contrast), so the AI cannot invent a problem. So does the check of which keys did anything: from the game's own state, a key the ghosts pressed again and again that never changed anything ("Z did nothing in 23 presses") goes on the card and to the analyst.
 
 **Decisions we made and measured** ([details](bench/README.md#experiments-on-our-ai-design-decisions)):
 
@@ -74,6 +76,8 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 | **Measure the contrast of objectives** (AI eyes saw a 1.09:1 key that a person could barely see) | The faint-key flaw was missed 4/4 | Found 4/4, no new false alarm when 90 recorded runs (45 of them clean) were re-scored |
 | **Prompt built for Meta's prompt cache**: stable part first, append-only move log, a shared `prompt_cache_key` | 48% of the input served from cache | 70% (cached input costs 25× less) |
 | **Stop a ghost once it has shown enough** (8 deaths at one spot, or 20 moves without new ground) | — | 15% fewer moves on replayed runs, same flaws found |
+| **Measure which keys did anything** and tell the analyst (no AI) | The analyst named Read Me's real flaw (the instructions name a key that does nothing) in 6 of 12 cards | 6 of 6, with the gap cards still 7 of 7 (not held out: designed after reading those cards) |
+| **Ask the ghosts afterwards** (exit interview) | On nine real jam games, the report raised the players' complaint in 4 of 9 and 2 of 9 (two runs); in 3 games of the second run it came back empty | 5 of 9, never empty (judged blind; one run per version); +3.5% cost |
 | **Teach the ghost how its actions work**: a tap happens at the start of the move, so walk to the edge first and jump next; in a new game, try one key at a time (from an analysis of 5,761 recorded moves) | 16 deaths per clean Gap Run run: 69% of deaths at fair gaps were jumps started too early | 5 per run, the same flaws found (17/20) and no false alarm (0/20), for 4% more cost |
 
 Together, these made a run 17% cheaper for the ghosts and the analyst's cards 47% cheaper, about 25% less per playtest. We also report what we rejected: smaller screenshots (8% cheaper, worse perception), not asking the ghost for its position (13% cheaper, but twice the deaths next to hazards), shorter memory, stricter stops ([tried and rejected](bench/README.md#cheaper-and-better-ghosts)).
@@ -142,8 +146,9 @@ Then pick "No game handy? Try ours" on the home page, or paste any web game's li
 - Ghosts **see faint shapes better than people**. Objectives the game declares are measured for contrast instead; undeclared ones are not.
 - They cannot tell intended difficulty from bad design. They show where players struggle; you decide.
 - Without the SDK, positions are what the ghosts report on screen, so in scrolling games the map is approximate.
-- **On games without the SDK, findings are leads, not verdicts.** On nine real jam games, the ghosts agreed with what players wrote in about half ([table](bench/results/outside-games.md)). With the SDK (our benchmark), they found 44 of 50 planted flaws with no false alarm.
-- **The written cause on a card is the least reliable part.** On recorded runs the analyst explained the too-wide gap correctly in 14 of 14 cards, but found the real cause of Read Me's flaw (instructions that name the wrong key) in only 6 of 12 cards ([every card](bench/results/analyst-blockers.md)). Trust the place, the numbers and the replay; read the cause as a guess to check.
+- **On games without the SDK, findings are leads, not verdicts.** On nine real jam games, the reports raised what players wrote in 5 of 9 at best (judged blind), and in two games they claimed problems that players contradict ([table](bench/results/outside-games.md#three-runs-judged-blind)). With the SDK (our benchmark), they found 44 of 50 planted flaws with no false alarm.
+- **The exit interview is the ghosts' opinion.** It tells our clean test games (8 of 8 ghosts understood the goal) from unfamiliar jam games (half or more did not, in 7 of 9), but it is not a measurement.
+- **The written cause on a card is the least reliable part.** On recorded runs the analyst explained the too-wide gap correctly in 14 of 14 cards, but found the real cause of Read Me's flaw (instructions that name the wrong key) in only 6 of 12. Once Ghostrun measured which keys did anything (no AI) and gave it to the analyst, it named the dead Z key in 6 of 6, with the gap still 7 of 7 ([every card](bench/results/analyst-blockers.md)). That fix was designed after seeing those cards, so it is not a held-out result: trust the place, the numbers and the replay first, and read the cause as a guess to check.
 
 More in [the benchmark's limitations](bench/README.md#limitations).
 
