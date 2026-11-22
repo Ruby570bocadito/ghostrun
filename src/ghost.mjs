@@ -26,6 +26,7 @@ const MAX_SAFE_MOVES_IN_A_ROW = 3;
 const CLICK_PRESS_MS = 90;
 // Longest real time to wait for a game to create its canvas after the page has loaded.
 const CANVAS_WAIT_MS = 6000;
+const LOAD_WAIT_MS = 15000; // how long a found canvas may stay blank while the game loads
 // F3, "run N px, then tap": the run-up advances the frozen clock in slices this long, checking the distance after each.
 const RUN_UP_SLICE_MS = 20;
 // The run-up has its own time budget and duration_ms counts from the tap. F5 (22 Nov): when the run-up came out of
@@ -318,10 +319,19 @@ export async function runGhost({
       await page.clock.runFor(250);
       canvas = await findCanvas();
     }
-    const first = await capture();
     // "Blank" = barely bigger than a screenshot of an empty page of the same size. A fixed 4,000-byte line refused
     // Big Champ (a js13k game) whose dark start screen only says "Tap" (2.8 KB, against 2.1 KB for an empty page).
-    if (!canvas || first.length < (await blankShotSize(browser, viewport)) + 250) {
+    const blank = (await blankShotSize(browser, viewport)) + 250;
+    // Engine games (Godot, Unity…) show a black canvas while they load, longer when four ghosts load them at once:
+    // two of four ghosts were refused as "blank" on an itch.io game that the other two played (22 Nov). Wait for it.
+    let shot = await page.screenshot({ type: 'jpeg', quality: 70 });
+    for (let waited = 0; canvas && shot.length < blank && waited < LOAD_WAIT_MS; waited += 500) {
+      await sleep(500);
+      await page.clock.runFor(500);
+      shot = await page.screenshot({ type: 'jpeg', quality: 70 });
+    }
+    const first = await capture();
+    if (!canvas || first.length < blank) {
       throw Object.assign(
         new Error(canvas ? 'The game screen looks blank after loading, so there is nothing to play.' : 'No game canvas found on this page.'),
         { kind: 'game_not_playable' },

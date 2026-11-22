@@ -1,4 +1,5 @@
 // Runs several ghosts in parallel on the same game, each in its own browser context.
+import { findPlayUrl } from './embed.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
@@ -43,15 +44,19 @@ export async function runSwarm({
   const started = Date.now();
   // A game whose canvas does not fit the window gets a bigger window, so the ghosts see all of it (src/fit.mjs).
   const requestedViewport = viewport;
+  // The page may only frame the game (itch.io): the ghosts play the game's own address (src/embed.mjs).
+  let playUrl = url;
   if (brain !== 'scripted') {
-    const rect = await measureCanvas(browser, url, viewport, {
+    const opts = {
       protect: guard ? (context) => protectContext(context, guard) : undefined,
       contextOptions: guard ? { serviceWorkers: 'block' } : {},
-    });
+    };
+    playUrl = await findPlayUrl(browser, url, opts);
+    const rect = await measureCanvas(browser, playUrl, viewport, opts);
     viewport = fitSize(viewport, rect);
   }
   const resized = viewport.width !== requestedViewport.width || viewport.height !== requestedViewport.height;
-  const config = { url, personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, ...(resized ? { requestedViewport } : {}), simulateOutage, compareTo };
+  const config = { url, ...(playUrl !== url ? { playUrl } : {}), personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, ...(resized ? { requestedViewport } : {}), simulateOutage, compareTo };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
@@ -77,7 +82,7 @@ export async function runSwarm({
         onEvent({ type: 'ghost_started', ghost: id });
         const trace = await runGhost({
           browser,
-          url,
+          url: playUrl,
           brain: ghostBrain,
           persona,
           maxSteps: steps,
