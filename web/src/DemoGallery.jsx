@@ -1,4 +1,4 @@
-import { HeroScene } from './HeroScene.jsx';
+import { HeroPreview } from './HeroPreview.jsx';
 import { HomeBands } from './HomeBands.jsx';
 
 const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
@@ -13,7 +13,7 @@ export function DemoGallery({ config }) {
         <p className="lede">
           AI ghosts with different personalities play a web game, think out loud, and show you exactly where players will get stuck, before the deadline.
         </p>
-        <HeroScene />
+        <HeroPreview />
       </div>
 
       <div className="demo-note" role="note">

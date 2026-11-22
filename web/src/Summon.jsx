@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { GhostSprite } from './Ghost.jsx';
-import { HeroScene } from './HeroScene.jsx';
+import { Ghost, GhostSprite } from './Ghost.jsx';
+import { HeroPreview } from './HeroPreview.jsx';
 import { HomeBands } from './HomeBands.jsx';
 
 // The test games are served by the app under /play/; turn their paths into full links at this address.
@@ -77,131 +77,141 @@ export function Summon({ config, onStarted }) {
   const [gameId, setGameId] = useState('gap-run');
   const game = config?.games?.find((g) => g.id === gameId) ?? config?.games?.[0];
 
+  const chosen = (config?.personas ?? []).filter((p) => selected.includes(p.id));
+
   return (
     <section className="summon">
-      <div className="summon-hero">
-        <h1>Who gets stuck in your game?</h1>
-        <p className="lede">
-          Paste your web game's link. AI ghosts with different personalities play it, think out loud, and show you exactly where players will get stuck, before the
-          deadline.
-        </p>
-        <HeroScene />
-      </div>
-
-      <form className="summon-card" onSubmit={submit} noValidate>
-        <label className="field-label" htmlFor="game-url">
-          Your game's link
-        </label>
-        <div className="url-row">
-          <input
-            id="game-url"
-            className="url-input mono"
-            type="url"
-            placeholder="https://your-game.itch.io/..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            autoComplete="off"
-            aria-describedby="link-error"
-          />
-          <button className="btn-primary" type="submit" disabled={sending || !selected.length || !config || config.error}>
-            {sending ? 'Summoning…' : 'Summon the ghosts'}
-          </button>
-        </div>
-        <p className="summon-hint muted small">
-          {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · about a minute · about $0.02 of AI
-        </p>
-        {game && (
-          <div className="quick-picks">
-            <label className="muted" htmlFor="test-game">
-              No game handy? Try ours:
+      <div className="hero">
+        <div className="hero-copy">
+          <h1>Who gets stuck in your game?</h1>
+          <p className="lede">Paste your web game's link. AI ghosts with different personalities play it, think out loud, and show you where players will get stuck, before the deadline.</p>
+          <form className="hero-form" onSubmit={submit} noValidate>
+            <label className="sr-only" htmlFor="game-url">
+              Your game's link
             </label>
-            <select
-              id="test-game"
-              className="game-select"
-              value={game.id}
-              onChange={(e) => {
-                // Choosing a game fills in its link: two test agents chose one and got "Paste your game's link first".
-                setGameId(e.target.value);
-                const g = config.games.find((x) => x.id === e.target.value);
-                if (g) setUrl(here(g.url));
-              }}
-            >
-              {config.games.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name} · {g.kind}
-                </option>
-              ))}
-            </select>
-            <button type="button" className="chip-btn" aria-pressed={url === here(game.url)} onClick={() => setUrl(here(game.url))}>
-              As designed
-            </button>
-            {game.faults.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                className="chip-btn chip-warn"
-                aria-pressed={url === here(`${game.url}?fault=${f.id}`)}
-                onClick={() => setUrl(here(`${game.url}?fault=${f.id}`))}
-              >
-                With a planted flaw: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
+            <div className="url-row">
+              <input
+                id="game-url"
+                className="url-input mono"
+                type="url"
+                placeholder="https://your-game.itch.io/..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                autoComplete="off"
+                aria-describedby="link-error"
+              />
+              <button className="btn-primary" type="submit" disabled={sending || !selected.length || !config || config.error}>
+                {sending ? 'Summoning…' : 'Summon the ghosts'}
               </button>
-            ))}
-          </div>
-        )}
+            </div>
+            <p className="summon-hint muted small">
+              {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · about a minute · about $0.02 of AI · keyboard and mouse games
+            </p>
+            {error && (
+              <p className="form-error" role="alert" id="link-error">
+                {error}
+              </p>
+            )}
+            {config?.error && <p className="form-error">Could not load the app settings. Is the server running?</p>}
+            <details className="ghost-picker">
+              <summary>
+                <span className="chosen" aria-hidden="true">
+                  {chosen.map((p) => (
+                    <Ghost key={p.id} persona={p.id} color={p.color} size={30} />
+                  ))}
+                </span>
+                <span className="picker-label">Change ghosts and options</span>
+              </summary>
+              <fieldset className="personas">
+                <legend className="field-label">
+                  Pick your ghosts <span className="muted small">· tap one to wake it up or let it sleep</span>
+                </legend>
+                <div className="persona-grid">
+                  {(config?.personas ?? []).map((p) => {
+                    const on = selected.includes(p.id);
+                    return (
+                      <button type="button" key={p.id} className={`persona ${on ? 'on' : 'asleep'}`} style={{ '--c': p.color }} onClick={() => toggle(p.id)} aria-pressed={on}>
+                        <span className="persona-art">
+                          <GhostSprite persona={p.id} color={p.color} size={76} dim={!on} />
+                        </span>
+                        <span className="persona-name">{p.name}</span>
+                        <span className="persona-style">{p.tagline ?? `${p.style.split('. ')[0]}.`}</span>
+                        {p.quote && <q className="persona-quote">{p.quote}</q>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="muted small persona-note">The game waits while each ghost thinks, so they can play action games too.</p>
+              </fieldset>
 
-        <fieldset className="personas">
-          <legend className="field-label">
-            Pick your ghosts <span className="muted small">· tap one to wake it up or let it sleep</span>
-          </legend>
-          <div className="persona-grid">
-            {(config?.personas ?? []).map((p) => {
-              const on = selected.includes(p.id);
-              return (
-                <button type="button" key={p.id} className={`persona ${on ? 'on' : 'asleep'}`} style={{ '--c': p.color }} onClick={() => toggle(p.id)} aria-pressed={on}>
-                  <span className="persona-art">
-                    <GhostSprite persona={p.id} color={p.color} size={76} dim={!on} />
-                  </span>
-                  <span className="persona-name">{p.name}</span>
-                  <span className="persona-style">{p.tagline ?? `${p.style.split('. ')[0]}.`}</span>
-                  {p.quote && <q className="persona-quote">{p.quote}</q>}
+              <details className="advanced">
+                <summary>Advanced options</summary>
+                <label className="adv-row">
+                  <span>Moves per ghost</span>
+                  <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>
+                    {[20, 40, 60].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="adv-row">
+                  <span>Game window size</span>
+                  <select value={viewport} onChange={(e) => setViewport(e.target.value)}>
+                    <option value="640x360">640×360 (fast, small games)</option>
+                    <option value="960x540">960×540 (games made for bigger screens)</option>
+                  </select>
+                </label>
+                <label className="adv-row">
+                  <input type="checkbox" checked={simulateOutage} onChange={(e) => setSimulateOutage(e.target.checked)} />
+                  <span>Test: simulate an AI outage for the first ghost from its 6th move (to see the backup model take over)</span>
+                </label>
+              </details>
+            </details>
+            {game && (
+              <div className="quick-picks">
+                <label className="muted" htmlFor="test-game">
+                  No game handy? Try ours:
+                </label>
+                <select
+                  id="test-game"
+                  className="game-select"
+                  value={game.id}
+                  onChange={(e) => {
+                    // Choosing a game fills in its link: two test agents chose one and got "Paste your game's link first".
+                    setGameId(e.target.value);
+                    const g = config.games.find((x) => x.id === e.target.value);
+                    if (g) setUrl(here(g.url));
+                  }}
+                >
+                  {config.games.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name} · {g.kind}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="chip-btn" aria-pressed={url === here(game.url)} onClick={() => setUrl(here(game.url))}>
+                  As designed
                 </button>
-              );
-            })}
-          </div>
-          <p className="muted small persona-note">The game waits while each ghost thinks, so they can play action games too.</p>
-        </fieldset>
+                {game.faults.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className="chip-btn chip-warn"
+                    aria-pressed={url === here(`${game.url}?fault=${f.id}`)}
+                    onClick={() => setUrl(here(`${game.url}?fault=${f.id}`))}
+                  >
+                    With a planted flaw: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
 
-        <details className="advanced">
-          <summary>Advanced options</summary>
-          <label className="adv-row">
-            <span>Moves per ghost</span>
-            <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>
-              {[20, 40, 60].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="adv-row">
-            <span>Game window size</span>
-            <select value={viewport} onChange={(e) => setViewport(e.target.value)}>
-              <option value="640x360">640×360 (fast, small games)</option>
-              <option value="960x540">960×540 (games made for bigger screens)</option>
-            </select>
-          </label>
-          <label className="adv-row">
-            <input type="checkbox" checked={simulateOutage} onChange={(e) => setSimulateOutage(e.target.checked)} />
-            <span>Test: simulate an AI outage for the first ghost from its 6th move (to see the backup model take over)</span>
-          </label>
-        </details>
-        {error && (
-          <p className="form-error" role="alert" id="link-error">
-            {error}
-          </p>
-        )}
-        {config?.error && <p className="form-error">Could not load the app settings. Is the server running?</p>}
-      </form>
+          </form>
+        </div>
+        <HeroPreview />
+      </div>
 
       <HomeBands />
     </section>

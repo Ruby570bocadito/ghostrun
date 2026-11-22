@@ -450,3 +450,47 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .summary .stat { padding: 10px 14px; }
 .summary .stat b { font-size: 1.5rem; }
+
+/* Home: copy and the one action on the left, a real recorded playtest on the right */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 40px; align-items: center; padding: 48px 0 24px; }
+.hero-copy h1 { font-size: clamp(2.2rem, 4.6vw, 3.6rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 16px; }
+.hero-copy .lede { margin: 0 0 24px; max-width: 520px; text-align: left; }
+.hero-form { display: grid; gap: 12px; }
+.hero-form .url-row { display: flex; gap: 8px; }
+.hero-form .url-input { flex: 1; min-width: 0; }
+.ghost-picker { border-top: 1px solid var(--line); padding-top: 10px; }
+.ghost-picker > summary { display: flex; align-items: center; gap: 12px; cursor: pointer; list-style: none; }
+.ghost-picker > summary::-webkit-details-marker { display: none; }
+.ghost-picker .chosen { display: flex; gap: 4px; }
+.picker-label { color: var(--muted); font-size: 0.9rem; text-decoration: underline; text-underline-offset: 3px; }
+.ghost-picker[open] > summary { margin-bottom: 14px; }
+.hero-form .quick-picks { font-size: 0.82rem; }
+
+.hero-preview { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.hero-preview.loading { aspect-ratio: 640 / 400; border-radius: 16px; background: var(--surface); }
+.hp-bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--surface-2); border: 1px solid var(--line); border-bottom: 0; border-radius: 14px 14px 0 0; font-size: 0.8rem; }
+.hp-dots { display: flex; gap: 5px; }
+.hp-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line-strong); }
+.hp-title { color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hp-pill { font-weight: 600; color: var(--coral); }
+.hp-pill.found { color: var(--mint); }
+.hp-screen { position: relative; border: 1px solid var(--line); border-radius: 0 0 14px 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
+.hp-screen img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.hp-over { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hp-x { animation: hp-pop 0.25s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes hp-pop { from { transform: scale(2); opacity: 0; } }
+.hp-box rect { fill: color-mix(in srgb, var(--coral) 14%, transparent); stroke: var(--coral); stroke-width: 2.5; stroke-dasharray: 100; animation: hp-draw 0.9s ease-out both; }
+.hp-box text { fill: var(--coral); font: 700 15px var(--font); animation: hp-fade 0.4s 0.7s both; }
+@keyframes hp-draw { from { stroke-dashoffset: 100; fill-opacity: 0; } }
+@keyframes hp-fade { from { opacity: 0; } }
+.hp-thought { position: absolute; left: 12px; right: 12px; top: 40px; margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(11, 13, 23, 0.86); font-size: 0.86rem; line-height: 1.35; animation: hp-fade 0.3s; }
+.hp-card { position: absolute; left: 12px; right: 12px; top: 12px; display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: rgba(20, 23, 38, 0.95); border: 1px solid color-mix(in srgb, var(--coral) 55%, transparent); animation: hp-rise 0.5s 0.6s both; }
+.hp-card .badge { justify-self: start; }
+@keyframes hp-rise { from { transform: translateY(16px); opacity: 0; } }
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; max-height: none; }
+  .hero-form .url-row { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-x, .hp-box rect, .hp-box text, .hp-card, .hp-thought { animation: none; }
+}

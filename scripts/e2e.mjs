@@ -19,12 +19,16 @@ const SIZES = [
 
 // Each page: where, what must be visible, and optional actions before checking.
 const PAGES = [
-  { name: 'home', path: '/', must: [['button', 'Summon the ghosts'], ['textbox', "Your game's link"], ['button', 'The Newbie'], ['link', 'See the evidence']] },
+  { name: 'home', path: '/', must: [['button', 'Summon the ghosts'], ['textbox', "Your game's link"], ['link', 'See the evidence']] },
   {
     name: 'home-advanced',
     path: '/',
-    act: async (page) => page.getByText('Advanced options').click(),
-    must: [['combobox', 'Game window size'], ['checkbox', 'simulate an AI outage']],
+    // The ghosts and the options live behind "Change ghosts and options", so the page has one action.
+    act: async (page) => {
+      await page.getByText('Change ghosts and options').click();
+      await page.getByText('Advanced options').click();
+    },
+    must: [['button', 'The Newbie'], ['combobox', 'Game window size'], ['checkbox', 'simulate an AI outage']],
   },
   {
     name: 'bad-link',
