@@ -56,6 +56,16 @@ The ghosts' browser runs on our server, so a visitor's link could point it at th
 
 Also in any mode: a run that takes longer than 8 minutes is stopped (`RUN_TIMEOUT_MS`); paths outside the runs folder are refused; malformed requests get a 400, not a server error; live streams send a heartbeat every 20 s so proxies do not cut them, and if one drops anyway the live view opens it again and catches up from the start of the run (a test agent's live view froze after a dropped stream; checked by cutting the network for 5 s mid-run); finished runs drop their frame-by-frame events from memory (the 30 most recent stay, older ones are read from disk); the spending file is written atomically; on restart the active run is stopped cleanly.
 
+## 5. A real game behaves in a way the ghosts did not expect (found on games by other people)
+
+Nine real js13kGames entries ([results](../bench/results/outside-games.md)) each broke Ghostrun in a way that made the report blame the game. Each is now handled, with a test:
+
+- **The game reads the mouse once per frame**: a click now keeps the button down for 90 ms of game time (before, Big Champ never saw it and the report said its start screen does not respond).
+- **The canvas appears after loading**: up to 6 s of real time are given (Dead Again made its canvas 1–3 s after "load" and was refused).
+- **The canvas is bigger than the window**: the game is opened once before playing, without AI, and the window is enlarged to show the whole canvas, up to 1024×768; the report says so (Coiner's character was below the 640×360 screen).
+- **A start screen with almost nothing on it**: "blank" now means barely bigger than an empty page of the same size (Big Champ's dark "Tap" screen was refused).
+- **On games without the SDK**, cards describe what the ghosts could not do ("the ghosts could not get Enter to start the game") with low confidence, instead of stating it as a fact about the game.
+
 ## Other safeguards
 
 - **One ghost fails completely:** the others keep playing and the report is built from the ghosts that played. If every ghost fails, the run ends with the first error message.

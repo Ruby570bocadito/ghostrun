@@ -48,6 +48,8 @@ Run it yourself: `npm run bench -- --label mine --reps 2` (needs `MODEL_API_KEY`
 | [optimized-v3-holdout](results/optimized-v3-holdout.md) | same code, **fresh runs** (8/10 by the ghosts alone), re-scored with the contrast check | **10/10** | **0/10** | $0.016 billed |
 | optimized-v3 + holdout, **strict rule** | same 40 runs, critical findings only, plus the analysis fixes found by test agents | **18/20** | **0/20** | — |
 | [optimized-v5](results/optimized-v5.md) | the same version, **fresh runs** played after those fixes, strict rule | **9/10** | **0/10** | $0.015 billed |
+| [optimized-v6](results/optimized-v6.md) | ghosts taught how their actions work ([below](#teaching-the-ghosts-how-their-actions-work)), fresh runs | **8/10** | **0/10** | $0.016 billed |
+| [optimized-v7](results/optimized-v7.md) | the same, plus "give a menu a second to change", fresh runs: **the current version** | **9/10** | **0/10** | $0.016 billed |
 
 "Billed" counts cached input at Meta's cached rate; earlier rows are list price (cached tokens were not recorded yet), so compare them with care. Measured with the cache, the old ghosts cost $0.018 per run, not $0.025.
 
@@ -67,6 +69,33 @@ On 21 November (night) we had the project reviewed by ten AI agents playing role
 Now one rule decides both "found" and "false alarm". The two misses are Spike Maze's invisible spikes, which the ghosts only reported as friction in one run of each round. The test agents also found three analysis bugs, fixed and covered by tests: a wide gap whose deaths split into two contradicting findings ("2/4 got past" next to "0/4 got past" for the same gap), ghosts that ended stuck attached to the wrong finding, and single deaths shown as findings. Re-scoring the 90 recorded runs with the fixes changed no result for the worse. A fresh round played after the fixes and not used to tune anything ([optimized-v5](results/optimized-v5.md)) found 9/10 flaws with 0/10 false alarms, like each earlier round, with the same miss. Across the three rounds: **27/30** found, **0/30** false alarms (`node bench/compare.mjs before-cache-v5 optimized-v3-gapfix+optimized-v3-holdout-gapfix+optimized-v5-gapfix`).
 
 Checking the new screenshots afterwards, we found that the merge for wide gaps also joined two neighbouring gaps into one finding: the run-up to the second gap starts where the first gap's area ends, so their areas touched. Now two areas are one place only if they overlap by at least a quarter of the smaller one (the two halves of one wide gap overlapped 54% and 89% in our runs; neighbouring gaps 1–10%). Re-scoring the three rounds with it ("-gapfix"): the same 27/30 and 0/30; in four Gap Run runs a finding that spanned two gaps became two findings.
+
+### Teaching the ghosts how their actions work
+
+On 22 November an analysis agent went through 5,761 recorded moves and 817 deaths (scripts in the review log). The ghosts knew where they were (median error 7 px), but misjudged how their actions work:
+
+- 69% of the deaths at the fair gaps of Gap Run were jumps started too early. A tapped key fires at the start of the move, but the ghosts expected it to wait until they reached the edge. Jumps prepared by a separate "walk to the edge" move crossed 72% of the time; jumps started while still running, 27%.
+- In Spike Maze, a maze with no jump, 28 of 58 fatal moves were planned jumps over spikes.
+- In games without the SDK (NILO), a respawn was never reported as a death.
+
+So the ghosts are now told that a tap happens at the start of the move (walk to the edge first, jump in the next move), to use only the controls the game shows, to try one key at a time in a game they do not know, to give a menu a second to change screens, and that being sent back to the start is a death. Two fresh rounds with these rules (`node bench/compare.mjs optimized-v5 optimized-v6+optimized-v7`):
+
+| | Before (round 3, 20 runs) | After (rounds 4–5, 40 runs) |
+|---|---|---|
+| Flaws found | 9/10 | 17/20 |
+| Clean runs with a false alarm | 0/10 | 0/20 |
+| Deaths per clean Gap Run run | 16 | 5 |
+| Deaths per run, all games | 13.9 | 11.1 |
+| Ghosts that finished the clean games | 78% | 74% |
+| Billed cost per run | $0.0154 | $0.0160 |
+
+Fewer deaths at fair spots, the same detection, slightly more cost (the instructions are longer). The finish rate did not improve: Spike Maze stays at 0%, and one ghost fewer finished in three games, within the noise of 40 ghosts.
+
+**Across all five rounds** (100 runs): **44/50** flaws found (76–94%), **0/50** false alarms (at most 7%); 34 found by what the ghosts did, 10 by the contrast measurement (`node bench/compare.mjs before-cache-v5 optimized-v3-gapfix+optimized-v3-holdout-gapfix+optimized-v5-gapfix+optimized-v6+optimized-v7`).
+
+## Real jam games made by other people
+
+The five benchmark games are ours. To see how the ghosts do on games nobody tuned anything for, we played nine js13kGames entries by other people at their public address, without the SDK, and compared the reports with what real players wrote on each game's page ([table and links](results/outside-games.md)). The ghosts agreed with the players in 5 of 9 games (1 match, 4 partial), disagreed in 2, failed where people did not in 1 (they never worked out Coiner's controls), and missed the players' complaint in 1 (Backout's arrows feel upside down). These games also exposed five bugs in Ghostrun, each of which made a report blame the game: clicks too short for games that read the mouse each frame, canvases created late, canvases bigger than the window, a near-empty start screen judged blank, and ghosts not waiting for menus. All are fixed and tested.
 
 ## Perception: does the model see its own character?
 
