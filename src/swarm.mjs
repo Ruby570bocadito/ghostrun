@@ -1,4 +1,5 @@
 // Runs several ghosts in parallel on the same game, each in its own browser context.
+import { LAUNCH_OPTIONS } from './browser.mjs';
 import { findPlayUrl } from './embed.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -40,7 +41,7 @@ export async function runSwarm({
     return seen[p] === 1 ? base : { ...base, id: `${p}-${seen[p]}`, name: `${base.name} #${seen[p]}` };
   });
   await mkdir(outDir, { recursive: true });
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(LAUNCH_OPTIONS);
   const started = Date.now();
   // A game whose canvas does not fit the window gets a bigger window, so the ghosts see all of it (src/fit.mjs).
   const requestedViewport = viewport;

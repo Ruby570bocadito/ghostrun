@@ -155,7 +155,7 @@ export async function runGhost({
   maxSteps = 40,
   outDir,
   viewport = DEFAULT_VIEWPORT,
-  frameEveryMs = 100,
+  frameEveryMs: frameEveryMsAsked = 100,
   onStep = () => {},
   onFrame = () => {},
   stopOnWin = true,
@@ -169,6 +169,7 @@ export async function runGhost({
   rng = Math.random,
   signal,
 }) {
+  let frameEveryMs = frameEveryMsAsked; // raised to 250 ms below for games without the SDK
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await mkdir(join(outDir, 'frames'), { recursive: true });
   // In the public demo the game may not install a service worker: its requests would not pass the check below.
@@ -339,6 +340,9 @@ export async function runGhost({
     }
     // Games with the SDK report positions and events; for the others the ghosts' own eyes are all we have.
     trace.sdk = trace.frames[0].state !== null;
+    // Games without the SDK: a frame every 250 ms of game time is enough for replays, and each capture costs real time
+    // on engine games. Games with the SDK keep 100 ms: deaths and teleports are read from positions that close.
+    if (!trace.sdk) frameEveryMs = Math.max(frameEveryMs, 250);
 
     const history = []; // one finished line per move: what the ghost did and what happened (append-only)
     const spots = new DeathSpots();
