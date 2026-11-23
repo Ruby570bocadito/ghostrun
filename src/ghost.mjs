@@ -21,6 +21,10 @@ const SETTLE_SLICE_MS = 500;
 const SETTLE_MAX_MS = 8000;
 const AUTOPILOT_MAX_MS = 16000;
 const LADDER = ['click', 'Enter', 'Space', 'KeyZ', 'KeyX'];
+// Stuck (games without the SDK): no new screen for this long → the harness tries the usual ways out, no model. On
+// Decogear three ghosts in four spent 67% of their game time on a name screen they could not confirm (23 Nov).
+const STUCK_MS = 12000;
+const UNSTICK = ['Escape', 'Enter', 'click', 'Space', 'KeyZ', 'KeyX', 'Backspace'];
 // Watchdog: some engine games got slower and slower with the frozen clock (Decogear, 23 Nov: from under 1 s to 59 s of
 // wall time per second of game after a minute, with four ghosts). When a second of game costs more than SLOW_RATIO
 // seconds of wall time, the ghost plays on in real time (the game runs on its own while the model thinks); if it is
@@ -417,6 +421,16 @@ export async function runGhost({
     // What the screen does: which inputs make it answer, how much it changes on its own, the screens seen so far.
     const inputs = new InputTable();
     const screens = new Set();
+    let lastNewScreenMs = 0;
+    let lastUnstickMs = -Infinity;
+    const seeScreen = (g) => {
+      if (!g) return false;
+      const h = screenHash(g);
+      if (screens.has(h)) return false;
+      screens.add(h);
+      lastNewScreenMs = gameMs;
+      return true;
+    };
     let idleChange = 0;
     const history = []; // one finished line per move: what the ghost did and what happened (append-only)
 
@@ -436,7 +450,7 @@ export async function runGhost({
           const cur = grid(lastBuf);
           const c = prev && cur ? compareGrids(prev, cur) : null;
           prev = cur;
-          if (cur) screens.add(screenHash(cur));
+          seeScreen(cur);
           if (!c) continue;
           fractions.push(c.fraction);
           if (c.fraction < 0.0015) {
@@ -499,6 +513,36 @@ export async function runGhost({
         trace.outcome = 'stopped';
         break;
       }
+      // Stuck: nothing new on screen for STUCK_MS of game time → try the usual ways out, without the model.
+      if (!trace.sdk && gameMs - lastNewScreenMs >= STUCK_MS && gameMs - lastUnstickMs >= STUCK_MS) {
+        lastUnstickMs = gameMs;
+        const tried = [];
+        for (const input of UNSTICK) {
+          if (signal?.aborted) break;
+          const g0 = grid(lastBuf);
+          if (input === 'click') {
+            await page.mouse.move(Math.round(viewport.width / 2), Math.round(viewport.height / 2));
+            await page.mouse.down();
+            await advance(CLICK_PRESS_MS);
+            await page.mouse.up();
+          } else {
+            await page.keyboard.down(input);
+            await advance(120);
+            await page.keyboard.up(input);
+          }
+          await advance(600);
+          if (bulletTime) await flush();
+          const g1 = grid(lastBuf);
+          const c = g0 && g1 ? compareGrids(g0, g1) : null;
+          const fresh = seeScreen(g1);
+          inputs.add([input], isEffect(c, idleChange));
+          tried.push(`${input === 'click' ? 'a click in the middle' : input} → ${fresh ? 'a new screen' : isEffect(c, idleChange) ? describeChange(c, idleChange) : 'no answer'}`);
+          if (fresh) break;
+        }
+        trace.unstuck = [...(trace.unstuck ?? []), { atMs: gameMs, tried }];
+        history.push(`${step}. (automatic) You had seen nothing new for ${Math.round(STUCK_MS / 1000)} s, so these were tried for you: ${tried.join('; ')}.`);
+        await onAutopilot({ unstuck: tried });
+      }
       // With the clock frozen nothing moves between the end of a move and the next decision: decide on the last frame.
       const shot = bulletTime && lastBuf ? lastBuf : await page.screenshot({ type: 'jpeg', quality: 70 });
       const { now: shotT, state: before } = await readState(page);
@@ -510,6 +554,7 @@ export async function runGhost({
         : turnNotes({ step, recent }).concat(
             recentDeathSteps.filter((s) => step - s <= 8).length >= 3 ? ['You have died 3 or more times in your last 8 moves. Try something different.'] : [],
             inputs.note() ?? [],
+            gameMs - lastNewScreenMs >= STUCK_MS / 2 ? [`You have seen nothing new on screen for ${Math.round((gameMs - lastNewScreenMs) / 1000)} s.`] : [],
           );
       const thinkStart = performance.now();
       const pageThinkStart = bulletTime ? null : await page.evaluate(() => performance.now());
@@ -654,7 +699,7 @@ export async function runGhost({
         const g0 = grid(shot);
         const g1 = grid(lastBuf);
         change = g0 && g1 ? compareGrids(g0, g1) : null;
-        if (g1) screens.add(screenHash(g1));
+        seeScreen(g1);
         const used = [...move.hold, ...move.tap, ...(move.click.length ? ['click'] : []), ...(move.drag.length ? ['drag'] : [])];
         if (used.length && !mainCounted) inputs.add(used, isEffect(change, idleChange));
       }

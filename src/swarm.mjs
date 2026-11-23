@@ -1,6 +1,6 @@
 // Runs several ghosts in parallel on the same game, each in its own browser context.
 import { LAUNCH_OPTIONS } from './browser.mjs';
-import { findPlayUrl } from './embed.mjs';
+import { findGame } from './embed.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
@@ -53,8 +53,18 @@ export async function runSwarm({
       protect: guard ? (context) => protectContext(context, guard) : undefined,
       contextOptions: guard ? { serviceWorkers: 'block' } : {},
     };
-    playUrl = await findPlayUrl(browser, url, opts);
-    const rect = await measureCanvas(browser, playUrl, viewport, opts);
+    const found = await findGame(browser, url, opts);
+    playUrl = found.url;
+    // A framed game (itch.io) is shown by its page in an iframe: give the window that shape, at the usual width (a
+    // 1280×720 frame at full size would make every screenshot 2.5× bigger for the model), with no second load.
+    const framed = found.size && playUrl !== url ? found.size : null;
+    const rect = framed
+      ? (() => {
+          const aspect = framed.height / framed.width;
+          const height = Math.min(768, Math.round(viewport.width * aspect));
+          return { x: 0, y: 0, width: Math.round(height / aspect), height };
+        })()
+      : await measureCanvas(browser, playUrl, viewport, opts);
     viewport = fitSize(viewport, rect);
   }
   const resized = viewport.width !== requestedViewport.width || viewport.height !== requestedViewport.height;

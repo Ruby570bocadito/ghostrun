@@ -210,10 +210,11 @@ export function inputKinds(move = {}) {
   return { mouse, keys, wait: !mouse && !keys };
 }
 
-const OUTCOME_LETTER = { out_of_steps: 'T', time_up: 'R', quit: 'A', error: 'E', won: 'W', saturated: 'S' };
+// too_slow: v3 stops a ghost that passes its own real-time budget (src/ghost.mjs MAX_GHOST_WALL_MS): a real-time limit.
+const OUTCOME_LETTER = { out_of_steps: 'T', time_up: 'R', quit: 'A', error: 'E', won: 'W', saturated: 'S', too_slow: 'L' };
 const ENDINGS_ORDER = ['R', 'T', 'W', 'S', 'A', 'E', 'L', 'C'];
 export const ENDINGS_LEGEND =
-  'T = used its 40 moves · R = played all its game time · W = won · S = stopped early (nothing new) · A = gave up · E = error · L = 8-minute limit · C = cancelled';
+  'T = used its moves · R = played all its game time · W = won · S = stopped early (nothing new) · A = gave up · E = error · L = real-time limit (8 minutes for the run, or the ghost\'s own budget) · C = cancelled';
 
 /** How a ghost ended, as one letter (T, R, W, S, A, E, L, C) or its outcome word when unknown. */
 export function endingOf(outcome, runWallS) {

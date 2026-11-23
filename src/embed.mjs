@@ -32,11 +32,25 @@ const hasCanvas = (frame) =>
     .catch(() => false);
 
 /**
+ * Opens `url` once and returns { url, size } (see findPlayUrl) — kept for callers that only need the address.
+ */
+export async function findPlayUrlOnly(browser, url, opts) {
+  return (await findGame(browser, url, opts)).url;
+}
+
+/**
  * Opens `url` once and returns the address the ghosts should play: `url` itself when the page draws the game, else
  * the address of the iframe that does (clicking itch.io's "Run game" button if the game waits behind it).
  * Returns `url` unchanged when it cannot tell, so the ghosts' own start reports what is wrong with the page.
  */
-export async function findPlayUrl(browser, url, { protect = async () => {}, contextOptions = {}, waitMs = 8000 } = {}) {
+export const findPlayUrl = findPlayUrlOnly;
+
+/**
+ * The same, with the size the page shows a framed game at (its iframe's box): the ghosts' window is fitted to it, so a
+ * framed game is not loaded a second time just to measure it (on itch.io the first frame took 27 s, 23 Nov).
+ * size is null when the page draws the game itself.
+ */
+export async function findGame(browser, url, { protect = async () => {}, contextOptions = {}, waitMs = 8000 } = {}) {
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, ...contextOptions });
   try {
     await protect(context);
@@ -45,9 +59,12 @@ export async function findPlayUrl(browser, url, { protect = async () => {}, cont
     const t0 = Date.now();
     let clicked = false;
     for (;;) {
-      if (await hasCanvas(page.mainFrame())) return url;
+      if (await hasCanvas(page.mainFrame())) return { url, size: null };
       for (const frame of page.frames()) {
-        if (frame !== page.mainFrame() && /^https?:/.test(frame.url()) && (await hasCanvas(frame))) return frame.url();
+        if (frame !== page.mainFrame() && /^https?:/.test(frame.url()) && (await hasCanvas(frame))) {
+          const box = await (await frame.frameElement().catch(() => null))?.boundingBox().catch(() => null);
+          return { url: frame.url(), size: box && box.width > 0 ? { width: Math.round(box.width), height: Math.round(box.height) } : null };
+        }
       }
       if (!clicked) {
         // itch.io: games that start on click show a "Run game" button that creates the iframe.
@@ -61,9 +78,9 @@ export async function findPlayUrl(browser, url, { protect = async () => {}, cont
       await page.waitForTimeout(300);
     }
     // No canvas yet (some games create it only after a click): fall back to the itch.io iframe, if there is one.
-    return itchIframeSrc(await page.content(), url) ?? url;
+    return { url: itchIframeSrc(await page.content(), url) ?? url, size: null };
   } catch {
-    return url;
+    return { url, size: null };
   } finally {
     await context.close().catch(() => {});
   }
