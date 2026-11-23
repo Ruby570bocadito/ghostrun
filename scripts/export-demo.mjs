@@ -7,6 +7,7 @@ import { cp, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { PERSONAS } from '../src/personas.mjs';
+import { buildIssues } from '../web/src/issues.js';
 
 const [outArg, ...picked] = process.argv.slice(2);
 if (!outArg || !picked.length) {
@@ -40,22 +41,20 @@ const describe = (id, r) => {
       : CREDITS[url.split('/').filter(Boolean).pop()]
         ? `${CREDITS[url.split('/').filter(Boolean).pop()]}: a real jam game, no SDK`
       : `${GAMES[game] ?? url}${fault ? ', with its planted flaw' : ''}${r.config?.compareTo ? ', fixed: compared with the run before' : ''}${r.config?.simulateOutage ? ', during a simulated AI outage' : ''}`;
-  const shown = (r.findings ?? []).filter((f) => f.severity !== 'low');
-  const critical = shown.filter((f) => ['blocker', 'missed', 'stuck', 'hard_to_see'].includes(f.type) && f.severity === 'high').length;
+  // The same problems the report lists (web/src/issues.js), so the card and the report say the same thing.
+  const { issues, fair } = buildIssues(r);
   const finished = (r.ghosts ?? []).filter((g) => g.outcome === 'won').length;
-  // The exit interview, when half or more of the ghosts never worked out the goal (as the report's verdict says).
-  const exit = r.debrief;
-  const unclear = exit && exit.goalUnclear.length * 2 >= exit.asked ? `${exit.goalUnclear.length} of ${exit.asked} ghosts never worked out the goal` : '';
+  const label = (i) => (i.kind === 'goal' ? `${i.unclear.length} of ${i.asked} ghosts never worked out the goal` : TYPE[i.primary.type] ?? i.primary.type);
   const shows = r.failure
     ? `Caught before any AI call: "${r.failure.message}"`
-    : shown.length
-      ? `Found: ${[...new Set(shown.map((f) => TYPE[f.type] ?? f.type))].join(', ')}${unclear ? ` · ${unclear}` : ''}`
-      : unclear
-        ? `No critical issue, but ${unclear}`
-        : 'Nothing worth reporting';
+    : issues.length
+      ? `Found: ${[...new Set(issues.map(label))].join(', ')}`
+      : fair.length
+        ? `Nothing to fix: ${plural(fair.length, 'fair challenge')}`
+        : `Nothing to fix: ${finished}/${r.ghostsTotal} ghosts finished`;
   const stats = r.failure
     ? '$0'
-    : `${plural(critical, 'critical issue')} · ${finished}/${r.ghostsTotal} finished · ${Math.round((r.realMs ?? 0) / 1000)} s · $${(r.cost?.total ?? 0).toFixed(3)}`;
+    : `${plural(issues.length, 'problem')} to fix · ${finished}/${r.ghostsTotal} finished · ${Math.round((r.realMs ?? 0) / 1000)} s · $${(r.cost?.total ?? 0).toFixed(3)}`;
   return { id, title, shows, stats };
 };
 
