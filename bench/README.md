@@ -343,3 +343,43 @@ We count this as a partial success: the ghosts found the right area and the righ
 - Ghosts **see better than people in low contrast**: they reached a key at 1.09:1 that a person could barely see. Declared objectives are measured instead (contrast check above); low-contrast things the game does not declare are not.
 - Ghosts are stopped early only in games with the SDK. Mazes remain their weak spot: 13% finish the clean Spike Maze, and it is the most expensive game to test.
 - Without the SDK, deaths and positions are what the ghosts say they saw. Positions are on-screen coordinates, so in scrolling games the map is approximate.
+
+## Do the ghosts really play real games? (measured with no AI, 23 Nov)
+
+To find where a new player gets stuck, a ghost first has to get past the loading and title screens and then play. `bench/real-games.mjs` measures that on recorded runs of 13 jam games made by other people (js13kGames and itch.io entries: platformers, puzzles, mouse games, shooters, Godot and GameMaker games, games with menus and a name screen). It uses no AI: only each ghost's trace and the frames it saw.
+
+- Real time of the run and per move, seconds of game per ghost, and the time until the first frame that shows the game.
+- **When a ghost really plays**: the first move where it says it is playing, used an input, the screen answered, and it stayed in the game.
+- The share of moves on loading screens, menus, game over and play.
+- **Distinct screens**: a fingerprint of the frame every 0.5 s of game time, as Go-Explore's cells (grey, 11 × 8, 8 levels), and the novelty curve. **Stalls**: 10 s of game time without a screen never seen before.
+- "Nothing happened" thoughts while the screen clearly changed, clicks against keys, endings, errors and cost.
+
+```
+node bench/real-games.mjs before --url js13kgames.com --url itch.io --url third-party/ --until 2026-11-23T17:45Z
+node bench/real-games.mjs <label> --url js13kgames.com --url itch.io --url third-party/ --since <when the new runs started> --compare before
+```
+
+Run ids (or their last characters) can be given instead of `--url`. Each measurement writes `results/real-<label>.md` (a table per game, totals and the targets of our plan) and `.json` (every ghost). Decoding the frames takes about 5 minutes for 60 runs.
+
+**Before**: the 60 runs of the 40-move ghosts on these games, 21–23 Nov ([all the tables](results/real-before.md); [checked against our first analysis of the same runs](results/real-before-check.md)).
+
+| Game | Ghosts that really played | Reached play after (median real s) | Game s per ghost (median) | % of moves playing | Distinct screens per ghost (median) | % of game time in stalls |
+|---|---|---|---|---|---|---|
+| Escape from Death Hole | 24 of 24 | 14 | 21 | 87 | 30 | 0 |
+| Find All Pages | 19 of 24 | 4 | 22 | 74 | 9 | 19 |
+| SpaceTaxi | 24 of 24 | 4 | 29 | 90 | 46 | 3 |
+| Coiner | 24 of 24 | 4 | 25 | 95 | 38 | 0 |
+| Backout | 20 of 20 | 12 | 21 | 94 | 42 | 0 |
+| Big Champ | 20 of 24 | 6 | 28 | 65 | 45 | 2 |
+| Dead Again | 16 of 16 | 5 | 26 | 80 | 32 | 0 |
+| Delete! | 16 of 16 | 2 | 25 | 76 | 25 | 5 |
+| Moon Buggy | 16 of 16 | 5 | 28 | 77 | 15 | 6 |
+| NILO | 4 of 4 | 7 | 25 | 93 | 11 | 34 |
+| Broken Repair | 8 of 10 | 89 | 25 | 70 | 22 | 9 |
+| Decogear | 0 of 14 | – | 19 | 5 | 26 | 0 |
+| Prerolled | none started | – | – | – | – | – |
+| **All 13** | 191 of 216 | 5 | 24 | 80 | 31 | 5 |
+
+"Ghosts" counts those that made at least one move: 22 of 238 ended in an error, all of them at start-up in 6 runs of 22 Nov. Against the targets we set for the new ghosts: a median of 24 s of game per ghost (target: at least 2 minutes); they reach play in 11 of 13 games (Decogear never gets past its intro and name screen; Prerolled never started); 121 "nothing happened" thoughts were contradicted by a clear change on screen (1.6 per 100 moves); 25 % of the moves in the mouse games had a click (target: at least 60 %); the first game frame took a median of 24 s on itch.io and 1 s on js13kGames.
+
+What this meter cannot tell: "playing" and "nothing happened" start from the ghost's own words (what it said it saw, read with regular expressions) and are then checked against the pixels; fingerprints change with animations as well as with progress, so busy screens count more distinct screens and fewer stalls; and only clear changes on screen (3 grey levels on average) count against a "nothing happened", so that number is a floor.
