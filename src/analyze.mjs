@@ -318,7 +318,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
   // 3) Where ghosts that did not finish ended up circling → stuck
   const zones = [];
   for (const t of traces) {
-    if (!['out_of_steps', 'quit', 'stopped', 'saturated'].includes(t.outcome)) continue;
+    if (!['out_of_steps', 'time_up', 'quit', 'stopped', 'saturated'].includes(t.outcome)) continue;
     const withPos = t.frames.map((f, i) => ({ f, i })).filter(({ f }) => f.state && Number.isFinite(f.state.x));
     const tail = withPos.slice(-Math.max(20, Math.floor(withPos.length * 0.4)));
     if (tail.length < 10) continue;

@@ -351,6 +351,14 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                 <li key={i}>
                   <b>{personas[n.persona]?.name ?? n.persona}</b>: at move {n.step} the model's answer was unusable twice, so the ghost waited a moment and kept playing.
                 </li>
+              ) : n.type === 'slow_game' ? (
+                <li key={i}>
+                  <b>{personas[n.persona]?.name ?? n.persona}</b>: at move {n.step} the game became too slow in our browser with its clock frozen ({n.ratio}× slower than real time), so the ghost played on in real time.
+                </li>
+              ) : n.type === 'debrief_failed' ? (
+                <li key={i}>
+                  <b>{personas[n.persona]?.name ?? n.persona}</b>: it has no exit interview ({String(n.reason).replace(/\.\s*$/, '')}); its moves and findings are complete.
+                </li>
               ) : (
                 <li key={i}>
                   <b>{personas[n.persona]?.name ?? n.persona}</b>: {n.from} failed at move {n.step} ({n.simulated ? `simulated outage, ${n.reason.split(':')[0]}` : n.reason.replace(/\.\s*$/, '')}). It switched to <b>{n.to}</b> and kept playing; no moves were lost.

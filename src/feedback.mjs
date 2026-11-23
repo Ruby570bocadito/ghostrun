@@ -6,6 +6,7 @@ import { keyName as keyLabel } from './keys.mjs';
 export function describeMove(move) {
   const parts = [];
   if (move.click?.length) parts.push(`clicked at ${move.click.map((c) => `(${c.x},${c.y})`).join(' and ')}`);
+  if (move.drag?.length) parts.push(`dragged ${move.drag.map((d) => `from (${d.x1},${d.y1}) to (${d.x2},${d.y2})`).join(' and ')}`);
   if (move.hold?.length) parts.push(`held ${move.hold.join('+')}`);
   if (move.tap?.length) parts.push(`tapped ${move.tap.join('+')}${move.tap_after_px > 0 ? ` after ${move.tap_after_px} px` : ''}`);
   if (!parts.length) parts.push('waited');
@@ -19,7 +20,7 @@ const finite = (p) => p && Number.isFinite(p.x) && Number.isFinite(p.y);
  * before/after: SDK positions (world pixels); events: what the game or the ghost reported during
  * the move; screenChanged: for games without the SDK, whether the screen changed at all.
  */
-export function outcomeOf({ before, after, events = [], sdk, screenChanged, jump = null }) {
+export function outcomeOf({ before, after, events = [], sdk, screenChanged, screenNote = null, jump = null }) {
   const parts = [];
   const deaths = events.filter((e) => e.type === 'death').length;
   if (sdk && !deaths && finite(before) && finite(after)) {
@@ -34,7 +35,9 @@ export function outcomeOf({ before, after, events = [], sdk, screenChanged, jump
   if (deaths && jump) parts.push(...deathFacts(jump));
   for (const e of events) if (e.type === 'milestone' && e.name && e.name !== 'win') parts.push(`you reached "${e.name}"`);
   if (events.some((e) => e.type === 'win') || (after?.won && !before?.won)) parts.push('you finished the level');
-  if (!sdk && screenChanged === false) parts.push('nothing changed on screen');
+  // Games without the SDK: where the screen changed and whether the view scrolled (src/screen.mjs), or nothing.
+  if (!sdk && screenNote) parts.push(screenNote);
+  else if (!sdk && screenChanged === false) parts.push('nothing changed on screen');
   return parts.length ? parts.join(', ') : null;
 }
 

@@ -14,7 +14,7 @@ export { PRICES, costOf } from './prices.mjs';
 export const SAW = ['playing', 'menu', 'died', 'level_complete', 'other'];
 // v3 (F3, 22 Nov): "run N px, then tap" (tap_after_px) for games with the SDK, and thoughts in a player's words.
 // v4 (after F5): with tap_after_px, duration_ms counts from the tap.
-export const CACHE_KEY = 'ghostrun-ghost-v4';
+export const CACHE_KEY = 'ghostrun-ghost-v5';
 // Longest run-up before a delayed tap, in px.
 export const MAX_TAP_AFTER_PX = 600;
 
@@ -63,8 +63,21 @@ export function moveSchema(w, h, { sdk = false } = {}) {
       },
       click: {
         type: 'array',
-        description: `Mouse clicks at the start of this action, in pixels of the ${w}x${h} screenshot. Use them for buttons and menus (Play, Retry, a level number). Leave empty while you play with the keyboard.`,
+        // "Leave empty while you play with the keyboard" made ghosts press keys in games played only with the mouse:
+        // 62-70% of their moves in Big Champ and Coiner were keys (rediseno/v3/juegos-reales.md, 23 Nov).
+        description: `Mouse clicks at the start of this action, in pixels of the ${w}x${h} screenshot. Use them for buttons and menus (Play, Retry, a level number) and to play games controlled with the mouse (aiming, clicking things, choosing).`,
         items: point,
+      },
+      drag: {
+        type: 'array',
+        // Broken Repair (itch.io) asks to drag parts; the ghosts tried it with two clicks 11 times (23 Nov).
+        description: `A mouse drag at the start of this action: press at (x1,y1), move to (x2,y2) and release, in pixels of the ${w}x${h} screenshot. For things the game asks you to drag. Leave empty otherwise.`,
+        items: {
+          type: 'object',
+          properties: { x1: { type: 'integer' }, y1: { type: 'integer' }, x2: { type: 'integer' }, y2: { type: 'integer' } },
+          required: ['x1', 'y1', 'x2', 'y2'],
+          additionalProperties: false,
+        },
       },
       hold: {
         type: 'array',
@@ -77,11 +90,11 @@ export function moveSchema(w, h, { sdk = false } = {}) {
         items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ', 'KeyR'] },
       },
       ...tapAfter,
-      duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms.' },
+      duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms; up to 5000 ms when you only wait (no keys, no clicks), for example while a loading screen, an intro or an animation plays.' },
       confused: { type: 'boolean', description: 'True if you do not understand what to do or why something happened.' },
       quit: { type: 'boolean', description: 'True only if, in character, you would stop playing this game right now and never come back.' },
     },
-    required: ['thought', 'saw', 'player', 'click', 'hold', 'tap', ...Object.keys(tapAfter), 'duration_ms', 'confused', 'quit'],
+    required: ['thought', 'saw', 'player', 'click', 'drag', 'hold', 'tap', ...Object.keys(tapAfter), 'duration_ms', 'confused', 'quit'],
     additionalProperties: false,
   };
 }
@@ -108,7 +121,10 @@ export const DEBRIEF_SCHEMA = {
 const rules = (sdk) => [
   'You are a playtester for web games, playing a game you have never seen before. Each turn you get one screenshot.',
   'The game is PAUSED while you think. It only moves forward for the duration_ms you choose, while your keys are held.',
-  'You can also click buttons with the mouse, for example to start the game from a menu or to retry after dying.',
+  'You can also click and drag with the mouse: buttons and menus, and games that are played with the mouse. Some games are played only with the mouse: if the screen shows no keys, or your keys do nothing, click or drag on things.',
+  // Decogear (itch.io, 23 Nov): with the clock frozen, a 30-second intro only moved on during the ghosts' moves, and
+  // they spent 94% of their moves pressing keys on loading, credits and story screens.
+  'On a loading screen, an intro, story text or an animation that is still changing, wait (no keys, no clicks) up to 5000 ms at once instead of pressing keys.',
   // From an analysis of 5,761 recorded moves (22 Nov): 69% of deaths at fair gaps were jumps started too early, because
   // ghosts expected a tap to wait for the edge; jumps prepared by a separate walk to the edge crossed 72% of the time,
   // against 27% for jumps started while running. And 28 of 58 fatal moves in a maze with no jump were planned jumps.
@@ -125,7 +141,7 @@ const rules = (sdk) => [
   // Escape from Death Hole (js13k): Enter started the game after a 1-3 s transition; ghosts pressed it again every 0.5 s.
   // Also game-over screens: on three real jam games the ghosts reported "restart does nothing" (22 Nov).
   'On a title, menu or game-over screen, after pressing a key or clicking, give the game a second (1000-1500 ms) to change screens before trying something else.',
-  'After each action you are told what happened (how far you moved, if you died or reached something). Use it to judge distances and timing.',
+  'After each action you are told what happened: how far you moved, if you died or reached something, where the screen changed, and whether the view scrolled (which means you moved, even if your character stays in the middle). You also get a table of which inputs have made the screen answer. Trust it over your impression.',
   'Keep actions short (200-800 ms) near danger. When the way ahead is clear, longer actions (up to 1500 ms) are fine.',
   'Your thought must describe something new you notice this turn. Do not repeat earlier thoughts.',
   'Answer only with the JSON object.',

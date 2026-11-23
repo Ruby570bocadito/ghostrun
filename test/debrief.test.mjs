@@ -53,7 +53,9 @@ test('after its last move a ghost answers the exit interview, with the run summa
   const { trace, heard } = await play(brain);
   assert.equal(trace.outcome, 'out_of_steps');
   assert.match(asked.summary, /You made 3 moves and died 0 times\./);
-  assert.equal(asked.history.length, 3);
+  // Its 3 moves, after the line about the start-up autopilot (this test page has no SDK).
+  assert.equal(asked.history.length, 4);
+  assert.match(asked.history[0], /^0\. Before your first move \(automatic/);
   assert.ok(asked.screenshot.length > 1000, 'the last screen goes with the questions');
   // Stored clean: real booleans only, short strings, a default when the model left one empty.
   assert.deepEqual(

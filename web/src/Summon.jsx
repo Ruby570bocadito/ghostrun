@@ -32,7 +32,7 @@ const ERRORS = {
 export function Summon({ config, onStarted }) {
   const [url, setUrl] = useState('');
   const [selected, setSelected] = useState([]);
-  const [steps, setSteps] = useState(40);
+  const [playSeconds, setPlaySeconds] = useState(150);
   const [viewport, setViewport] = useState('640x360');
   const [simulateOutage, setSimulateOutage] = useState(false);
   const [sending, setSending] = useState(false);
@@ -58,7 +58,7 @@ export function Summon({ config, onStarted }) {
       const res = await fetch('/api/runs', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url: link.url, personas: selected, steps, viewport, simulateOutage }),
+        body: JSON.stringify({ url: link.url, personas: selected, playSeconds, viewport, simulateOutage }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -105,7 +105,7 @@ export function Summon({ config, onStarted }) {
               </button>
             </div>
             <p className="summon-hint muted small">
-              {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · about a minute · about $0.02 of AI · keyboard and mouse games
+              {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · {playSeconds >= 120 ? `${playSeconds / 60} minutes` : `${playSeconds} s`} of play each · about $0.05–0.10 of AI · keyboard and mouse games
             </p>
             {error && (
               <p className="form-error" role="alert" id="link-error">
@@ -147,11 +147,15 @@ export function Summon({ config, onStarted }) {
               <details className="advanced">
                 <summary>Advanced options</summary>
                 <label className="adv-row">
-                  <span>Moves per ghost</span>
-                  <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>
-                    {[20, 40, 60].map((n) => (
+                  <span>Game time per ghost</span>
+                  <select value={playSeconds} onChange={(e) => setPlaySeconds(Number(e.target.value))}>
+                    {[
+                      [60, '1 minute'],
+                      [150, '2 minutes 30'],
+                      [240, '4 minutes'],
+                    ].map(([n, label]) => (
                       <option key={n} value={n}>
-                        {n}
+                        {label}
                       </option>
                     ))}
                   </select>

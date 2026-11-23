@@ -26,7 +26,7 @@ const GAMES_PORT = Number(process.env.GAMES_PORT) || 5174;
 const BUDGET_USD = Number(process.env.GHOST_BUDGET_USD) || 35; // hard stop below Rafa's $40 cap
 const PUBLIC = process.env.GHOSTRUN_PUBLIC === '1';
 const TRUST_PROXY = Number(process.env.TRUST_PROXY) || 0; // reverse proxies in front (1 on most hosts): read X-Forwarded-For/-Host
-const RUN_TIMEOUT_MS = Number(process.env.RUN_TIMEOUT_MS) || 8 * 60_000; // a stuck run must not hold the queue forever
+const RUN_TIMEOUT_MS = Number(process.env.RUN_TIMEOUT_MS) || 12 * 60_000; // a stuck run must not hold the queue forever
 const QUEUE_MAX = Number(process.env.QUEUE_MAX) || 5; // playtests that may wait for their turn
 // The demo's public address (for example my-space.hf.space). Links to its /play/ pages are opened from the local
 // games server. Without it, the request's own Host header is used (it can only point to our games server anyway).
@@ -180,9 +180,9 @@ function announceQueue() {
 
 function createRun(opts) {
   const id = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().replace(/-/g, '').slice(0, 10)}`;
-  const { personas, steps, model, viewport, simulateOutage, compareTo } = opts;
+  const { personas, steps, playSeconds, model, viewport, simulateOutage, compareTo } = opts;
   // config.url is the link as the visitor wrote it; opts.url is what the ghosts open (see runOptions).
-  const run = { id, owner: opts.owner, status: 'queued', opts, config: { url: opts.displayUrl, personas, steps, model, viewport, simulateOutage, compareTo }, events: [], clients: new Set(), report: null, controller: new AbortController() };
+  const run = { id, owner: opts.owner, status: 'queued', opts, config: { url: opts.displayUrl, personas, steps, playSeconds, model, viewport, simulateOutage, compareTo }, events: [], clients: new Set(), report: null, controller: new AbortController() };
   runs.set(id, run);
   return run;
 }
@@ -222,6 +222,7 @@ async function play(run) {
       url: opts.url,
       personas: opts.personas,
       steps: opts.steps,
+      playSeconds: opts.playSeconds,
       model: opts.model,
       viewport: opts.viewport,
       simulateOutage: opts.simulateOutage,
@@ -324,7 +325,9 @@ async function runOptions(body, req, ip) {
   }
   const maxPersonas = PUBLIC ? 5 : 8;
   const personas = (Array.isArray(body.personas) && body.personas.length ? body.personas : DEFAULT_PERSONAS).filter((p) => typeof p === 'string' && Object.hasOwn(PERSONAS, p)).slice(0, maxPersonas);
-  const steps = Math.max(5, Math.min(PUBLIC ? 60 : 80, Number(body.steps) || 40));
+  // v3 (23 Nov): ghosts play a length of game time (2:30 by default); steps only caps the model calls (cost).
+  const steps = Math.max(5, Math.min(PUBLIC ? 80 : 150, Number(body.steps) || 120));
+  const playSeconds = Math.max(20, Math.min(PUBLIC ? 120 : 300, Number(body.playSeconds) || 150));
   const vp = String(body.viewport ?? '640x360');
   const [vw, vh] = vp.split('x').map(Number);
   const okViewport = PUBLIC ? PUBLIC_VIEWPORTS.includes(vp) : vw >= 320 && vw <= 1600 && vh >= 180 && vh <= 1000;
@@ -334,7 +337,7 @@ async function runOptions(body, req, ip) {
   const simulateOutage = body.simulateOutage && !PUBLIC ? { ghost: personas[0], fromCall: 6 } : null;
   const compareTo = SAFE_ID.test(String(body.compareTo ?? '')) && existsSync(join(runsDir, body.compareTo, 'report.json')) ? body.compareTo : null;
   const model = PUBLIC ? undefined : body.model; // the public demo always uses the default model
-  return { url, displayUrl: target.href, personas, steps, model, viewport, simulateOutage, compareTo, guard, owner: ip };
+  return { url, displayUrl: target.href, personas, steps, playSeconds, model, viewport, simulateOutage, compareTo, guard, owner: ip };
 }
 
 const server = createServer(async (req, res) => {

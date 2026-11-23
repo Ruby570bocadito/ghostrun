@@ -15,7 +15,8 @@ import { measureObjectives } from './contrast.mjs';
 export async function runSwarm({
   url,
   personas = ['newbie', 'speedrunner', 'reader', 'impatient'],
-  steps = 40,
+  steps = 40, // cap on model calls per ghost
+  playSeconds = 150, // game time each ghost plays (src/ghost.mjs PLAY_SECONDS)
   brain = 'meta',
   model = process.env.GHOST_MODEL || 'muse-ember-1.0',
   fallbackModel = 'muse-spark-1.3',
@@ -57,7 +58,7 @@ export async function runSwarm({
     viewport = fitSize(viewport, rect);
   }
   const resized = viewport.width !== requestedViewport.width || viewport.height !== requestedViewport.height;
-  const config = { url, ...(playUrl !== url ? { playUrl } : {}), personas, steps, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, ...(resized ? { requestedViewport } : {}), simulateOutage, compareTo };
+  const config = { url, ...(playUrl !== url ? { playUrl } : {}), personas, steps, playSeconds, brain, model, fallbackModel, reasoning, bulletTime, stopWhenSaturated, viewport, ...(resized ? { requestedViewport } : {}), simulateOutage, compareTo };
   await writeFile(join(outDir, 'config.json'), JSON.stringify(config, null, 2));
   onEvent({ type: 'run_started', config });
 
@@ -87,6 +88,7 @@ export async function runSwarm({
           brain: ghostBrain,
           persona,
           maxSteps: steps,
+          playSeconds,
           outDir: join(outDir, id),
           bulletTime,
           stopWhenSaturated,
@@ -96,6 +98,7 @@ export async function runSwarm({
           signal,
           onFrame: (f) => onEvent({ type: 'frame', ghost: id, t: f.t, file: `${id}/${f.file}`, state: f.state }),
           onStep: (s) => onEvent({ type: 'step', ghost: id, step: s }),
+          onAutopilot: (a) => onEvent({ type: 'autopilot', ghost: id, autopilot: a }),
           onDebrief: (d) => onEvent({ type: 'debrief', ghost: id, debrief: { goal: d.goal, understood_goal: d.understood_goal, understood_controls: d.understood_controls, stopped_me: d.stopped_me, keep_playing: d.keep_playing } }),
         });
         onEvent({ type: 'ghost_done', ghost: id, outcome: trace.outcome, error: trace.error ?? null });

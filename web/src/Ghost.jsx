@@ -131,6 +131,8 @@ export const OUTCOME_LABEL = {
   won: 'Finished',
   quit: 'Quit',
   out_of_steps: 'Out of moves',
+  time_up: 'Played its time',
+  too_slow: 'Too slow to play',
   stopped: 'Stopped',
   saturated: 'Seen enough',
   error: 'Error',

@@ -25,7 +25,7 @@ function reducer(state, e) {
         ghosts: {
           ...state.ghosts,
           // sx/sy: where the character is on this screen (games with the SDK), to float the ghost over it
-          [e.ghost]: { ...g, frame: e.file, x: e.state?.x ?? g.x, worldW: e.state?.worldW ?? g.worldW, deaths: e.state?.deaths ?? g.deaths, sx: e.state?.screenX ?? g.sx, sy: e.state?.screenY ?? g.sy },
+          [e.ghost]: { ...g, frame: e.file, t: e.t ?? g.t, x: e.state?.x ?? g.x, worldW: e.state?.worldW ?? g.worldW, deaths: e.state?.deaths ?? g.deaths, sx: e.state?.screenX ?? g.sx, sy: e.state?.screenY ?? g.sy },
         },
       };
     }
@@ -46,6 +46,13 @@ function reducer(state, e) {
           [e.ghost]: { ...g, thought: s.thought, steps: s.step, deaths: s.after?.deaths ?? g.deaths, model: s.model, confused: s.confused, px: s.player?.x ?? g.px, py: s.player?.y ?? g.py },
         },
       };
+    }
+    case 'autopilot': {
+      // Before its first move a ghost without the SDK lets the game load and tries the usual ways to start it.
+      const g = ghost(state, e.ghost);
+      const worked = (e.autopilot?.tried ?? []).filter((x) => x.effect).map((x) => (x.input === 'click' ? 'a click' : x.input.replace(/^Key/, '')));
+      const text = worked.length ? `got past the start screens with ${worked.join(', then ')}` : 'waited for the game to load; no start key answered';
+      return { ...state, log: [...state.log, { at: e.at, ghost: e.ghost, kind: 'autopilot', text }].slice(-40), ghosts: { ...state.ghosts, [e.ghost]: { ...g, autopilot: e.autopilot } } };
     }
     case 'debrief': {
       // The ghost's exit interview, right after its last move: shown in its tile and in the log.

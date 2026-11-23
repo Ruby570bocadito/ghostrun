@@ -21,6 +21,7 @@
     "local": "powershell -NoProfile -ExecutionPolicy Bypass -File start.ps1"
   },
   "dependencies": {
+    "jpeg-js": "0.4.4",
     "openai": "7.62.0",
     "phaser": "3.90.0",
     "playwright": "1.65.1",

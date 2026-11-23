@@ -6,8 +6,36 @@ import { DeathSpots, JumpLog, historyLine, jumpFacts, outcomeOf, turnNotes, walk
 import { deadKeysNear } from './keys.mjs';
 import { MAX_TAP_AFTER_PX } from './brains/meta.mjs';
 import { sumUsage } from './brains/prices.mjs';
+import { InputTable, compareGrids, describeChange, grayGrid, isEffect, screenHash } from './screen.mjs';
 
 export const DEFAULT_VIEWPORT = { width: 640, height: 360 };
+// v3 (23 Nov): a ghost plays for a length of game time, not a number of moves. 40 moves were a median of 24 s of game
+// on real jam games, never 2 minutes (rediseno/v3/juegos-reales.md); maxSteps stays as a cap on model calls (cost).
+export const PLAY_SECONDS = 150;
+// A move with no input may wait this long: loading screens, intros and animations only move on in game time.
+export const MAX_WAIT_MS = 5000;
+// Start-up autopilot (games without the SDK, no model): let the game load while the screen keeps changing, then try
+// the usual ways to start a game and keep what makes the screen answer. On Decogear the ghosts spent 94% of their
+// moves on loading, credits, an intro and a name screen and never reached the game (23 Nov).
+const SETTLE_SLICE_MS = 500;
+const SETTLE_MAX_MS = 8000;
+const AUTOPILOT_MAX_MS = 16000;
+const LADDER = ['click', 'Enter', 'Space', 'KeyZ', 'KeyX'];
+// Watchdog: some engine games got slower and slower with the frozen clock (Decogear, 23 Nov: from under 1 s to 59 s of
+// wall time per second of game after a minute, with four ghosts). When a second of game costs more than SLOW_RATIO
+// seconds of wall time, the ghost plays on in real time (the game runs on its own while the model thinks); if it is
+// still that slow, or the ghost has used MAX_GHOST_WALL_MS, it stops and says why instead of holding the queue.
+const SLOW_RATIO = 5;
+const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
+export const MAX_GHOST_WALL_MS = 7 * 60_000;
+const median = (xs) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)] : 0);
+const grid = (buf) => {
+  try {
+    return buf ? grayGrid(buf) : null;
+  } catch {
+    return null;
+  }
+};
 const SAW = ['playing', 'menu', 'died', 'level_complete', 'other'];
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -20,7 +48,7 @@ export const STOP_AFTER_IDLE_MOVES = 20;
 const IDLE_CELL_PX = 80;
 
 // What a ghost does when the model's answer is unusable twice in a row: wait a moment, keep playing.
-export const SAFE_MOVE = { thought: '', saw: 'other', player: null, click: [], hold: [], tap: [], duration_ms: 300, confused: false, quit: false };
+export const SAFE_MOVE = { thought: '', saw: 'other', player: null, click: [], drag: [], hold: [], tap: [], duration_ms: 300, confused: false, quit: false };
 const MAX_SAFE_MOVES_IN_A_ROW = 3;
 // How long a click keeps the button down, in game time (games that check the button each frame need to see it).
 const CLICK_PRESS_MS = 90;
@@ -52,18 +80,29 @@ export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
   const hold = [...new Set((m?.hold ?? []).filter((k) => typeof k === 'string'))].slice(0, 2);
   const tap = [...new Set((m?.tap ?? []).filter((k) => typeof k === 'string' && !hold.includes(k)))].slice(0, 2);
   const tapAfter = tap.length ? clamp(Math.round(Number(m?.tap_after_px) || 0), 0, MAX_TAP_AFTER_PX) : 0;
+  const click = (Array.isArray(m?.click) ? m.click : [])
+    .map((c) => point(c, viewport.width - 1, viewport.height - 1))
+    .filter(Boolean)
+    .slice(0, 2);
+  const drag = (Array.isArray(m?.drag) ? m.drag : [])
+    .map((d) => {
+      const a = point({ x: d?.x1, y: d?.y1 }, viewport.width - 1, viewport.height - 1);
+      const b = point({ x: d?.x2, y: d?.y2 }, viewport.width - 1, viewport.height - 1);
+      return a && b ? { x1: a.x, y1: a.y, x2: b.x, y2: b.y } : null;
+    })
+    .filter(Boolean)
+    .slice(0, 1);
+  const waiting = !hold.length && !tap.length && !click.length && !drag.length;
   return {
     thought: String(m?.thought ?? '').slice(0, 160),
     saw: SAW.includes(m?.saw) ? m.saw : 'playing',
     player: point(m?.player),
-    click: (Array.isArray(m?.click) ? m.click : [])
-      .map((c) => point(c, viewport.width - 1, viewport.height - 1))
-      .filter(Boolean)
-      .slice(0, 2),
+    click,
+    drag,
     hold,
     tap,
     ...(tapAfter ? { tap_after_px: tapAfter } : {}),
-    duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, 1500),
+    duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, waiting ? MAX_WAIT_MS : 1500),
     confused: Boolean(m?.confused),
     quit: Boolean(m?.quit),
   };
@@ -152,7 +191,8 @@ export async function runGhost({
   url,
   brain,
   persona,
-  maxSteps = 40,
+  maxSteps = 40, // cap on model calls
+  playSeconds = PLAY_SECONDS, // game time each ghost plays
   outDir,
   viewport = DEFAULT_VIEWPORT,
   frameEveryMs: frameEveryMsAsked = 100,
@@ -165,6 +205,7 @@ export async function runGhost({
   guard = null, // async (url) => may the game page load it? Set by the public demo (src/guard.mjs)
   debrief = true, // after its last move, the ghost answers a short exit interview (if its brain can)
   onDebrief = () => {},
+  onAutopilot = () => {},
   humanErrorMs = HUMAN_ERROR_MS, // spread of a delayed tap (F3); 0 = exact, for tests
   rng = Math.random,
   signal,
@@ -235,7 +276,9 @@ export async function runGhost({
   };
   // Moves the frozen clock on, recording a frame every frameEveryMs of game time (and at the end of a move: flush()).
   let sinceCapture = 0;
+  const pace = []; // recent ticks: { game, wall } ms, to see how much wall time a second of game costs
   const tick = async (ms) => {
+    const w0 = performance.now();
     await page.clock.runFor(ms);
     gameMs += ms;
     sinceCapture += ms;
@@ -243,7 +286,14 @@ export async function runGhost({
       sinceCapture = 0;
       await capture();
     }
+    pace.push({ game: ms, wall: performance.now() - w0 });
+    while (pace.length > 1 && pace.reduce((a, p) => a + p.game, 0) - pace[0].game >= SLOW_WINDOW_MS) pace.shift();
   };
+  const slowRatio = () => {
+    const game = pace.reduce((a, p) => a + p.game, 0);
+    return game >= SLOW_WINDOW_MS ? pace.reduce((a, p) => a + p.wall, 0) / game : 0;
+  };
+  const startedWall = performance.now();
   const flush = async () => {
     if (sinceCapture > 0) {
       sinceCapture = 0;
@@ -343,8 +393,87 @@ export async function runGhost({
     // Games without the SDK: a frame every 250 ms of game time is enough for replays, and each capture costs real time
     // on engine games. Games with the SDK keep 100 ms: deaths and teleports are read from positions that close.
     if (!trace.sdk) frameEveryMs = Math.max(frameEveryMs, 250);
+    trace.playSeconds = playSeconds;
 
+    // Stay in the game: links in the page (a "Readme", the author's site) no longer take the ghost away. The Reader of
+    // Find All Pages spent 15 to 39 moves on GitHub after clicking "Readme" (23 Nov). Reloading the game is fine.
+    const gameAddress = page.url().split('#')[0];
+    await page.route('**/*', (route) => {
+      const r = route.request();
+      if (r.isNavigationRequest() && r.frame() === page.mainFrame() && r.url().split('#')[0] !== gameAddress) {
+        trace.blockedNavigations = (trace.blockedNavigations ?? 0) + 1;
+        return route.abort('blockedbyclient');
+      }
+      return route.fallback();
+    });
+
+    // What the screen does: which inputs make it answer, how much it changes on its own, the screens seen so far.
+    const inputs = new InputTable();
+    const screens = new Set();
+    let idleChange = 0;
     const history = []; // one finished line per move: what the ghost did and what happened (append-only)
+
+    if (!trace.sdk) {
+      // Start-up autopilot: no model involved, so loading screens and "press any key" cost nothing.
+      const tried = [];
+      let waitedMs = 0;
+      const settle = async (maxMs) => {
+        let prev = grid(lastBuf);
+        const fractions = [];
+        let ms = 0;
+        let still = 0;
+        while (ms < maxMs) {
+          await advance(SETTLE_SLICE_MS);
+          await flush();
+          ms += SETTLE_SLICE_MS;
+          const cur = grid(lastBuf);
+          const c = prev && cur ? compareGrids(prev, cur) : null;
+          prev = cur;
+          if (cur) screens.add(screenHash(cur));
+          if (!c) continue;
+          fractions.push(c.fraction);
+          if (c.fraction < 0.0015) {
+            if (++still >= 2) break;
+          } else still = 0;
+        }
+        return { ms, fractions };
+      };
+      const first = await settle(SETTLE_MAX_MS);
+      waitedMs += first.ms;
+      idleChange = median(first.fractions.slice(-3));
+      let answered = 0;
+      for (const input of LADDER) {
+        if (waitedMs >= AUTOPILOT_MAX_MS || answered >= 2 || signal?.aborted) break;
+        const g0 = grid(lastBuf);
+        if (input === 'click') {
+          await page.mouse.move(Math.round(viewport.width / 2), Math.round(viewport.height / 2));
+          await page.mouse.down();
+          await advance(CLICK_PRESS_MS);
+          await page.mouse.up();
+        } else {
+          await page.keyboard.down(input);
+          await advance(120);
+          await page.keyboard.up(input);
+        }
+        await advance(700);
+        await flush();
+        waitedMs += 820;
+        const g1 = grid(lastBuf);
+        const c = g0 && g1 ? compareGrids(g0, g1) : null;
+        const effect = isEffect(c, idleChange);
+        inputs.add([input], effect);
+        tried.push({ input, effect, change: c ? describeChange(c, idleChange) : null });
+        if (effect) {
+          answered += 1;
+          waitedMs += (await settle(4000)).ms;
+        }
+      }
+      trace.autopilot = { waitedMs, idleChange: Number(idleChange.toFixed(4)), tried };
+      const said = tried.map((t) => `${t.input === 'click' ? 'a click in the middle' : t.input} → ${t.effect ? t.change : 'no answer'}`).join('; ');
+      history.push(`0. Before your first move (automatic, to get past loading and start screens): waited ${(first.ms / 1000).toFixed(1)} s for the game to load, then tried ${said}.`);
+      await onAutopilot(trace.autopilot);
+    }
+
     const spots = new DeathSpots();
     const jumps = new JumpLog(); // F2: takeoffs, jump lengths and respawns, from the game's own state
     const recent = []; // per move: did it achieve nothing?
@@ -357,7 +486,8 @@ export async function runGhost({
     let lastPlayer = null;
     const cellOf = (s) => `${Math.floor(s.x / IDLE_CELL_PX)},${Math.floor(s.y / IDLE_CELL_PX)}`;
 
-    for (let step = 1; step <= maxSteps; step++) {
+    const playMs = playSeconds * 1000;
+    for (let step = 1; step <= maxSteps && gameMs < playMs; step++) {
       if (signal?.aborted) {
         trace.outcome = 'stopped';
         break;
@@ -371,6 +501,7 @@ export async function runGhost({
         ? turnNotes({ spots, step, recent, speed: walkSpeed(speedSamples), jumps, deadKeys: keysCenter ? deadKeysNear(trace, keysCenter) : [] })
         : turnNotes({ step, recent }).concat(
             recentDeathSteps.filter((s) => step - s <= 8).length >= 3 ? ['You have died 3 or more times in your last 8 moves. Try something different.'] : [],
+            inputs.note() ?? [],
           );
       const thinkStart = performance.now();
       const pageThinkStart = bulletTime ? null : await page.evaluate(() => performance.now());
@@ -418,6 +549,16 @@ export async function runGhost({
         await page.mouse.up();
         clickedMs += CLICK_PRESS_MS;
       }
+      for (const d of move.drag) {
+        await page.mouse.move(d.x1, d.y1);
+        await page.mouse.down();
+        for (let k = 1; k <= 6; k++) {
+          await page.mouse.move(Math.round(d.x1 + ((d.x2 - d.x1) * k) / 6), Math.round(d.y1 + ((d.y2 - d.y1) * k) / 6));
+          await advance(50);
+        }
+        await page.mouse.up();
+        clickedMs += 300;
+      }
       for (const k of move.hold) await page.keyboard.down(k);
       // F3: "run N px, then tap", only where the game reports positions and the clock is frozen.
       const delayed = Boolean(move.tap_after_px && trace.sdk && bulletTime);
@@ -458,14 +599,24 @@ export async function runGhost({
       }
 
       // What happened, told to the ghost on its next turn (and kept in the trace).
-      const screenChanged = trace.sdk ? null : !(lastBuf && lastBuf.equals(shot));
+      let change = null;
+      if (!trace.sdk) {
+        const g0 = grid(shot);
+        const g1 = grid(lastBuf);
+        change = g0 && g1 ? compareGrids(g0, g1) : null;
+        if (g1) screens.add(screenHash(g1));
+        const used = [...move.hold, ...move.tap, ...(move.click.length ? ['click'] : []), ...(move.drag.length ? ['drag'] : [])];
+        if (used.length) inputs.add(used, isEffect(change, idleChange));
+      }
+      const screenChanged = trace.sdk ? null : isEffect(change, idleChange);
+      const screenNote = trace.sdk || !change ? null : describeChange(change, idleChange);
       const died = events.some((e) => e.type === 'death');
       const observed = trace.sdk
         ? jumps.observe([before, ...trace.frames.slice(frameFrom).map((f) => f.state)], { step, died, tapX: move.tap.length ? tapAt?.x : null })
         : null;
       const facts = died ? jumpFacts(observed, jumps) : null;
-      const outcome = decision.safe ? 'no answer from the model, you waited' : outcomeOf({ before, after, events, sdk: trace.sdk, screenChanged, jump: facts });
-      const acted = move.hold.length + move.tap.length + move.click.length > 0;
+      const outcome = decision.safe ? 'no answer from the model, you waited' : outcomeOf({ before, after, events, sdk: trace.sdk, screenChanged, screenNote, jump: facts });
+      const acted = move.hold.length + move.tap.length + move.click.length + move.drag.length > 0;
       const moved = before && after && Number.isFinite(before.x) && Number.isFinite(after.x) && Math.hypot(after.x - before.x, after.y - before.y) >= 4;
       recent.push({ stuck: acted && !events.length && (trace.sdk ? !moved : screenChanged === false) });
       if (trace.sdk && before && after && Number.isFinite(before.x) && Number.isFinite(after.x)) {
@@ -490,6 +641,15 @@ export async function runGhost({
         if (fresh) lastFreshStep = step;
       }
 
+      // The watchdog (SLOW_RATIO): too slow with the frozen clock → real time; still too slow, or out of time → stop.
+      if (bulletTime && slowRatio() > SLOW_RATIO) {
+        notices.push({ type: 'slow_game', step, ratio: Number(slowRatio().toFixed(1)), handled: 'the game got too slow with its clock frozen, so this ghost played on in real time' });
+        trace.realTimeFrom = gameMs;
+        await page.clock.resume();
+        bulletTime = false;
+        pace.length = 0;
+      }
+      const tooSlow = !bulletTime && trace.realTimeFrom != null && performance.now() - startedWall > MAX_GHOST_WALL_MS;
       const record = {
         step,
         t0,
@@ -500,7 +660,8 @@ export async function runGhost({
         confused: move.confused,
         quit: move.quit,
         player: move.player,
-        move: { click: move.click, hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
+        move: { click: move.click, ...(move.drag.length ? { drag: move.drag } : {}), hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
+        ...(change ? { change: { fraction: Number(change.fraction.toFixed(4)), ...(change.scroll ? { scroll: change.scroll } : {}) } } : {}),
         ...(move.tap_after_px && trace.sdk && bulletTime ? { tapAt } : {}),
         ...(fallHoldMs ? { fallHoldMs } : {}),
         ...(facts ? { facts } : {}),
@@ -522,6 +683,11 @@ export async function runGhost({
         trace.outcome = 'quit';
         break;
       }
+      if (tooSlow || performance.now() - startedWall > MAX_GHOST_WALL_MS) {
+        trace.outcome = 'too_slow';
+        trace.stopReason = { kind: 'wall_time', minutes: Number(((performance.now() - startedWall) / 60000).toFixed(1)) };
+        break;
+      }
       if (stopOnWin && after?.won) {
         trace.outcome = 'won';
         break;
@@ -539,7 +705,10 @@ export async function runGhost({
         }
       }
     }
+    if (!trace.outcome && gameMs >= playSeconds * 1000) trace.outcome = 'time_up';
     trace.outcome ??= 'out_of_steps';
+    trace.inputs = inputs.toJSON();
+    trace.screens = screens.size;
     if (debrief && typeof brain.debrief === 'function' && trace.steps.length >= 3 && trace.outcome !== 'stopped' && !signal?.aborted) {
       try {
         const shot = await page.screenshot({ type: 'jpeg', quality: 70 });

@@ -14,9 +14,14 @@ function Elapsed({ from, to }) {
   return <span className="mono">{`${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`}</span>;
 }
 
-const STAMP = { won: 'Cleared!', quit: 'Quit', saturated: 'Seen enough', out_of_steps: 'Out of moves', error: 'Error', stopped: 'Stopped' };
+const STAMP = { won: 'Cleared!', quit: 'Quit', saturated: 'Seen enough', out_of_steps: 'Out of moves', time_up: 'Time up', too_slow: 'Too slow', error: 'Error', stopped: 'Stopped' };
 
-function GhostTile({ runId, g, p, viewport }) {
+const clock = (ms) => {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+function GhostTile({ runId, g, p, viewport, playSeconds }) {
   const progress = g.x != null && g.worldW ? Math.min(1, g.x / g.worldW) : 0;
   // Every tile shows the same game, so the ghost floats over the character it plays (where the game or the ghost says it is).
   const at = Number.isFinite(g.sx) && Number.isFinite(g.sy) ? { x: g.sx, y: g.sy } : Number.isFinite(g.px) && Number.isFinite(g.py) ? { x: g.px, y: g.py } : null;
@@ -59,7 +64,7 @@ function GhostTile({ runId, g, p, viewport }) {
         )}
       </p>
       <footer className="tile-foot mono">
-        <span>move {g.steps}</span>
+        <span title="Game time this ghost has played, of its total">{playSeconds ? `${clock(g.t ?? 0)} / ${clock(playSeconds * 1000)}` : `move ${g.steps}`}</span>
         <span className={g.deaths ? 'deaths' : ''}>✕ {g.deaths}</span>
         <span className="progress" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
           <span style={{ width: `${progress * 100}%` }} />
@@ -80,7 +85,7 @@ function groupLog(log) {
   return out;
 }
 
-const LOG_ICON = { death: '✕', win: '⚑', quit: '⏏', confused: '?', fallback: '↻', exit: '»' };
+const LOG_ICON = { death: '✕', win: '⚑', quit: '⏏', confused: '?', fallback: '↻', exit: '»', autopilot: '▸' };
 
 export function Haunting({ run, runId, personas, onHome }) {
   const stop = () => fetch(`/api/runs/${runId}/stop`, { method: 'POST' });
@@ -137,7 +142,7 @@ export function Haunting({ run, runId, personas, onHome }) {
       <div className="haunt-layout">
         <div className={`tiles n${run.order.length}`}>
           {run.order.map((id) => (
-            <GhostTile key={id} runId={runId} g={run.ghosts[id] ?? { status: 'waiting' }} p={personas[id] ?? { id, name: id, color: '#9bf6ec' }} viewport={run.config?.viewport} />
+            <GhostTile key={id} runId={runId} g={run.ghosts[id] ?? { status: 'waiting' }} p={personas[id] ?? { id, name: id, color: '#9bf6ec' }} viewport={run.config?.viewport} playSeconds={run.config?.playSeconds} />
           ))}
         </div>
         <aside className="log" aria-live="polite">
@@ -152,7 +157,7 @@ export function Haunting({ run, runId, personas, onHome }) {
                     {LOG_ICON[l.kind]}
                   </span>
                   <span>
-                    <b>{p?.name ?? l.ghost}</b> {l.kind === 'death' ? (l.n > 1 ? `died ×${l.n}` : 'died') : l.kind === 'win' ? 'finished!' : l.kind === 'quit' ? 'quit the game' : l.kind === 'confused' ? 'is confused' : ''}
+                    <b>{p?.name ?? l.ghost}</b> {l.kind === 'death' ? (l.n > 1 ? `died ×${l.n}` : 'died') : l.kind === 'win' ? 'finished!' : l.kind === 'quit' ? 'quit the game' : l.kind === 'confused' ? 'is confused' : l.kind === 'autopilot' ? 'autopilot:' : ''}
                     {l.text && <em> “{l.text}”</em>}
                   </span>
                 </li>
