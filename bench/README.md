@@ -162,7 +162,30 @@ The finish rate over all games went from 74% to 93%, but that compares five game
 
 Met: the ghosts now jump at the edge, and at the impossible gap three in four make at least two clean attempts, which is the proof that the gap, not the ghost, is the problem. Not met: they still tap keys in mid-air about as often as before the whole change, and they die a little more in the clean Gap Run (all of them finish it anyway). With 4 runs per variant these are small samples.
 
-**Across all five rounds** (100 runs): **44/50** flaws found (76–94%), **0/50** false alarms (at most 7%); 34 found by what the ghosts did, 10 by the contrast measurement (`node bench/compare.mjs before-cache-v5 optimized-v3-gapfix+optimized-v3-holdout-gapfix+optimized-v5-gapfix+optimized-v6+optimized-v7`).
+**On the first games, across all five rounds** (100 runs): **44/50** flaws found (76–94%), **0/50** false alarms (at most 7%); 34 found by what the ghosts did, 10 by the contrast measurement (`node bench/compare.mjs before-cache-v5 optimized-v3-gapfix+optimized-v3-holdout-gapfix+optimized-v5-gapfix+optimized-v6+optimized-v7`).
+
+### New art for the five games, three new rounds (23 Nov)
+
+The five games were redrawn with one art kit (`games/shared/kit.js`) so that each planted flaw reads as a design flaw: Gap Run's impossible gap is visibly 7 tiles wide against 3; Lever Room's door, which ghosts read as a ladder, is now a portcullis with a red/green light; the flawed lever and key match what surrounds them (1.26:1 and 1.09:1). The first games are tagged `games-v1`. New art changes what the ghosts see, so every number was measured again, with the scoring and analysis rules unchanged and the ghosts of the section above. Criteria written before measuring (`rediseno/PLAN.md`): at least 9/10 flaws found in each round, no false alarm, at least 75% of ghosts finishing the clean games; if not met, published as is.
+
+| Round (20 runs each) | Flaws found | Clean runs with a false alarm |
+|---|---|---|
+| v2-a | 10/10 | 1/10 (Spike Maze) |
+| v2-b | 9/10 | 0/10 |
+| v2-c | 8/10 | 0/10 |
+| **All three** | **27/30** (74–97%) | **1/30** (at most 17%) |
+
+| Game | Found | False alarms | Ghosts that finished the clean version | Billed per run |
+|---|---|---|---|---|
+| Gap Run | 6/6 | 0/6 | 100% | $0.0084 |
+| Key Hunt | 6/6 | 0/6 | 100% | $0.0158 |
+| Lever Room | 6/6 | 0/6 | 100% | $0.0164 |
+| Read Me | 6/6 | 0/6 | 83% | $0.0077 |
+| Spike Maze | 3/6 | 1/6 | 8% | $0.0206 |
+
+Met: 78% of ghosts finished the clean games. Not met: round v2-c found 8/10, and there was one false alarm. All of it is Spike Maze. Its clean maze is finished by almost no ghost (2 of 24), so in one run the ghosts that ended stuck in it made a false alarm; and its invisible spikes were reported three times as a missed objective plus friction instead of a blocker ("found, other type", which does not count). Making the maze fairer is planned, not done. The other four games: 24/24 found, 0/24 false alarms. Billed cost $0.0138 per run on average; the three rounds cost $0.87 (`node bench/compare.mjs optimized-v6+optimized-v7 v2-a+v2-b+v2-c`).
+
+How the ghosts played in the same runs (`node bench/play-quality.mjs v2-a v2-b v2-c`): 23% of takeoffs at Gap Run's first gap started more than 40 px before the edge; three in four ghosts made at least two clean attempts at the impossible gap; still 20.5 mid-air taps per Gap Run run with the flaw and 1.38 deaths per ghost in the clean Gap Run; 2 of 48 exit interviews said they jumped too far when every pit death was a jump that fell short.
 
 ## Real jam games made by other people
 

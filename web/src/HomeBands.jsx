@@ -110,17 +110,17 @@ export function HomeBands() {
         <div className="proof-grid">
           <div>
             <span className="mono big">
-              <CountUp to={44} />
-              /50
+              <CountUp to={27} />
+              /30
             </span>
-            <span className="muted small">planted design flaws found, in five benchmark rounds</span>
+            <span className="muted small">planted design flaws found, in three rounds on our redrawn test games</span>
           </div>
           <div>
             <span className="mono big">
-              <CountUp to={0} from={0} />
-              /50
+              <CountUp to={1} from={0} />
+              /30
             </span>
-            <span className="muted small">clean games with a false alarm</span>
+            <span className="muted small">clean games with a false alarm (a maze almost no ghost finishes)</span>
           </div>
           <div>
             <span className="mono big">~$0.02</span>

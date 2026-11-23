@@ -33,19 +33,21 @@ It is not a small group: the GMTK Game Jam 2025 alone received [more than 9,500 
 
 ## Does it work? (measured, not claimed)
 
-Five small web games, each with a clean version and a version with one planted design flaw whose type and place we know ([benchmark](bench/README.md)), played in five rounds of 20 runs. We changed the scoring and analysis rules after looking at the first two rounds, so the honest test is rounds 3 to 5: played afterwards, and not used to tune those rules. Rounds 4 and 5 also use the latest ghosts, which play better ([below](#how-the-ai-is-used)).
+Five small web games, each with a clean version and a version with one planted design flaw whose type and place we know ([benchmark](bench/README.md)). The first version of the games was played in five rounds of 20 runs; we changed the scoring and analysis rules after looking at its first two rounds, so its honest test is rounds 3 to 5, played afterwards and not used to tune those rules. On 22–23 November we redrew all five games with one art kit, so that each flaw reads as a design flaw, and changed how the ghosts jump ([why](bench/README.md#ghosts-that-play-with-their-heads-criteria-written-before-measuring-22-nov)); new art changes what the ghosts see, so we played three new rounds with the rules unchanged.
 
-| | Rounds 3–5 (held out) | All five rounds |
-|---|---|---|
-| Planted flaws found: a critical finding of the right type in the right place | **26/30** | 44/50 (34 from what the ghosts did, 10 from the contrast measurement) |
-| Clean games with a false alarm: the same kind of finding where there is no flaw | **0/30** | 0/50 |
-| Clean games where the report still shows a hard spot ("friction": ghosts died there but got past; counted neither way) | 17/30 | 29/50 |
-| Ghosts that finished the clean games | 75% | 75% |
+| | New games and ghosts: 3 rounds (23 Nov) | First games: rounds 3–5 (held out) | First games: all five rounds |
+|---|---|---|---|
+| Planted flaws found: a critical finding of the right type in the right place | **27/30** | **26/30** | 44/50 (34 from what the ghosts did, 10 from the contrast measurement) |
+| Clean games with a false alarm: the same kind of finding where there is no flaw | **1/30** | **0/30** | 0/50 |
+| Clean games where the report still shows a hard spot ("friction": ghosts died there but got past; counted neither way) | 18/30 | 17/30 | 29/50 |
+| Ghosts that finished the clean games | 78% | 75% | 75% |
+
+On the new games, the three misses and the false alarm are all in Spike Maze: its clean version is a maze almost no ghost finishes (2 of 24), so in one run the ghosts that ended stuck in it made a false alarm, and its invisible spikes were twice reported as a missed objective instead of a blocker. The other four games: 24/24 found, 0/24 false alarms ([details](bench/README.md#new-art-for-the-five-games-three-new-rounds-23-nov)).
 
 - **Cost and time per playtest** (4 ghosts and the analyst): about $0.02 and under a minute on these games (about 45 s on average; the maze takes about a minute).
 - **People vs ghosts:** every spot where a person died or got stuck was also flagged by the ghosts, 4/4 (2 of them only as friction). One person, the developer, not blind ([details](bench/README.md#people-vs-ghosts)).
 
-One rule decides "found" and "false alarm", so neither can be bought with the other: only critical findings count. "Friction" counts neither way, because it also shows up on clean games at hard but fair spots, and the report labels it as probably fair. The misses are Spike Maze's invisible spikes, which the ghosts sometimes reported only as friction (one run in most rounds, both runs in round 4). Decided after looking at the first two rounds: counting only critical findings ([why](bench/README.md#the-scoring-rule-we-changed-after-a-review)), the contrast check with our own 1.5:1 line for "practically invisible" (the faint key measures 1.09:1), and treating the deaths at both edges of one wide gap as one spot. With so few runs the uncertainty is wide: 26/30 means 70–95% and 0/30 false alarms means at most 11%; over all 50, 76–94% and at most 7% (95% intervals).
+One rule decides "found" and "false alarm", so neither can be bought with the other: only critical findings count. "Friction" counts neither way, because it also shows up on clean games at hard but fair spots, and the report labels it as probably fair. On the first games, the misses are Spike Maze's invisible spikes, which the ghosts sometimes reported only as friction (one run in most rounds, both runs in round 4). Decided after looking at the first two rounds: counting only critical findings ([why](bench/README.md#the-scoring-rule-we-changed-after-a-review)), the contrast check with our own 1.5:1 line for "practically invisible" (the faint key measures 1.09:1), and treating the deaths at both edges of one wide gap as one spot. With so few runs the uncertainty is wide: on the new games 27/30 means 74–97% and 1/30 false alarms at most 17%; on the first games 26/30 means 70–95% and 0/30 at most 11%, and over all 50, 76–94% and at most 7% (95% intervals).
 
 | Case | What happened |
 |---|---|
