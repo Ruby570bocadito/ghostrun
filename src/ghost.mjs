@@ -93,12 +93,19 @@ export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
     .filter(Boolean)
     .slice(0, 1);
   const waiting = !hold.length && !tap.length && !click.length && !drag.length;
+  const then = (Array.isArray(m?.then) ? m.then : []).slice(0, 2).map((a) => ({
+    click: (Array.isArray(a?.click) ? a.click : []).map((c) => point(c, viewport.width - 1, viewport.height - 1)).filter(Boolean).slice(0, 2),
+    hold: [...new Set((a?.hold ?? []).filter((k) => typeof k === 'string'))].slice(0, 2),
+    tap: [...new Set((a?.tap ?? []).filter((k) => typeof k === 'string'))].slice(0, 2),
+    duration_ms: clamp(Math.round(Number(a?.duration_ms) || 400), 100, 1500),
+  }));
   return {
     thought: String(m?.thought ?? '').slice(0, 160),
     saw: SAW.includes(m?.saw) ? m.saw : 'playing',
     player: point(m?.player),
     click,
     drag,
+    then,
     hold,
     tap,
     ...(tapAfter ? { tap_after_px: tapAfter } : {}),
@@ -492,7 +499,8 @@ export async function runGhost({
         trace.outcome = 'stopped';
         break;
       }
-      const shot = await page.screenshot({ type: 'jpeg', quality: 70 });
+      // With the clock frozen nothing moves between the end of a move and the next decision: decide on the last frame.
+      const shot = bulletTime && lastBuf ? lastBuf : await page.screenshot({ type: 'jpeg', quality: 70 });
       const { now: shotT, state: before } = await readState(page);
       // Keys that did nothing where it last died, measured around its last fatal takeoff (or the death itself).
       const lastTry = jumps.jumps.filter((j) => j.died).at(-1);
@@ -589,6 +597,48 @@ export async function runGhost({
       if (bulletTime) await flush();
       for (const k of move.hold) await page.keyboard.up(k);
 
+      // Follow-up actions (games without the SDK): each one in turn, its effect counted for the input table; the rest
+      // are skipped when the screen changes completely (a new screen: the ghost should look again).
+      const usedOf = (a) => [...a.hold, ...a.tap, ...(a.click.length ? ['click'] : []), ...((a.drag ?? []).length ? ['drag'] : [])];
+      let mainCounted = false;
+      let thenDone = 0;
+      let thenSkipped = false;
+      if (!trace.sdk && move.then.length) {
+        const g0 = grid(shot);
+        let prev = grid(lastBuf);
+        const c0 = g0 && prev ? compareGrids(g0, prev) : null;
+        if (usedOf(move).length) inputs.add(usedOf(move), isEffect(c0, idleChange));
+        mainCounted = true;
+        thenSkipped = Boolean(c0 && c0.fraction > 0.5 && !c0.scroll);
+        for (const a of thenSkipped ? [] : move.then) {
+          for (const c of a.click) {
+            await page.mouse.move(c.x, c.y);
+            await page.mouse.down();
+            await advance(CLICK_PRESS_MS);
+            await page.mouse.up();
+          }
+          for (const k of a.hold) await page.keyboard.down(k);
+          for (const k of a.tap) await page.keyboard.down(k);
+          const tapMsThen = a.tap.length ? Math.min(120, a.duration_ms) : 0;
+          if (tapMsThen) {
+            await advance(tapMsThen);
+            for (const k of a.tap) await page.keyboard.up(k);
+          }
+          await advance(Math.max(0, a.duration_ms - tapMsThen - (a.click.length ? CLICK_PRESS_MS : 0)));
+          if (bulletTime) await flush();
+          for (const k of a.hold) await page.keyboard.up(k);
+          const cur = grid(lastBuf);
+          const c = prev && cur ? compareGrids(prev, cur) : null;
+          if (usedOf(a).length) inputs.add(usedOf(a), isEffect(c, idleChange));
+          thenDone += 1;
+          prev = cur;
+          if (c && c.fraction > 0.5 && !c.scroll) {
+            thenSkipped = thenDone < move.then.length;
+            break;
+          }
+        }
+      }
+
       const after = (await readState(page)).state;
       const events = await readEvents(page, eventCount);
       eventCount += events.length;
@@ -606,10 +656,10 @@ export async function runGhost({
         change = g0 && g1 ? compareGrids(g0, g1) : null;
         if (g1) screens.add(screenHash(g1));
         const used = [...move.hold, ...move.tap, ...(move.click.length ? ['click'] : []), ...(move.drag.length ? ['drag'] : [])];
-        if (used.length) inputs.add(used, isEffect(change, idleChange));
+        if (used.length && !mainCounted) inputs.add(used, isEffect(change, idleChange));
       }
       const screenChanged = trace.sdk ? null : isEffect(change, idleChange);
-      const screenNote = trace.sdk || !change ? null : describeChange(change, idleChange);
+      const screenNote = trace.sdk || !change ? null : [describeChange(change, idleChange), thenSkipped ? 'your next actions were skipped because the screen changed completely' : null].filter(Boolean).join(', ');
       const died = events.some((e) => e.type === 'death');
       const observed = trace.sdk
         ? jumps.observe([before, ...trace.frames.slice(frameFrom).map((f) => f.state)], { step, died, tapX: move.tap.length ? tapAt?.x : null })
@@ -660,7 +710,7 @@ export async function runGhost({
         confused: move.confused,
         quit: move.quit,
         player: move.player,
-        move: { click: move.click, ...(move.drag.length ? { drag: move.drag } : {}), hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
+        move: { click: move.click, ...(move.drag.length ? { drag: move.drag } : {}), ...(move.then.length ? { then: move.then, thenDone } : {}), hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
         ...(change ? { change: { fraction: Number(change.fraction.toFixed(4)), ...(change.scroll ? { scroll: change.scroll } : {}) } } : {}),
         ...(move.tap_after_px && trace.sdk && bulletTime ? { tapAt } : {}),
         ...(fallHoldMs ? { fallHoldMs } : {}),
@@ -677,7 +727,7 @@ export async function runGhost({
         frames: [frameFrom, trace.frames.length - 1],
       };
       trace.steps.push(record);
-      history.push(historyLine(step, move, outcome));
+      history.push(historyLine(step, { ...move, thenDone }, outcome));
       await onStep(record);
       if (move.quit) {
         trace.outcome = 'quit';

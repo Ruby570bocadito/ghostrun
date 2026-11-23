@@ -10,7 +10,8 @@ export function describeMove(move) {
   if (move.hold?.length) parts.push(`held ${move.hold.join('+')}`);
   if (move.tap?.length) parts.push(`tapped ${move.tap.join('+')}${move.tap_after_px > 0 ? ` after ${move.tap_after_px} px` : ''}`);
   if (!parts.length) parts.push('waited');
-  return `${parts.join(', ')} for ${move.duration_ms} ms`;
+  const then = (move.then ?? []).slice(0, move.thenDone ?? move.then?.length ?? 0).map((a) => `, then ${describeMove(a)}`).join('');
+  return `${parts.join(', ')} for ${move.duration_ms} ms${then}`;
 }
 
 const finite = (p) => p && Number.isFinite(p.x) && Number.isFinite(p.y);

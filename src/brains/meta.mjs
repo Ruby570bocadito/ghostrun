@@ -28,6 +28,30 @@ const TIMEOUT_MS = { 'muse-ember-1.0': 20_000, 'muse-spark-1.3': 60_000, 'muse-w
  * got a false alarm (0 of 8 with it). Asking where it is makes the model reason about where it is
  * (bench/README.md, "Tried and rejected").
  */
+// v3 (23 Nov): on real games each decision moved the game on only 0.4-0.6 s and cost 2.6-3.3 s of wall time, so 120
+// decisions were about 1-2 minutes of game. A ghost sure of what comes next can chain up to 2 more actions without
+// looking again (they stop early if the screen changes completely). Games with the SDK keep one action per decision.
+function followUps(w, h, sdk, point) {
+  if (sdk) return {};
+  return {
+    then: {
+      type: 'array',
+      description: `Up to 2 more actions to do right after this one without looking again, only when you are sure what comes next (for example: walk to the ledge, then jump; or click a card, then another). Done in order; they stop early if the screen changes completely. Leave empty to see the result first.`,
+      items: {
+        type: 'object',
+        properties: {
+          click: { type: 'array', description: `Clicks, in pixels of the ${w}x${h} screenshot.`, items: point },
+          hold: { type: 'array', items: { type: 'string', enum: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'] } },
+          tap: { type: 'array', items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ', 'KeyR'] } },
+          duration_ms: { type: 'integer', description: '100 to 1500 ms.' },
+        },
+        required: ['click', 'hold', 'tap', 'duration_ms'],
+        additionalProperties: false,
+      },
+    },
+  };
+}
+
 export function moveSchema(w, h, { sdk = false } = {}) {
   const point = {
     type: 'object',
@@ -90,11 +114,12 @@ export function moveSchema(w, h, { sdk = false } = {}) {
         items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ', 'KeyR'] },
       },
       ...tapAfter,
+      ...followUps(w, h, sdk, point),
       duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms; up to 5000 ms when you only wait (no keys, no clicks), for example while a loading screen, an intro or an animation plays.' },
       confused: { type: 'boolean', description: 'True if you do not understand what to do or why something happened.' },
       quit: { type: 'boolean', description: 'True only if, in character, you would stop playing this game right now and never come back.' },
     },
-    required: ['thought', 'saw', 'player', 'click', 'drag', 'hold', 'tap', ...Object.keys(tapAfter), 'duration_ms', 'confused', 'quit'],
+    required: ['thought', 'saw', 'player', 'click', 'drag', 'hold', 'tap', ...Object.keys(tapAfter), ...Object.keys(followUps(w, h, sdk, point)), 'duration_ms', 'confused', 'quit'],
     additionalProperties: false,
   };
 }
