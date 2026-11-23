@@ -29,7 +29,7 @@ It is not a small group: the GMTK Game Jam 2025 alone received [more than 9,500 
    - **Exit interview**: after playing, each ghost says whether it understood the goal and the controls, and what stopped it most. If half or more never worked out the goal, the verdict says so.
 4. **You fix it and re-run**: the new report is compared with the old one ("critical issues 1 → 0, ghosts that finished 0/4 → 3/4").
 
-![A playtest report comparing a run before and after a fix, with a map of the level and the findings](docs/img/report-before-after.jpg)
+![A playtest report after a fix, compared with the run before: critical issues 1 to 0, ghosts that finished 0 to 4, deaths 40 to 1](docs/img/report-before-after.jpg)
 
 ## Does it work? (measured, not claimed)
 
@@ -57,7 +57,7 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 | Hard: [NILO](games/third-party/nilo/README.md), a real jam game we did not make, unmodified, no SDK | The ghosts got through its mouse-only menu by themselves, and all four got stuck at the start of level 1. A person confirmed half the diagnosis: the controls are confusing, but the jump was not too hard ([partial success](bench/README.md#hard-case-a-real-jam-game-we-did-not-make)) |
 | Harder: 9 more real jam games by other people (js13kGames), no SDK, compared with what their players wrote | Judged blind by an independent agent: with the exit interview, the report raised the players' complaint in 5 of 9 games (1 match, 4 partial) and never came back empty; without it, 4 of 9 and 2 of 9 in two runs ([table](bench/results/outside-games.md#three-runs-judged-blind)). The games also exposed five Ghostrun bugs, now fixed |
 
-![A finding card: the key is too faint against the background, with the measured contrast and a replay](docs/img/report-hard-to-see.jpg)
+![A problem with its proof: the key is too faint against the background (contrast 1.09:1, measured), next to its replay and its place on the level map](docs/img/report-hard-to-see.jpg)
 
 ![The exit interview on SPACETAXI, a real jam game: none of the four ghosts worked out the goal, and the Newbie kept crashing into planets, as its players wrote](docs/img/exit-interview.jpg)
 
@@ -84,7 +84,7 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 | **Ask the ghosts afterwards** (exit interview) | On nine real jam games, the report raised the players' complaint in 4 of 9 and 2 of 9 (two runs); in 3 games of the second run it came back empty | 5 of 9, never empty (judged blind; one run per version); +3.5% cost |
 | **Teach the ghost how its actions work**: a tap happens at the start of the move, so walk to the edge first and jump next; in a new game, try one key at a time (from an analysis of 5,761 recorded moves) | 16 deaths per clean Gap Run run: 69% of deaths at fair gaps were jumps started too early | 5 per run, the same flaws found (17/20) and no false alarm (0/20), for 4% more cost |
 
-![A blocker card on Read Me: the ghosts pressed Z 23 times and it never did anything, so the card blames the key the instructions name, not the pit](docs/img/report-dead-key.jpg)
+![A blocker on Read Me: the ghosts pressed Z 27 times and it never did anything, so the card blames the key the instructions name, not the pit](docs/img/report-dead-key.jpg)
 
 Together, these made a run 17% cheaper for the ghosts and the analyst's cards 47% cheaper, about 25% less per playtest. We also report what we rejected: smaller screenshots (8% cheaper, worse perception), not asking the ghost for its position (13% cheaper, but twice the deaths next to hazards), shorter memory, stricter stops ([tried and rejected](bench/README.md#cheaper-and-better-ghosts)).
 
