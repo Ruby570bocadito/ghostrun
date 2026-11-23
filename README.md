@@ -132,9 +132,11 @@ npm run build
 npm start                   # http://localhost:5180
 ```
 
-Then pick "No game handy? Try ours" on the home page, or paste any web game's link. The test games are also playable by people at <http://localhost:5180/play/>.
+On Windows, `npm run local` does the build and starts the server in that terminal, asking for the key without saving it anywhere.
 
-- `npm test`: 46 tests (analysis, ghost feedback, failure handling, public-demo protections), no API key needed.
+Then pick "No game handy? Try ours" on the home page, or paste any web game's link (itch.io pages work: the ghosts open the game inside them). The test games are also playable by people at <http://localhost:5180/play/>: every version "as designed" can be finished; the versions with a planted flaw have one design flaw on purpose, and Gap Run's cannot be finished at all.
+
+- `npm test`: 80 tests (analysis, ghost feedback, failure handling, public-demo protections), no API key needed.
 - `npm run bench -- --label mine --reps 2`: the benchmark (about $0.30 with Ember).
 - Public deployment (Docker, protections for strangers' links): [docs/deploy.md](docs/deploy.md).
 

@@ -30,15 +30,15 @@
     <label for="player">Your name (only to tell sessions apart)</label>
     <input id="player" value="" placeholder="your name or a nickname" autocomplete="off" />
     <ol id="list"></ol>
-    <p class="hint">Opened links turn grey. Tip: play the version "as designed" first, then the one with the planted flaw.</p>
+    <p class="hint">Opened links turn grey. Play the version <b>as designed</b> first: every one of them can be finished. The version <b>with the planted flaw</b> has one design flaw on purpose, so that Ghostrun has something known to find; some of them cannot be finished at all, on purpose.</p>
   </main>
   <script>
     const games = [
-      { id: 'gap-run', name: 'Gap Run', how: '← → move · SPACE jump', fault: 'gap' },
-      { id: 'key-hunt', name: 'Key Hunt', how: 'arrow keys', fault: 'hidden-key' },
-      { id: 'lever-room', name: 'Lever Room', how: '← → move · SPACE jump · E use', fault: 'no-hint' },
-      { id: 'spike-maze', name: 'Spike Maze', how: 'arrow keys', fault: 'hidden-spikes' },
-      { id: 'read-me', name: 'Read Me', how: '← → move · SPACE jump · X dash', fault: 'wrong-key' },
+      { id: 'gap-run', name: 'Gap Run', how: '← → move · SPACE jump', fault: 'gap', flaw: 'gap 3 is too wide to jump: impossible on purpose' },
+      { id: 'key-hunt', name: 'Key Hunt', how: 'arrow keys', fault: 'hidden-key', flaw: 'the key is almost invisible' },
+      { id: 'lever-room', name: 'Lever Room', how: '← → move · SPACE jump · E use', fault: 'no-hint', flaw: 'the lever and its key (E) are not shown' },
+      { id: 'spike-maze', name: 'Spike Maze', how: 'arrow keys', fault: 'hidden-spikes', flaw: 'some spikes are invisible' },
+      { id: 'read-me', name: 'Read Me', how: '← → move · SPACE jump · X dash', fault: 'wrong-key', flaw: 'the sign names the wrong dash key' },
     ];
     const list = document.getElementById('list');
     const player = document.getElementById('player');
@@ -51,8 +51,8 @@
           const flaw = `./${g.id}/?fault=${g.fault}&human=1&player=${who}`;
           const cls = (href, base) => `${base}${opened.has(href.split('&player')[0]) ? ' done' : ''}`;
           return `<li><span class="game">${g.name}</span> <span class="hint">(${g.how})</span>
-            <div class="links"><a class="${cls(clean, '')}" href="${clean}" target="_blank">As designed</a>
-            <a class="${cls(flaw, 'flaw')}" href="${flaw}" target="_blank">With the planted flaw</a></div></li>`;
+            <div class="links"><a class="${cls(clean, '')}" href="${clean}" target="_blank">As designed (can be finished)</a>
+            <a class="${cls(flaw, 'flaw')}" href="${flaw}" target="_blank">With the planted flaw: ${g.flaw}</a></div></li>`;
         })
         .join('');
     }

@@ -17,7 +17,8 @@
     "swarm": "node src/swarm-cli.mjs",
     "bench": "node bench/run.mjs",
     "test": "node --test \"test/*.test.mjs\"",
-    "spike": "node src/spike-clock.mjs"
+    "spike": "node src/spike-clock.mjs",
+    "local": "powershell -NoProfile -ExecutionPolicy Bypass -File start.ps1"
   },
   "dependencies": {
     "openai": "7.62.0",

@@ -85,6 +85,7 @@
     bar.innerHTML = '<span>● Recording your playtest (positions, deaths, time)</span>';
     const give = document.createElement('button');
     give.textContent = 'I give up';
+    give.tabIndex = -1; // Tab must not move the keyboard to this button: Enter would end the session (found 23 Nov)
     give.style.cssText = 'font:inherit;padding:6px 12px;border-radius:8px;border:1px solid #ff6b6b;background:transparent;color:#ff6b6b;cursor:pointer';
     give.onclick = () => {
       if (session.outcome !== 'playing') return;
