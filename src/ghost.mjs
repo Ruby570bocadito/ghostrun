@@ -54,6 +54,14 @@ const SLOW_FRAME_EVERY_MS = 500;
 // Repair played on normally. So after the switch, FROZEN_AFTER_SKIP moves in a row that change nothing at all send that
 // game to real time.
 const FROZEN_AFTER_SKIP = 4;
+// Within a move. On Decogear (24 Nov) each of the four ghosts spent 29 minutes in one move: a moment of game suddenly
+// cost ~580 s of wall per second, and nothing was checked until the move ended. Now one slice of game (at most
+// frameEveryMs) that costs more than PANIC_TICK_MS of wall, at PANIC_RATIO or worse, sends the ghost to real time at
+// once, and a move stops advancing the game when the ghost is out of time (MAX_GHOST_WALL_MS plus MOVE_GRACE_MS) or the
+// run is stopped (the server's time limit used to wait for the move to end).
+const PANIC_TICK_MS = 3000;
+const PANIC_RATIO = 15;
+const MOVE_GRACE_MS = 30_000;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
 const SLOW_FROM_STEP = 3;
 // Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
@@ -295,24 +303,26 @@ export async function runGhost({
   // the page is read), so all the time since the last action is game time. Only the thinking used to be counted: on 24
   // Nov, ghosts in real time spent 10-50% of their real time in that overhead, uncounted.
   let realMark = null;
-  const advance = async (ms) => {
-    if (!bulletTime) {
-      // Measure the real clock so the keys are held for exactly `ms` (taking screenshots also takes time, which must count).
-      const start = performance.now();
-      if (realMark != null) gameMs += Math.round(start - realMark);
-      for (;;) {
-        const left = ms - (performance.now() - start);
-        if (left <= 0) break;
-        await sleep(Math.min(frameEveryMs, left));
-        await capture();
-      }
-      gameMs += Math.round(performance.now() - start);
-      realMark = performance.now();
-      return;
+  const outOfTime = () => Boolean(signal?.aborted) || performance.now() - startedWall > MAX_GHOST_WALL_MS + MOVE_GRACE_MS;
+  const realTimeFor = async (ms) => {
+    // Measure the real clock so the keys are held for exactly `ms` (taking screenshots also takes time, which must count).
+    const start = performance.now();
+    if (realMark != null) gameMs += Math.round(start - realMark);
+    for (;;) {
+      const left = ms - (performance.now() - start);
+      if (left <= 0 || outOfTime()) break;
+      await sleep(Math.min(frameEveryMs, left));
+      await capture();
     }
-    // Bullet time: step the frozen clock in small slices so we can record frames for clips and heatmaps.
+    gameMs += Math.round(performance.now() - start);
+    realMark = performance.now();
+  };
+  const advance = async (ms) => {
+    // Bullet time: step the frozen clock in small slices so we can record frames for clips and heatmaps. The watchdog
+    // may switch to real time in the middle (PANIC_TICK_MS): the rest of the move is then played in real time.
     let left = ms;
-    while (left > 0) {
+    while (left > 0 && !outOfTime()) {
+      if (!bulletTime) return realTimeFor(left);
       const slice = Math.min(frameEveryMs - sinceCapture, left);
       await tick(slice);
       left -= slice;
@@ -324,6 +334,7 @@ export async function runGhost({
   let frameStepMs = 0; // 0: every frame is drawn (runFor); else one frame per frameStepMs of game time (fastForward)
   let stillSinceSkip = 0; // moves in a row with no change at all since frames were skipped
   const tick = async (ms) => {
+    if (!bulletTime) return realTimeFor(ms); // the brake below may have switched to real time in the middle of a move
     const w0 = performance.now();
     if (frameStepMs) {
       // fastForward fires each due timer (and the next animation frame) at most once: one frame per step.
@@ -337,7 +348,18 @@ export async function runGhost({
       sinceCapture = 0;
       await capture();
     }
-    pace.push({ game: ms, wall: performance.now() - w0 });
+    const wall = performance.now() - w0;
+    pace.push({ game: ms, wall });
+    if (bulletTime && wall > PANIC_TICK_MS && wall / ms > PANIC_RATIO) {
+      notices.push({ type: 'slow_game', ratio: Math.round(wall / ms), panic: true, handled: `one moment of the game took ${Math.round(wall / 1000)} s with its clock frozen, so this ghost played on in real time` });
+      trace.realTimeFrom = gameMs;
+      frameStepMs = 0;
+      await page.clock.resume();
+      realMark = performance.now();
+      bulletTime = false;
+      pace.length = 0;
+      return;
+    }
     while (pace.length > 1 && pace.reduce((a, p) => a + p.game, 0) - pace[0].game >= SLOW_WINDOW_MS) pace.shift();
   };
   const slowRatio = () => {
