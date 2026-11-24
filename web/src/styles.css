@@ -135,6 +135,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .status-won .thought, .status-quit .thought { color: var(--muted); }
 .tile-foot { display: flex; align-items: center; gap: 12px; padding: 6px 12px 12px; font-size: 0.78rem; color: var(--muted); }
 .tile-foot .deaths { color: var(--coral); }
+.tile-inputs { display: flex; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.tile-inputs .works { color: var(--mint); }
+.tile-inputs .dead { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--coral) 70%, transparent); }
 .progress { flex: 1; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; display: block; }
 .progress > span { display: block; height: 100%; background: var(--c, var(--mint)); border-radius: 999px; transition: width 0.3s; }
 .log { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; max-height: 70vh; overflow: auto; }

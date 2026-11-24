@@ -43,7 +43,7 @@ function reducer(state, e) {
         ghosts: {
           ...state.ghosts,
           // px/py: where the ghost said its character is (the only position in games without the SDK)
-          [e.ghost]: { ...g, thought: s.thought, steps: s.step, deaths: s.after?.deaths ?? g.deaths, model: s.model, confused: s.confused, px: s.player?.x ?? g.px, py: s.player?.y ?? g.py },
+          [e.ghost]: { ...g, thought: s.thought, steps: s.step, deaths: s.after?.deaths ?? g.deaths, model: s.model, confused: s.confused, px: s.player?.x ?? g.px, py: s.player?.y ?? g.py, inputs: s.inputs ?? g.inputs },
         },
       };
     }

@@ -38,6 +38,13 @@ const UNSTICK = ['Escape', 'Enter', 'click', 'Space', 'KeyZ', 'KeyX', 'Backspace
 // (24 Nov). Games with the SDK keep 5: their jumps and falls need the frozen clock, and the benchmark runs 8 ghosts at once.
 const SLOW_RATIO = 2.5;
 const SLOW_RATIO_SDK = 5;
+// What the watchdog does first (games without the SDK): draw fewer frames. With the clock frozen every frame of game
+// time is drawn (60 per second), however long each takes; a browser in real time drops frames instead. So a slow game
+// moves on in steps of up to MAX_FRAME_STEP_MS, one frame drawn per step (like a slower computer), and stays frozen
+// while the ghost thinks. Real time (where the game runs on while the model thinks, and every screenshot waits for a
+// busy page: up to 26 s for one move on Escape from Death Hole, 24 Nov) is the last resort.
+const FRAME_MS = 1000 / 60;
+const MAX_FRAME_STEP_MS = 100;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
 const SLOW_FROM_STEP = 3;
 // Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
@@ -305,9 +312,15 @@ export async function runGhost({
   // Moves the frozen clock on, recording a frame every frameEveryMs of game time (and at the end of a move: flush()).
   let sinceCapture = 0;
   const pace = []; // recent ticks: { game, wall } ms, to see how much wall time a second of game costs
+  let frameStepMs = 0; // 0: every frame is drawn (runFor); else one frame per frameStepMs of game time (fastForward)
   const tick = async (ms) => {
     const w0 = performance.now();
-    await page.clock.runFor(ms);
+    if (frameStepMs) {
+      // fastForward fires each due timer (and the next animation frame) at most once: one frame per step.
+      for (let left = ms; left > 0; left -= frameStepMs) await page.clock.fastForward(Math.min(frameStepMs, left));
+    } else {
+      await page.clock.runFor(ms);
+    }
     gameMs += ms;
     sinceCapture += ms;
     if (sinceCapture >= frameEveryMs) {
@@ -757,13 +770,27 @@ export async function runGhost({
         if (fresh) lastFreshStep = step;
       }
 
-      // The watchdog (SLOW_RATIO): too slow with the frozen clock → real time; still too slow, or out of time → stop.
+      // The watchdog (SLOW_RATIO): too slow with the frozen clock → fewer frames drawn, then real time; out of time → stop.
       if (bulletTime && step >= SLOW_FROM_STEP && slowRatio() > (trace.sdk ? SLOW_RATIO_SDK : SLOW_RATIO)) {
-        notices.push({ type: 'slow_game', step, ratio: Number(slowRatio().toFixed(1)), handled: 'the game got too slow with its clock frozen, so this ghost played on in real time' });
-        trace.realTimeFrom = gameMs;
-        await page.clock.resume();
-        realMark = performance.now();
-        bulletTime = false;
+        const ratio = Number(slowRatio().toFixed(1));
+        if (!trace.sdk && frameStepMs < MAX_FRAME_STEP_MS) {
+          frameStepMs = Math.round(Math.min(MAX_FRAME_STEP_MS, Math.max(2 * (frameStepMs || FRAME_MS), FRAME_MS * ratio)));
+          trace.frameStepMs = frameStepMs;
+          trace.frameStepFrom ??= gameMs;
+          notices.push({
+            type: 'slow_game',
+            step,
+            ratio,
+            frameStepMs,
+            handled: `the game was slow to draw with its clock frozen, so it was drawn at ${Math.round(1000 / frameStepMs)} frames per second, like on a slower computer; it still froze while the ghost thought`,
+          });
+        } else {
+          notices.push({ type: 'slow_game', step, ratio, handled: 'the game got too slow with its clock frozen, so this ghost played on in real time' });
+          trace.realTimeFrom = gameMs;
+          await page.clock.resume();
+          realMark = performance.now();
+          bulletTime = false;
+        }
         pace.length = 0;
       }
       const record = {
@@ -778,7 +805,7 @@ export async function runGhost({
         player: move.player,
         move: { click: move.click, ...(move.drag.length ? { drag: move.drag } : {}), ...(move.then.length ? { then: move.then, thenDone } : {}), hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
         ...(change ? { change: { fraction: Number(change.fraction.toFixed(4)), ...(change.scroll ? { scroll: change.scroll } : {}) } } : {}),
-        ...(!trace.sdk ? { screens: screens.size } : {}),
+        ...(!trace.sdk ? { screens: screens.size, inputs: inputs.toJSON() } : {}),
         ...(move.tap_after_px && trace.sdk && bulletTime ? { tapAt } : {}),
         ...(fallHoldMs ? { fallHoldMs } : {}),
         ...(facts ? { facts } : {}),

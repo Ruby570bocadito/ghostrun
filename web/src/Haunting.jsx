@@ -21,6 +21,31 @@ const clock = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
+// Games without the SDK report no deaths or position: there the tile shows what the ghost has learned about the controls,
+// the inputs that made the screen answer (✓) and the ones that did nothing (✗), most used first.
+const INPUT_LABEL = { ArrowRight: '→', ArrowLeft: '←', ArrowUp: '↑', ArrowDown: '↓', Space: 'Space', Enter: 'Enter', Escape: 'Esc', Backspace: '⌫', click: 'click', drag: 'drag' };
+const inputLabel = (k) => INPUT_LABEL[k] ?? k.replace(/^Key(?=[A-Z]$)/, '').replace(/^Digit(?=\d$)/, '');
+function LearnedInputs({ inputs }) {
+  const rows = Object.entries(inputs)
+    .filter(([, r]) => r.used > 0)
+    .sort((a, b) => b[1].used - a[1].used)
+    .slice(0, 5);
+  if (!rows.length) return <span className="tile-inputs muted">trying the controls…</span>;
+  return (
+    <span className="tile-inputs" title="What this ghost has learned about the controls: inputs that made the screen answer (✓) and inputs that did nothing (✗)">
+      {rows.map(([k, r]) => {
+        const works = r.changed / r.used >= 0.5;
+        return (
+          <span key={k} className={works ? 'works' : 'dead'} aria-label={`${k}: the screen answered ${r.changed} of ${r.used} times`}>
+            {inputLabel(k)}
+            {works ? '✓' : '✗'}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 function GhostTile({ runId, g, p, viewport, playSeconds }) {
   const progress = g.x != null && g.worldW ? Math.min(1, g.x / g.worldW) : 0;
   // Every tile shows the same game, so the ghost floats over the character it plays (where the game or the ghost says it is).
@@ -65,10 +90,16 @@ function GhostTile({ runId, g, p, viewport, playSeconds }) {
       </p>
       <footer className="tile-foot mono">
         <span title="Game time this ghost has played, of its total">{playSeconds ? `${clock(g.t ?? 0)} / ${clock(playSeconds * 1000)}` : `move ${g.steps}`}</span>
-        <span className={g.deaths ? 'deaths' : ''}>✕ {g.deaths}</span>
-        <span className="progress" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-          <span style={{ width: `${progress * 100}%` }} />
-        </span>
+        {g.inputs ? (
+          <LearnedInputs inputs={g.inputs} />
+        ) : (
+          <>
+            <span className={g.deaths ? 'deaths' : ''}>✕ {g.deaths}</span>
+            <span className="progress" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+              <span style={{ width: `${progress * 100}%` }} />
+            </span>
+          </>
+        )}
       </footer>
     </article>
   );
