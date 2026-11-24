@@ -174,7 +174,7 @@ const rules = (sdk) => [
   'After each action you are told what happened: how far you moved, if you died or reached something, where the screen changed, and whether the view scrolled (which means you moved, even if your character stays in the middle). You also get a table of which inputs have made the screen answer. Trust it over your impression.',
   sdk
     ? 'Keep actions short (200-800 ms) near danger. When the way ahead is clear, longer actions (up to 1500 ms) are fine.'
-    : `Every look at the screen takes time, so make each one count. Keep actions short (200-800 ms) only near danger. Otherwise use long actions (1500-${MAX_ACTION_MS} ms): walking, exploring, holding a direction, waiting for something to happen. When you can tell what comes next, add 1-2 follow-up actions instead of looking again.`,
+    : `Every look at the screen takes time, so make each one count. Keep actions short (200-800 ms) near danger and when a small push is enough (steering, aiming, stopping on a spot): a long push overshoots. Otherwise use long actions (1500-${MAX_ACTION_MS} ms): walking, exploring, holding a direction, waiting for something to happen. When you can tell what comes next, add 1-2 follow-up actions instead of looking again.`,
   'Your thought must describe something new you notice this turn. Do not repeat earlier thoughts.',
   'Answer only with the JSON object.',
 ].join('\n');

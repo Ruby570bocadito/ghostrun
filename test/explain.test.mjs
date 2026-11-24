@@ -58,9 +58,9 @@ test('a card the analyst does not answer in time is replaced by the plain findin
     await writeFile(join(runDir, 'newbie', 'f0.jpg'), Buffer.from('fake-jpeg'));
     const traces = [{ persona: 'newbie', frames: [{ file: 'f0.jpg' }], steps: [] }];
     const report = { findings: [finding(), finding({ id: 'F2', type: 'blocker', passed: [] })], ghostsTotal: 4, worldW: 1200, worldH: 400 };
-    let n = 0;
-    // The first card answers at once, the second never does.
-    const create = () => (n++ === 0 ? Promise.resolve({ choices: [{ message: { content: JSON.stringify(card('Add a checkpoint.')) } }], usage: {} }) : new Promise(() => {}));
+    // The friction card answers at once; the blocker's never does (the cards are asked for in parallel).
+    const create = (req) =>
+      /blocker/i.test(factsOf(req)) ? new Promise(() => {}) : Promise.resolve({ choices: [{ message: { content: JSON.stringify(card('Add a checkpoint.')) } }], usage: {} });
     const t0 = Date.now();
     const out = await explainHotspots(report, { runDir, traces, client: { chat: { completions: { create } } }, deadlineMs: 200 });
     assert.ok(Date.now() - t0 < 2000);

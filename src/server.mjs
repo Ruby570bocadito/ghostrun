@@ -243,9 +243,11 @@ async function play(run) {
       report.failure = { kind: err.kind, message: err.message };
     } else if (report.hotspots.length) {
       try {
+        const t0 = Date.now();
         const { cards, usage } = await explainHotspots(report, { runDir: outDir, traces });
         report.cards = cards;
         report.analystUsage = usage;
+        report.analystMs = Date.now() - t0;
       } catch (err) {
         // The analyst is optional: hotspots stand on their own evidence.
         report.cards = [];

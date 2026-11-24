@@ -35,6 +35,26 @@ const clipAround = (frames, pageT, beforeMs = 1600, afterMs = 300) => [
 ];
 
 /** Single-linkage clustering in 2D. */
+/**
+ * When a ghost started to play, in game ms: the first of two moves in a row in which it saw the game being played (its
+ * own reading of the screen). Real jam games often open with loading, menus, intros and name screens; null if it never
+ * got past them.
+ */
+export function reachedPlayMs(steps) {
+  for (let i = 0; i + 1 < steps.length; i++) if (steps[i].saw === 'playing' && steps[i + 1].saw === 'playing') return steps[i].t0;
+  return steps.length === 1 && steps[0].saw === 'playing' ? steps[0].t0 : null;
+}
+
+/**
+ * Different screens seen over game time, as [seconds, screens] points (at most `max`), from each move's count (src/ghost.mjs,
+ * games without the SDK). A line that goes flat is a ghost that stopped finding anything new.
+ */
+export function noveltyCurve(steps, max = 40) {
+  const pts = steps.filter((s) => Number.isFinite(s.screens) && Number.isFinite(s.t1)).map((s) => [Math.round(s.t1 / 100) / 10, s.screens]);
+  if (pts.length <= max) return pts;
+  return Array.from({ length: max }, (_, i) => pts[Math.round((i * (pts.length - 1)) / (max - 1))]);
+}
+
 export function cluster2d(points, radius) {
   const parent = points.map((_, i) => i);
   const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
@@ -163,6 +183,11 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
               ? Math.min(1, Math.max(...xs) / worldW)
               : null,
       gameMs: t.gameMs,
+      sdk: Boolean(t.sdk),
+      playSeconds: t.playSeconds ?? null,
+      reachedPlayMs: reachedPlayMs(t.steps),
+      screens: t.screens ?? null,
+      novelty: t.sdk ? [] : noveltyCurve(t.steps),
       tokensIn: t.steps.reduce((a, s) => a + (s.usage?.input ?? 0), 0),
       tokensCached: t.steps.reduce((a, s) => a + (s.usage?.cached ?? 0), 0),
       tokensOut: t.steps.reduce((a, s) => a + (s.usage?.output ?? 0), 0),

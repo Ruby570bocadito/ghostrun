@@ -151,10 +151,11 @@ function factsFor(f, report, tracesByPersona = {}) {
 
 // reasoning 'minimal' instead of 'low': on the same 3 runs the cards were as good (one 'low' card even
 // blamed the arrow keys for hidden spikes), for 47% less cost and 45% less time (bench/results/analyst-effort.md).
-// One card normally takes 7-12 s; twice the analyst took 48-55 s, and with 2 retries of 60 s it could hold a finished
-// run for minutes (24 Nov).
-const CARD_TIMEOUT_MS = 25_000;
-const ANALYST_DEADLINE_MS = 45_000;
+// One card normally takes 6-12 s; twice the analyst took 48-55 s, and with 2 retries of 60 s it could hold a finished
+// run for minutes. On 24 Nov a call hung, timed out at 25 s and the retry finished at ~45 s; the same card took 5.8 s
+// when asked again. So: 15 s per call, one retry, 30 s in all.
+const CARD_TIMEOUT_MS = 15_000;
+const ANALYST_DEADLINE_MS = 30_000;
 export async function explainHotspots(report, { runDir, traces, model = 'muse-spark-1.3', reasoning = 'minimal', client, max = 5, deadlineMs = ANALYST_DEADLINE_MS } = {}) {
   const api = client ?? new OpenAI({ baseURL: 'https://api.meta.ai/v1', apiKey: process.env.MODEL_API_KEY, maxRetries: 1, timeout: CARD_TIMEOUT_MS });
   const byPersona = Object.fromEntries(traces.map((t) => [t.persona, t]));

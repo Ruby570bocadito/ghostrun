@@ -20,6 +20,9 @@ export const MAX_WAIT_MS = 5000;
 const SETTLE_SLICE_MS = 500;
 const SETTLE_MAX_MS = 8000;
 const AUTOPILOT_MAX_MS = 16000;
+// The same in real time: drawing a game with its clock frozen can be slow at start-up (Coiner, 24 Nov: 42 s of real time
+// for 11 s of autopilot), and the watchdog only acts once the ghost is making moves.
+const AUTOPILOT_MAX_WALL_MS = 20000;
 const LADDER = ['click', 'Enter', 'Space', 'KeyZ', 'KeyX'];
 // Stuck (games without the SDK): no new screen for this long → the harness tries the usual ways out, no model. On
 // Decogear three ghosts in four spent 67% of their game time on a name screen they could not confirm (23 Nov).
@@ -29,9 +32,14 @@ const UNSTICK = ['Escape', 'Enter', 'click', 'Space', 'KeyZ', 'KeyX', 'Backspace
 // wall time per second of game after a minute, with four ghosts). When a second of game costs more than SLOW_RATIO
 // seconds of wall time, the ghost plays on in real time (the game runs on its own while the model thinks). Light games
 // cost 0.2-0.7 s per second of game; Escape from Death Hole cost about 3, so its ghosts played 60-80 s in 5-7 minutes
-// (24 Nov): the ratio is now 3 instead of 5.
-const SLOW_RATIO = 3;
+// (24 Nov). Above ~2.5, a ghost in bullet time cannot play 2 minutes inside MAX_GHOST_WALL_MS, so that is the limit.
+// It is measured over SLOW_WINDOW_MS of moves only (not the loading and the autopilot), from the third move: right after
+// four pages load at once even SpaceTaxi (0.5-0.8 in steady play) measured 3.5-8.8 and was wrongly sent to real time
+// (24 Nov). Games with the SDK keep 5: their jumps and falls need the frozen clock, and the benchmark runs 8 ghosts at once.
+const SLOW_RATIO = 2.5;
+const SLOW_RATIO_SDK = 5;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
+const SLOW_FROM_STEP = 3;
 // Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
 // played MIN_PLAY_MS by then has had its go ('time_up'); one that has not is reported as 'too_slow'.
 export const MAX_GHOST_WALL_MS = 4.5 * 60_000;
@@ -267,11 +275,15 @@ export async function runGhost({
     return buf;
   };
 
+  // Real time: the game runs on its own between actions too (while the model thinks, and while screenshots are taken and
+  // the page is read), so all the time since the last action is game time. Only the thinking used to be counted: on 24
+  // Nov, ghosts in real time spent 10-50% of their real time in that overhead, uncounted.
+  let realMark = null;
   const advance = async (ms) => {
     if (!bulletTime) {
-      // Real time: the game runs on its own. Measure the real clock so the keys are held for exactly
-      // `ms` (taking screenshots also takes time, which must count).
+      // Measure the real clock so the keys are held for exactly `ms` (taking screenshots also takes time, which must count).
       const start = performance.now();
+      if (realMark != null) gameMs += Math.round(start - realMark);
       for (;;) {
         const left = ms - (performance.now() - start);
         if (left <= 0) break;
@@ -279,6 +291,7 @@ export async function runGhost({
         await capture();
       }
       gameMs += Math.round(performance.now() - start);
+      realMark = performance.now();
       return;
     }
     // Bullet time: step the frozen clock in small slices so we can record frames for clips and heatmaps.
@@ -368,7 +381,10 @@ export async function runGhost({
       }
     }
     await page.clock.runFor(1500); // let the game boot inside game time
-    if (!bulletTime) await page.clock.resume(); // from now on game time flows in real time
+    if (!bulletTime) {
+      await page.clock.resume(); // from now on game time flows in real time
+      realMark = performance.now();
+    }
     trace.bulletTime = bulletTime;
 
     // Some games create their canvas only after loading their images or sounds, which the frozen clock does not
@@ -442,12 +458,12 @@ export async function runGhost({
       // Start-up autopilot: no model involved, so loading screens and "press any key" cost nothing.
       const tried = [];
       let waitedMs = 0;
-      const settle = async (maxMs) => {
+      const settle = async (maxMs, deadline = Infinity) => {
         let prev = grid(lastBuf);
         const fractions = [];
         let ms = 0;
         let still = 0;
-        while (ms < maxMs) {
+        while (ms < maxMs && performance.now() < deadline) {
           await advance(SETTLE_SLICE_MS);
           await flush();
           ms += SETTLE_SLICE_MS;
@@ -463,12 +479,14 @@ export async function runGhost({
         }
         return { ms, fractions };
       };
-      const first = await settle(SETTLE_MAX_MS);
+      const apStart = performance.now();
+      const apDeadline = apStart + AUTOPILOT_MAX_WALL_MS;
+      const first = await settle(SETTLE_MAX_MS, apDeadline);
       waitedMs += first.ms;
       idleChange = median(first.fractions.slice(-3));
       let answered = 0;
       for (const input of LADDER) {
-        if (waitedMs >= AUTOPILOT_MAX_MS || answered >= 2 || signal?.aborted) break;
+        if (waitedMs >= AUTOPILOT_MAX_MS || answered >= 2 || signal?.aborted || performance.now() > apDeadline) break;
         const g0 = grid(lastBuf);
         if (input === 'click') {
           await page.mouse.move(Math.round(viewport.width / 2), Math.round(viewport.height / 2));
@@ -490,10 +508,10 @@ export async function runGhost({
         tried.push({ input, effect, change: c ? describeChange(c, idleChange) : null });
         if (effect) {
           answered += 1;
-          waitedMs += (await settle(4000)).ms;
+          waitedMs += (await settle(4000, apDeadline)).ms;
         }
       }
-      trace.autopilot = { waitedMs, idleChange: Number(idleChange.toFixed(4)), tried };
+      trace.autopilot = { waitedMs, wallMs: Math.round(performance.now() - apStart), idleChange: Number(idleChange.toFixed(4)), tried };
       const said = tried.map((t) => `${t.input === 'click' ? 'a click in the middle' : t.input} → ${t.effect ? t.change : 'no answer'}`).join('; ');
       history.push(`0. Before your first move (automatic, to get past loading and start screens): waited ${(first.ms / 1000).toFixed(1)} s for the game to load, then tried ${said}.`);
       await onAutopilot(trace.autopilot);
@@ -512,6 +530,7 @@ export async function runGhost({
     const cellOf = (s) => `${Math.floor(s.x / IDLE_CELL_PX)},${Math.floor(s.y / IDLE_CELL_PX)}`;
 
     const playMs = playSeconds * 1000;
+    pace.length = 0; // the watchdog judges the moves only, not the loading and the autopilot before them
     for (let step = 1; step <= maxSteps && gameMs < playMs; step++) {
       if (signal?.aborted) {
         trace.outcome = 'stopped';
@@ -560,7 +579,6 @@ export async function runGhost({
             inputs.note() ?? [],
             gameMs - lastNewScreenMs >= STUCK_MS / 2 ? [`You have seen nothing new on screen for ${Math.round((gameMs - lastNewScreenMs) / 1000)} s.`] : [],
           );
-      const thinkStart = performance.now();
       const pageThinkStart = bulletTime ? null : await page.evaluate(() => performance.now());
       const decision = await decideRobustly(
         brain,
@@ -572,7 +590,6 @@ export async function runGhost({
         },
       );
       const pageThinkEnd = bulletTime ? null : await page.evaluate(() => performance.now());
-      if (!bulletTime) gameMs += Math.round(performance.now() - thinkStart); // the game kept running meanwhile
       if (decision.safe) {
         if (++safeInARow >= MAX_SAFE_MOVES_IN_A_ROW) {
           throw Object.assign(new Error(`The model gave ${MAX_SAFE_MOVES_IN_A_ROW} unusable answers in a row.`), { kind: 'bad_output' });
@@ -741,10 +758,11 @@ export async function runGhost({
       }
 
       // The watchdog (SLOW_RATIO): too slow with the frozen clock → real time; still too slow, or out of time → stop.
-      if (bulletTime && slowRatio() > SLOW_RATIO) {
+      if (bulletTime && step >= SLOW_FROM_STEP && slowRatio() > (trace.sdk ? SLOW_RATIO_SDK : SLOW_RATIO)) {
         notices.push({ type: 'slow_game', step, ratio: Number(slowRatio().toFixed(1)), handled: 'the game got too slow with its clock frozen, so this ghost played on in real time' });
         trace.realTimeFrom = gameMs;
         await page.clock.resume();
+        realMark = performance.now();
         bulletTime = false;
         pace.length = 0;
       }
@@ -760,6 +778,7 @@ export async function runGhost({
         player: move.player,
         move: { click: move.click, ...(move.drag.length ? { drag: move.drag } : {}), ...(move.then.length ? { then: move.then, thenDone } : {}), hold: move.hold, tap: move.tap, ...(move.tap_after_px ? { tap_after_px: move.tap_after_px } : {}), duration_ms: move.duration_ms },
         ...(change ? { change: { fraction: Number(change.fraction.toFixed(4)), ...(change.scroll ? { scroll: change.scroll } : {}) } } : {}),
+        ...(!trace.sdk ? { screens: screens.size } : {}),
         ...(move.tap_after_px && trace.sdk && bulletTime ? { tapAt } : {}),
         ...(fallHoldMs ? { fallHoldMs } : {}),
         ...(facts ? { facts } : {}),
@@ -772,6 +791,7 @@ export async function runGhost({
         ...(decision.safe ? { safeMove: true } : {}),
         usage: decision.usage,
         latencyMs: Math.round(decision.latencyMs),
+        wallMs: Math.round(performance.now() - startedWall), // real time since the ghost started, at the end of this move
         frames: [frameFrom, trace.frames.length - 1],
       };
       trace.steps.push(record);

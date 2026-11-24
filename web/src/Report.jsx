@@ -29,6 +29,31 @@ function clipFrames(runId, trace, [from, to]) {
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : /s$/.test(word) ? 'es' : 's'}`;
+const clock = (ms) => {
+  const s = Math.round((ms ?? 0) / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+/** Different screens a ghost saw over its game time, with a mark where it started to play (games without the SDK). */
+function Novelty({ points, totalSec, reachedMs, label }) {
+  const W = 200;
+  const H = 30;
+  const last = points.at(-1);
+  const top = Math.max(1, ...points.map((p) => p[1]));
+  const span = Math.max(totalSec || 0, last?.[0] ?? 0, 1);
+  const xy = points.map(([s, n]) => [(s / span) * W, H - 2 - (n / top) * (H - 6)]);
+  const line = xy.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const playX = reachedMs != null ? (reachedMs / 1000 / span) * W : null;
+  return (
+    <svg className="novelty" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
+      <title>{label}</title>
+      <line x1="0" y1={H - 1} x2={W} y2={H - 1} className="novelty-base" />
+      {xy.length > 1 && <polygon points={`${xy[0][0].toFixed(1)},${H - 1} ${line} ${xy.at(-1)[0].toFixed(1)},${H - 1}`} className="novelty-area" />}
+      {xy.length > 1 && <polyline points={line} className="novelty-line" vectorEffect="non-scaling-stroke" />}
+      {playX != null && <line x1={playX} y1="0" x2={playX} y2={H} className="novelty-play" vectorEffect="non-scaling-stroke" />}
+    </svg>
+  );
+}
 // "KeyZ" → "Z", as the game's own instructions name it.
 const keyLabel = (k) => k.replace(/^Key(?=[A-Z]$)/, '').replace(/^Digit(?=\d$)/, '');
 const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
@@ -594,12 +619,29 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                   {OUTCOME_LABEL[g.outcome] ?? g.outcome}
                 </span>
               </div>
-              <span className="progress wide" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((g.progress ?? 0) * 100)}>
-                <span style={{ width: `${(g.progress ?? 0) * 100}%` }} />
-              </span>
-              <span className="mono small">
-                ✕ {g.deaths} · {g.steps} moves
-              </span>
+              {g.sdk === false && g.novelty?.length ? (
+                <>
+                  <Novelty
+                    points={g.novelty}
+                    totalSec={g.playSeconds}
+                    reachedMs={g.reachedPlayMs}
+                    label={`${plural(g.screens ?? 0, 'different screen')} in ${clock(g.gameMs)} of play; ${g.reachedPlayMs == null ? 'never got past the start screens' : `started playing at ${clock(g.reachedPlayMs)}`}`}
+                  />
+                  <span className="mono small roster-stats">
+                    <span>{clock(g.gameMs)} played</span>
+                    <span>{g.reachedPlayMs == null ? 'never played' : `playing from ${clock(g.reachedPlayMs)}`}</span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="progress wide" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((g.progress ?? 0) * 100)}>
+                    <span style={{ width: `${(g.progress ?? 0) * 100}%` }} />
+                  </span>
+                  <span className="mono small">
+                    ✕ {g.deaths} · {g.steps} moves
+                  </span>
+                </>
+              )}
               <em className="roster-quote">{g.error ? g.error.message : last ? `“${last}”` : ''}</em>
             </div>
           );
