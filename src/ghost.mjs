@@ -49,6 +49,11 @@ const MAX_FRAME_STEP_MS = 100;
 // cost 1.3-1.6 s, most of it in 4 screenshots of a busy page (577 for 131 s of game, 24 Nov). The move's last frame is
 // always taken, so the ghost still decides on what is on screen.
 const SLOW_FRAME_EVERY_MS = 500;
+// Fewer frames can freeze an engine game's screen altogether: on Decogear (24 Nov), after the switch not one move changed
+// anything, not even a blinking cursor (before it, the arrows changed the name), while Escape from Death Hole and Broken
+// Repair played on normally. So after the switch, FROZEN_AFTER_SKIP moves in a row that change nothing at all send that
+// game to real time.
+const FROZEN_AFTER_SKIP = 4;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
 const SLOW_FROM_STEP = 3;
 // Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
@@ -317,6 +322,7 @@ export async function runGhost({
   let sinceCapture = 0;
   const pace = []; // recent ticks: { game, wall } ms, to see how much wall time a second of game costs
   let frameStepMs = 0; // 0: every frame is drawn (runFor); else one frame per frameStepMs of game time (fastForward)
+  let stillSinceSkip = 0; // moves in a row with no change at all since frames were skipped
   const tick = async (ms) => {
     const w0 = performance.now();
     if (frameStepMs) {
@@ -774,6 +780,20 @@ export async function runGhost({
         if (fresh) lastFreshStep = step;
       }
 
+      // Fewer frames froze this game's screen: real time instead (FROZEN_AFTER_SKIP).
+      if (bulletTime && frameStepMs && !trace.sdk) {
+        stillSinceSkip = change && change.fraction === 0 ? stillSinceSkip + 1 : 0;
+        if (stillSinceSkip >= FROZEN_AFTER_SKIP) {
+          notices.push({ type: 'slow_game', step, frozen: true, handled: "drawing fewer frames froze this game's screen, so this ghost played on in real time" });
+          frameStepMs = 0;
+          trace.skipFroze = true;
+          trace.realTimeFrom = gameMs;
+          await page.clock.resume();
+          realMark = performance.now();
+          bulletTime = false;
+          pace.length = 0;
+        }
+      }
       // The watchdog (SLOW_RATIO): too slow with the frozen clock → fewer frames drawn, then real time; out of time → stop.
       if (bulletTime && step >= SLOW_FROM_STEP && slowRatio() > (trace.sdk ? SLOW_RATIO_SDK : SLOW_RATIO)) {
         const ratio = Number(slowRatio().toFixed(1));
