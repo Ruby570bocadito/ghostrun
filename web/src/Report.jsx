@@ -595,6 +595,12 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       )}
 
       <h3 className="section-title">Who played</h3>
+      {report.ghosts.some((g) => g.sdk === false && g.novelty?.length) && (
+        <p className="small muted roster-legend">
+          Each line is how many different screens a ghost saw over its game time: it goes flat when the ghost stops finding anything new. The dashed mark is when it
+          started to play.
+        </p>
+      )}
       <div className="roster">
         {report.ghosts.map((g) => {
           const p = personas[g.persona] ?? { name: g.persona, color: '#9bf6ec' };
@@ -629,7 +635,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                   />
                   <span className="mono small roster-stats">
                     <span>{clock(g.gameMs)} played</span>
-                    <span>{g.reachedPlayMs == null ? 'never played' : `playing from ${clock(g.reachedPlayMs)}`}</span>
+                    <span>{g.reachedPlayMs == null ? 'never played' : `started at ${clock(g.reachedPlayMs)}`}</span>
                   </span>
                 </>
               ) : (
@@ -649,12 +655,19 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       </div>
 
       <h3 className="section-title">How this was made</h3>
-      <p className="method small muted">
-        How this was made: each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). Deaths, objectives and positions
-        come from the game; findings are grouped by position without AI. A blocker is a spot no ghost that reached it got past. Objectives the game marks as things to see
-        are also measured for contrast on the screen (WCAG asks 3:1), because AI eyes spot faint shapes that people miss. The AI only writes the explanation of each
-        finding.
-      </p>
+      {report.ghosts.every((g) => g.sdk === false) ? (
+        <p className="method small muted">
+          Each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). This game does not tell Ghostrun what happens in it,
+          so everything here comes from the screen and from the ghosts: where the screen stopped changing, which inputs made it answer, what the ghosts said while
+          playing and in their exit interview. Read the findings as leads to check by playing, not as measurements. The AI only writes the explanation of each finding.
+        </p>
+      ) : (
+        <p className="method small muted">
+          Each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). Deaths, objectives and positions come from the
+          game; findings are grouped by position without AI. A blocker is a spot no ghost that reached it got past. Objectives the game marks as things to see are also
+          measured for contrast on the screen (WCAG asks 3:1), because AI eyes spot faint shapes that people miss. The AI only writes the explanation of each finding.
+        </p>
+      )}
     </section>
   );
 }

@@ -45,6 +45,10 @@ const SLOW_RATIO_SDK = 5;
 // busy page: up to 26 s for one move on Escape from Death Hole, 24 Nov) is the last resort.
 const FRAME_MS = 1000 / 60;
 const MAX_FRAME_STEP_MS = 100;
+// A slow game also gets fewer screenshots: on Escape from Death Hole with fewer frames drawn, a second of game still
+// cost 1.3-1.6 s, most of it in 4 screenshots of a busy page (577 for 131 s of game, 24 Nov). The move's last frame is
+// always taken, so the ghost still decides on what is on screen.
+const SLOW_FRAME_EVERY_MS = 500;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
 const SLOW_FROM_STEP = 3;
 // Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
@@ -775,6 +779,7 @@ export async function runGhost({
         const ratio = Number(slowRatio().toFixed(1));
         if (!trace.sdk && frameStepMs < MAX_FRAME_STEP_MS) {
           frameStepMs = Math.round(Math.min(MAX_FRAME_STEP_MS, Math.max(2 * (frameStepMs || FRAME_MS), FRAME_MS * ratio)));
+          frameEveryMs = Math.max(frameEveryMs, SLOW_FRAME_EVERY_MS);
           trace.frameStepMs = frameStepMs;
           trace.frameStepFrom ??= gameMs;
           notices.push({
