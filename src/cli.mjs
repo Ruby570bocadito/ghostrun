@@ -1,6 +1,6 @@
 // Run one ghost from the terminal.
 // node src/cli.mjs --game gap-run [--fault gap] [--persona newbie] [--steps 40] [--brain meta|scripted] [--model muse-ember-1.0]
-import { LAUNCH_OPTIONS } from './browser.mjs';
+import { launchBrowser } from './browser.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
@@ -35,7 +35,7 @@ const brain =
     : createMetaBrain({ model: args.model, reasoning: args.reasoning, persona, controlsHint: args.controls });
 const outDir = join('runs', `${new Date().toISOString().replace(/[:.]/g, '-')}-${game}${args.fault ? '-' + args.fault : ''}-${persona.id}-${brain.model}`);
 
-const browser = await chromium.launch(LAUNCH_OPTIONS);
+const browser = await launchBrowser(chromium);
 const usages = [];
 const t0 = performance.now();
 const trace = await runGhost({

@@ -21,6 +21,43 @@ export function itchIframeSrc(html, base = 'https://itch.io/') {
   }
 }
 
+/** The size an itch.io page shows its game at (the options of init_HtmlEmbed, else the game frame's style), or null. */
+export function itchFrameSize(html) {
+  const options = html.match(/init_HtmlEmbed\([^,()]*,\s*(\{[^{}]*\})\s*\)/)?.[1];
+  try {
+    const o = options ? JSON.parse(options) : null;
+    if (o && o.width > 0 && o.height > 0) return { width: Math.round(o.width), height: Math.round(o.height) };
+  } catch {
+    // not JSON: try the style below
+  }
+  const style = html.match(/class="game_frame\b[^"]*"[^>]*style="width:\s*(\d+)px;\s*height:\s*(\d+)px/i);
+  return style ? { width: Number(style[1]), height: Number(style[2]) } : null;
+}
+
+/**
+ * An itch.io page read as text, without a browser: { url, size } of its game, or null (not itch.io, no game iframe
+ * in the page, a redirect, an error) to look with a browser instead. A browser also starts loading the game in the
+ * page's iframe, which the ghosts then load again: 1.6-3.2 s before each run's ghosts could start (24 Nov).
+ */
+export async function findItchGame(url, { fetchImpl = globalThis.fetch, timeoutMs = 8000 } = {}) {
+  let host;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return null;
+  }
+  if (!/(^|\.)itch\.io$/i.test(host) || typeof fetchImpl !== 'function') return null;
+  try {
+    const res = await fetchImpl(url, { redirect: 'error', signal: AbortSignal.timeout(timeoutMs), headers: { 'user-agent': 'Mozilla/5.0 (compatible; playtest)' } });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const src = itchIframeSrc(html, url);
+    return src ? { url: src, size: itchFrameSize(html) } : null;
+  } catch {
+    return null;
+  }
+}
+
 const hasCanvas = (frame) =>
   frame
     .evaluate(() => {
@@ -50,7 +87,9 @@ export const findPlayUrl = findPlayUrlOnly;
  * framed game is not loaded a second time just to measure it (on itch.io the first frame took 27 s, 23 Nov).
  * size is null when the page draws the game itself.
  */
-export async function findGame(browser, url, { protect = async () => {}, contextOptions = {}, waitMs = 8000 } = {}) {
+export async function findGame(browser, url, { protect = async () => {}, contextOptions = {}, waitMs = 8000, quick = findItchGame } = {}) {
+  const found = quick ? await quick(url) : null;
+  if (found) return found;
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, ...contextOptions });
   try {
     await protect(context);
