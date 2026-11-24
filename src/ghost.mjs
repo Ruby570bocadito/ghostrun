@@ -7,6 +7,7 @@ import { deadKeysNear } from './keys.mjs';
 import { MAX_ACTION_MS, MAX_ACTION_MS_SDK, MAX_TAP_AFTER_PX } from './brains/meta.mjs';
 import { sumUsage } from './brains/prices.mjs';
 import { InputTable, compareGrids, describeChange, grayGrid, isEffect, screenHash } from './screen.mjs';
+import { canHear, cannotHear, hearingNote } from './listeners.mjs';
 
 export const DEFAULT_VIEWPORT = { width: 640, height: 360 };
 // v3 (23 Nov): a ghost plays for a length of game time, not a number of moves. 40 moves were a median of 24 s of game
@@ -28,6 +29,12 @@ const LADDER = ['click', 'Enter', 'Space', 'KeyZ', 'KeyX'];
 // Decogear three ghosts in four spent 67% of their game time on a name screen they could not confirm (23 Nov).
 const STUCK_MS = 12000;
 const UNSTICK = ['Escape', 'Enter', 'click', 'Space', 'KeyZ', 'KeyX', 'Backspace'];
+// Which inputs the game can hear (src/listeners.mjs) is read before the autopilot, after it, and every this many moves:
+// some games add their handlers when play starts.
+const HEAR_CHECK_EVERY = 10;
+// Reading the handlers waits for the page: an engine starting up kept it busy for 7-16 s (Prerolled, Decogear). Engines
+// listen to both the keyboard and the mouse anyway, so a reading that takes longer than this is given up (no claim).
+const HEAR_CHECK_MS = 2000;
 // Watchdog: some engine games got slower and slower with the frozen clock (Decogear, 23 Nov: from under 1 s to 59 s of
 // wall time per second of game after a minute, with four ghosts). When a second of game costs more than SLOW_RATIO
 // seconds of wall time, the ghost plays on in real time (the game runs on its own while the model thinks). Light games
@@ -514,6 +521,27 @@ export async function runGhost({
     let idleChange = 0;
     const history = []; // one finished line per move: what the ghost did and what happened (append-only)
 
+    // Games without the SDK: can the game hear the keyboard and the mouse at all? An input it cannot hear never counts
+    // as having made the screen answer (the screen may move on its own), and once the ghost has used one, it is told (as
+    // a person sees at once that nothing of theirs moved): its first tries stay its own, for the report.
+    let hears = null;
+    const hearsLog = [];
+    const checkHearing = async (step) => {
+      const h = await Promise.race([canHear(page).catch(() => null), sleep(HEAR_CHECK_MS).then(() => null)]);
+      if (!h) return;
+      if (!hears || h.keys !== hears.keys || h.mouse !== hears.mouse) hearsLog.push({ atMs: gameMs, step, ...h });
+      hears = h;
+      trace.hears = h;
+    };
+    if (!trace.sdk) {
+      trace.hearsLog = hearsLog;
+      await checkHearing(0);
+    }
+    const deaf = (input) => cannotHear(hears, input);
+    const addInputs = (list, effect) => {
+      for (const k of new Set(list)) inputs.add([k], Boolean(effect) && !deaf(k));
+    };
+
     if (!trace.sdk) {
       // Start-up autopilot: no model involved, so loading screens and "press any key" cost nothing.
       const tried = [];
@@ -547,6 +575,7 @@ export async function runGhost({
       let answered = 0;
       for (const input of LADDER) {
         if (waitedMs >= AUTOPILOT_MAX_MS || answered >= 2 || signal?.aborted || performance.now() > apDeadline) break;
+        if (deaf(input)) continue;
         const g0 = grid(lastBuf);
         if (input === 'click') {
           await page.mouse.move(Math.round(viewport.width / 2), Math.round(viewport.height / 2));
@@ -575,6 +604,7 @@ export async function runGhost({
       const said = tried.map((t) => `${t.input === 'click' ? 'a click in the middle' : t.input} → ${t.effect ? t.change : 'no answer'}`).join('; ');
       history.push(`0. Before your first move (automatic, to get past loading and start screens): waited ${(first.ms / 1000).toFixed(1)} s for the game to load, then tried ${said}.`);
       await onAutopilot(trace.autopilot);
+      await checkHearing(0);
     }
 
     const spots = new DeathSpots();
@@ -596,12 +626,14 @@ export async function runGhost({
         trace.outcome = 'stopped';
         break;
       }
+      if (!trace.sdk && step > 1 && step % HEAR_CHECK_EVERY === 1) await checkHearing(step);
       // Stuck: nothing new on screen for STUCK_MS of game time → try the usual ways out, without the model.
       if (!trace.sdk && gameMs - lastNewScreenMs >= STUCK_MS && gameMs - lastUnstickMs >= STUCK_MS) {
         lastUnstickMs = gameMs;
         const tried = [];
         for (const input of UNSTICK) {
           if (signal?.aborted) break;
+          if (deaf(input)) continue;
           const g0 = grid(lastBuf);
           if (input === 'click') {
             await page.mouse.move(Math.round(viewport.width / 2), Math.round(viewport.height / 2));
@@ -618,7 +650,7 @@ export async function runGhost({
           const g1 = grid(lastBuf);
           const c = g0 && g1 ? compareGrids(g0, g1) : null;
           const fresh = seeScreen(g1);
-          inputs.add([input], isEffect(c, idleChange));
+          addInputs([input], isEffect(c, idleChange));
           tried.push(`${input === 'click' ? 'a click in the middle' : input} → ${fresh ? 'a new screen' : isEffect(c, idleChange) ? describeChange(c, idleChange) : 'no answer'}`);
           if (fresh) break;
         }
@@ -636,6 +668,7 @@ export async function runGhost({
         ? turnNotes({ spots, step, recent, speed: walkSpeed(speedSamples), jumps, deadKeys: keysCenter ? deadKeysNear(trace, keysCenter) : [] })
         : turnNotes({ step, recent }).concat(
             recentDeathSteps.filter((s) => step - s <= 8).length >= 3 ? ['You have died 3 or more times in your last 8 moves. Try something different.'] : [],
+            [...inputs.rows.keys()].some(deaf) ? [hearingNote(hears)] : [],
             inputs.note() ?? [],
             gameMs - lastNewScreenMs >= STUCK_MS / 2 ? [`You have seen nothing new on screen for ${Math.round((gameMs - lastNewScreenMs) / 1000)} s.`] : [],
           );
@@ -733,7 +766,7 @@ export async function runGhost({
         const g0 = grid(shot);
         let prev = grid(lastBuf);
         const c0 = g0 && prev ? compareGrids(g0, prev) : null;
-        if (usedOf(move).length) inputs.add(usedOf(move), isEffect(c0, idleChange));
+        if (usedOf(move).length) addInputs(usedOf(move), isEffect(c0, idleChange));
         mainCounted = true;
         thenSkipped = Boolean(c0 && c0.fraction > 0.5 && !c0.scroll);
         for (const a of thenSkipped ? [] : move.then) {
@@ -755,7 +788,7 @@ export async function runGhost({
           for (const k of a.hold) await page.keyboard.up(k);
           const cur = grid(lastBuf);
           const c = prev && cur ? compareGrids(prev, cur) : null;
-          if (usedOf(a).length) inputs.add(usedOf(a), isEffect(c, idleChange));
+          if (usedOf(a).length) addInputs(usedOf(a), isEffect(c, idleChange));
           thenDone += 1;
           prev = cur;
           if (c && c.fraction > 0.5 && !c.scroll) {
@@ -776,16 +809,20 @@ export async function runGhost({
 
       // What happened, told to the ghost on its next turn (and kept in the trace).
       let change = null;
+      let allDeaf = false; // every input of the move is one the game cannot hear: whatever changed, changed on its own
       if (!trace.sdk) {
         const g0 = grid(shot);
         const g1 = grid(lastBuf);
         change = g0 && g1 ? compareGrids(g0, g1) : null;
         seeScreen(g1);
         const used = [...move.hold, ...move.tap, ...(move.click.length ? ['click'] : []), ...(move.drag.length ? ['drag'] : [])];
-        if (used.length && !mainCounted) inputs.add(used, isEffect(change, idleChange));
+        if (used.length && !mainCounted) addInputs(used, isEffect(change, idleChange));
+        const allUsed = [...used, ...move.then.slice(0, thenDone).flatMap(usedOf)];
+        allDeaf = allUsed.length > 0 && allUsed.every(deaf);
       }
-      const screenChanged = trace.sdk ? null : isEffect(change, idleChange);
-      const screenNote = trace.sdk || !change ? null : [describeChange(change, idleChange), thenSkipped ? 'your next actions were skipped because the screen changed completely' : null].filter(Boolean).join(', ');
+      const screenChanged = trace.sdk ? null : allDeaf ? false : isEffect(change, idleChange);
+      const changeSaid = change && allDeaf && isEffect(change, idleChange) ? `${describeChange(change, idleChange)}, on its own: this game cannot hear ${hears?.mouse ? 'keys' : 'the mouse'}` : describeChange(change, idleChange);
+      const screenNote = trace.sdk || !change ? null : [changeSaid, thenSkipped ? 'your next actions were skipped because the screen changed completely' : null].filter(Boolean).join(', ');
       const died = events.some((e) => e.type === 'death');
       const observed = trace.sdk
         ? jumps.observe([before, ...trace.frames.slice(frameFrom).map((f) => f.state)], { step, died, tapX: move.tap.length ? tapAt?.x : null })
