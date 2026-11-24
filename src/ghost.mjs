@@ -62,6 +62,11 @@ const FROZEN_AFTER_SKIP = 4;
 const PANIC_TICK_MS = 3000;
 const PANIC_RATIO = 15;
 const MOVE_GRACE_MS = 30_000;
+// A slow slice can also be a stall: an engine loading or compiling something once. On Prerolled (24 Nov) a slice of
+// 250 ms of game took 11 s at start-up and the game ran normally after it, but three ghosts in four were sent to real
+// time for the whole game. So a slow slice is followed by a single frame of game: only if that frame is slow too (at
+// PANIC_RATIO or worse) has the game become slow, and the ghost goes on in real time.
+const PROBE_FRAME_MS = 17;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
 const SLOW_FROM_STEP = 3;
 // Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
@@ -349,9 +354,18 @@ export async function runGhost({
       await capture();
     }
     const wall = performance.now() - w0;
-    pace.push({ game: ms, wall });
     if (bulletTime && wall > PANIC_TICK_MS && wall / ms > PANIC_RATIO) {
-      notices.push({ type: 'slow_game', ratio: Math.round(wall / ms), panic: true, handled: `one moment of the game took ${Math.round(wall / 1000)} s with its clock frozen, so this ghost played on in real time` });
+      const p0 = performance.now();
+      await page.clock.runFor(PROBE_FRAME_MS);
+      const probe = performance.now() - p0;
+      gameMs += PROBE_FRAME_MS;
+      sinceCapture += PROBE_FRAME_MS;
+      if (probe / PROBE_FRAME_MS <= PANIC_RATIO) {
+        // A stall: the clock stays frozen, and the slice is kept out of the pace so the watchdog does not count it.
+        (trace.stalls ??= []).push({ atMs: gameMs, wallMs: Math.round(wall), frameMs: Math.round(probe) });
+        return;
+      }
+      notices.push({ type: 'slow_game', ratio: Math.round(probe / PROBE_FRAME_MS), panic: true, handled: `one moment of the game took ${Math.round(wall / 1000)} s with its clock frozen, and the game stayed that slow, so this ghost played on in real time` });
       trace.realTimeFrom = gameMs;
       frameStepMs = 0;
       await page.clock.resume();
@@ -360,6 +374,7 @@ export async function runGhost({
       pace.length = 0;
       return;
     }
+    pace.push({ game: ms, wall });
     while (pace.length > 1 && pace.reduce((a, p) => a + p.game, 0) - pace[0].game >= SLOW_WINDOW_MS) pace.shift();
   };
   const slowRatio = () => {
