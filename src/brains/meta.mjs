@@ -171,6 +171,10 @@ const rules = (sdk) => [
   // Escape from Death Hole (js13k): Enter started the game after a 1-3 s transition; ghosts pressed it again every 0.5 s.
   // Also game-over screens: on three real jam games the ghosts reported "restart does nothing" (22 Nov).
   'On a title, menu or game-over screen, after pressing a key or clicking, give the game a second (1000-1500 ms) to change screens before trying something else.',
+  // Decogear (itch.io, 23 Nov): an arcade name entry ("AAA, confirm with Z") held 3 of 4 ghosts for most of their game:
+  // they pressed Z, saw only the cursor move, then pressed arrows, which changed letters. The one that got through
+  // pressed Z three times in a row.
+  'On a name-entry screen (letters such as AAA to choose), the confirm key usually accepts one letter and moves to the next: press it once per letter, with nothing in between, until the screen changes.',
   'After each action you are told what happened: how far you moved, if you died or reached something, where the screen changed, and whether the view scrolled (which means you moved, even if your character stays in the middle). You also get a table of which inputs have made the screen answer. Trust it over your impression.',
   sdk
     ? 'Keep actions short (200-800 ms) near danger. When the way ahead is clear, longer actions (up to 1500 ms) are fine.'
