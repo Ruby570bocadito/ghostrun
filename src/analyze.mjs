@@ -13,6 +13,26 @@ const mean = (a) => a.reduce((s, v) => s + v, 0) / Math.max(1, a.length);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const SEVERITY_RANK = { high: 0, medium: 1, low: 2 };
 const TYPE_RANK = { blocker: 0, missed: 1, hard_to_see: 1.5, stuck: 2, confusion: 3, friction: 4 };
+// Without the SDK there are no levels or objectives to tell whether a ghost got past a spot, and a death is placed where
+// the ghost saw its character on screen: in a game that fits on one screen, or whose camera follows the character,
+// every death lands on the same spot. So every spot of repeated deaths was a "blocker": on Big Champ (24 Nov) 35 deaths
+// became "the Game Over screen traps players with no restart", though each ghost had started again 10-11 times, and the
+// same happened on Dead Again, Moon Buggy and Escape from Death Hole. A ghost without the SDK got past a spot if, after it
+// first died there, the game showed it MIN_NEW_SCREENS screens it had not seen before while it played (src/ghost.mjs
+// counts them). On those four games the ghosts saw 3-59 after their first death there; most saw 20 or more.
+const MIN_NEW_SCREENS = 10;
+
+/** New screens a ghost without the SDK saw while playing after `step` (null when its trace does not count screens). */
+export function newScreensAfter(t, step) {
+  if (!t.steps.some((s) => Number.isFinite(s.screens))) return null;
+  let n = 0;
+  for (let k = 1; k < t.steps.length; k++) {
+    const s = t.steps[k];
+    const prev = t.steps[k - 1].screens;
+    if (s.step > step && s.saw === 'playing' && Number.isFinite(s.screens) && Number.isFinite(prev)) n += Math.max(0, s.screens - prev);
+  }
+  return n;
+}
 
 function frameAt(frames, pageT) {
   // Last frame recorded at or before pageT (frames are in time order).
@@ -237,14 +257,25 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
     const reachedTraces = traces.filter((t) => t.outcome !== 'error' && t.frames.some((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f))));
     const reached = reachedTraces.map((t) => t.persona);
     // "Got past" = after its last death here (or after first reaching the spot), the ghost made progress:
-    // reached an objective or finished, or (side-scrollers) was seen beyond the far edge of the spot.
+    // reached an objective or finished, or (side-scrollers) was seen beyond the far edge of the spot. Without the SDK,
+    // also: after its first death here the game went on showing it new screens (MIN_NEW_SCREENS).
+    const afterDeaths = {};
     const passed = reachedTraces
       .filter((t) => {
-        const lastDeath = Math.max(-Infinity, ...g.filter((d) => d.persona === t.persona).map((d) => d.t));
+        const mine = g.filter((d) => d.persona === t.persona);
+        const lastDeath = Math.max(-Infinity, ...mine.map((d) => d.t));
         const from = Number.isFinite(lastDeath) ? lastDeath : (t.frames.find((f) => f.state && Number.isFinite(f.state.x) && inside(posOf(f)))?.pageT ?? 0);
         const progressed = t.events.some((e) => (e.type === 'milestone' || e.type === 'win') && e.t > from);
         const beyond = sideScroller && t.frames.some((f) => f.pageT > from && f.state && f.state.x > region.x1 + 40);
-        return t.outcome === 'won' || progressed || beyond;
+        let keptGoing = false;
+        if (!t.sdk && mine.length) {
+          const fresh = newScreensAfter(t, Math.min(...mine.map((d) => d.step)));
+          if (fresh != null) {
+            afterDeaths[t.persona] = fresh;
+            keptGoing = fresh >= MIN_NEW_SCREENS;
+          }
+        }
+        return t.outcome === 'won' || progressed || beyond || keptGoing;
       })
       .map((t) => t.persona);
     // Blocker = repeated failure with no success: at least two ghosts died here three or more times,
@@ -261,6 +292,7 @@ export function analyze(rawTraces, { deathRadius = 70, stuckRadius = 90, objecti
       share: personas.length / ghostsTotal,
       reached,
       passed,
+      ...(Object.keys(afterDeaths).length ? { newScreensAfterDeath: afterDeaths } : {}),
       evidence: personas.map((p) => {
         const d = g.find((x) => x.persona === p);
         return { persona: p, step: d.step, clip: d.clip, thought: d.thought };

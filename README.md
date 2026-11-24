@@ -21,7 +21,7 @@ It is not a small group: the GMTK Game Jam 2025 alone received [more than 9,500 
 1. **You paste a link.** Any web game that runs in a browser. No install, no engine plugin. A one-line SDK is optional and gives exact positions.
 2. **Four AI ghosts play it at once**, each with a personality: the Newbie, the Speedrunner, the Reader, the Impatient (and the Completionist). They read the screen, decide, and say what they think. **The game clock freezes while each ghost thinks**, so they can play real-time games too.
 3. **You get a report** in about a minute, for about $0.02: a map of the level rebuilt from the ghosts' screens, and each problem as a finding with its replay, the ghosts' own words and a suggested fix.
-   - **Blocker**: a spot nobody got past.
+   - **Blocker**: a spot nobody got past (in a game without the SDK: after dying there, nobody saw anything new).
    - **Missed objective**: something nobody found.
    - **Stuck**: where ghosts ended up circling.
    - **Confusing**: where they said they did not understand.

@@ -173,6 +173,35 @@ test('without the SDK, positions come from the ghosts and ghost-reported deaths 
   assert.equal(f.ghosts.length, 2);
 });
 
+// Big Champ (24 Nov): without the SDK every spot of repeated deaths was a blocker, "the Game Over screen traps players",
+// though each ghost started again 10-11 times and kept seeing new screens. Now that counts as getting past.
+test('without the SDK, ghosts that play on and see new screens after dying have got past the spot', () => {
+  const ghostOnly = (p, newPerMove) => {
+    const frames = [];
+    const steps = [];
+    const events = [];
+    let screens = 3;
+    for (let k = 0; k < 8; k++) {
+      const from = frames.length;
+      for (let j = 0; j < 4; j++) frames.push({ i: frames.length, t: frames.length * 100, pageT: frames.length * 100, file: `f${frames.length}.jpg`, state: null });
+      screens += k === 0 ? 0 : newPerMove;
+      const died = k % 2 === 0; // dies, starts again, dies...
+      steps.push({ step: k + 1, saw: died ? 'died' : 'playing', player: { x: 300, y: 200 }, thought: 'again', frames: [from, frames.length - 1], screens, usage: { input: 0, output: 0 }, latencyMs: 0 });
+      if (died) events.push({ type: 'death', source: 'ghost', x: 305, y: 205, t: frames.at(-1).pageT, step: k + 1 });
+    }
+    return { persona: p, outcome: 'time_up', coords: 'pixels', viewport: { width: 640, height: 360 }, frames, events, steps, gameMs: 3200, model: 'test' };
+  };
+  // Playing on: 5 new screens per move after the first death (20 while playing, in 4 moves).
+  const on = analyze([ghostOnly('a', 5), ghostOnly('b', 5)]);
+  const f = on.findings.find((x) => x.type === 'blocker' || x.type === 'friction');
+  assert.equal(f.type, 'friction');
+  assert.deepEqual(f.passed.sort(), ['a', 'b']);
+  assert.deepEqual(f.newScreensAfterDeath, { a: 20, b: 20 });
+  // The same deaths with almost nothing new afterwards (4 while playing): still a blocker.
+  const stuck = analyze([ghostOnly('a', 1), ghostOnly('b', 1)]);
+  assert.equal(stuck.findings.find((x) => x.type === 'blocker' || x.type === 'friction').type, 'blocker');
+});
+
 test('sanitizeMove keeps clicks inside the screen and defaults what the ghost saw', () => {
   const m = sanitizeMove({ click: [{ x: 700, y: -3 }, { x: 10, y: 10 }, { x: 20, y: 20 }], saw: 'nonsense' }, { width: 640, height: 360 });
   assert.deepEqual(m.click, [{ x: 639, y: 0 }, { x: 10, y: 10 }]);

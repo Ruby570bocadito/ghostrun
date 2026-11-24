@@ -100,10 +100,18 @@ function factsFor(f, report, tracesByPersona = {}) {
   const lines = [];
   if (f.type === 'blocker' || f.type === 'friction') {
     lines.push(`${f.type.toUpperCase()}: ${f.count} deaths around (${f.center.x}, ${f.center.y}) in a level of ${report.worldW}x${report.worldH}. ${who} died here.`);
+    // Without the SDK, "got past" means the game went on showing new screens after the ghost died here (analyze.mjs):
+    // say that, so a card cannot claim the ghosts were trapped when they played on (Big Champ, 24 Nov).
+    const fresh = f.newScreensAfterDeath ? Object.values(f.newScreensAfterDeath) : [];
+    const freshRange = fresh.length ? (Math.min(...fresh) === Math.max(...fresh) ? `${fresh[0]}` : `${Math.min(...fresh)}-${Math.max(...fresh)}`) : null;
     lines.push(
       f.type === 'blocker'
-        ? `None of the ${f.reached.length} ghosts that reached this spot ever got past it.`
-        : `${f.passed.length} of ${f.reached.length} ghosts that reached this spot got past it eventually${fairChallenge(f) ? ': most did, so treat it as a fair challenge and do not suggest making it easier' : ''}.`,
+        ? freshRange
+          ? `None of the ${f.reached.length} ghosts that died here saw much new afterwards (${freshRange} new screens while playing), so the game did not go on for them past this point.`
+          : `None of the ${f.reached.length} ghosts that reached this spot ever got past it.`
+        : freshRange
+          ? `${f.passed.length} of ${f.reached.length} ghosts played on after dying here: the game went on showing them new screens (${freshRange} new screens while playing, after their first death here), so dying here did not stop them${fairChallenge(f) ? '. Treat it as part of the game (dying and starting again), not as something that traps players, and do not suggest making it easier' : ''}.`
+          : `${f.passed.length} of ${f.reached.length} ghosts that reached this spot got past it eventually${fairChallenge(f) ? ': most did, so treat it as a fair challenge and do not suggest making it easier' : ''}.`,
     );
     // Deaths at the bottom edge of a side-scroller are falls. Ghosts sometimes thought they stood in a pit they
     // could climb out of, and a card blamed "pit walls taller than the jump" for a gap that was too wide (21 Nov).
