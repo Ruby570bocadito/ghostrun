@@ -22,6 +22,9 @@ import { RateLimiter, checkTarget, clientIp, createRequestGuard } from './guard.
 if (existsSync('.env')) process.loadEnvFile('.env');
 
 const PORT = Number(process.env.PORT) || 5180;
+// For working on the interface: GHOST_BRAIN=scripted plays with the scripted ghost (src/brains/scripted.mjs) and skips the
+// analyst, so a run costs nothing and needs no key. Off unless set.
+const SCRIPTED = process.env.GHOST_BRAIN === 'scripted';
 const GAMES_PORT = Number(process.env.GAMES_PORT) || 5174;
 const BUDGET_USD = Number(process.env.GHOST_BUDGET_USD) || 35; // hard stop below Rafa's $40 cap
 const PUBLIC = process.env.GHOSTRUN_PUBLIC === '1';
@@ -228,6 +231,7 @@ async function play(run) {
       simulateOutage: opts.simulateOutage,
       compareTo: opts.compareTo,
       guard: opts.guard,
+      ...(SCRIPTED ? { brain: 'scripted' } : {}),
       outDir,
       signal: run.controller.signal,
       // The live view shows the link as the visitor wrote it.
@@ -241,7 +245,7 @@ async function play(run) {
     if (failed.length === report.ghosts.length) {
       const err = failed[0].error;
       report.failure = { kind: err.kind, message: err.message };
-    } else if (report.hotspots.length) {
+    } else if (report.hotspots.length && !SCRIPTED) {
       try {
         const t0 = Date.now();
         const { cards, usage } = await explainHotspots(report, { runDir: outDir, traces });
@@ -412,7 +416,7 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       const opts = await runOptions(body, req, ip);
       if (opts.error) return send(res, opts.status, { error: opts.error, message: opts.message });
-      if (!process.env.MODEL_API_KEY) return send(res, 503, { error: 'no_key', message: 'The server has no MODEL_API_KEY.' });
+      if (!process.env.MODEL_API_KEY && !SCRIPTED) return send(res, 503, { error: 'no_key', message: 'The server has no MODEL_API_KEY.' });
       const spend = await readSpend();
       if (spend.totalUsd >= BUDGET_USD) return send(res, 402, { error: 'budget', message: `Spending cap of $${BUDGET_USD} reached.` });
       if (queue.length >= QUEUE_MAX) return send(res, 409, { error: 'queue_full', message: 'Several playtests are already waiting for their turn. Try again in a few minutes.', ...(PUBLIC ? {} : { runId: activeRun?.id }) });

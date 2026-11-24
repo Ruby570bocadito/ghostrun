@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Ghost, GhostSprite } from './Ghost.jsx';
 import { HeroPreview } from './HeroPreview.jsx';
 import { HomeBands } from './HomeBands.jsx';
+import { Reveal, RiseWords } from './fx.jsx';
 
 // The test games are served by the app under /play/; turn their paths into full links at this address.
 const here = (path) => new URL(path, window.location.origin).href;
@@ -83,9 +84,11 @@ export function Summon({ config, onStarted }) {
     <section className="summon">
       <div className="hero">
         <div className="hero-copy">
-          <h1>Who gets stuck in your game?</h1>
-          <p className="lede">Paste your web game's link. AI ghosts with different personalities play it, think out loud, and show you where players will get stuck, before the deadline.</p>
-          <form className="hero-form" onSubmit={submit} noValidate>
+          <RiseWords as="h1" text="Who gets stuck in your game?" />
+          <Reveal as="p" className="lede" delay={0.35} y={10}>
+            Paste your web game's link. AI ghosts with different personalities play it, think out loud, and show you where players will get stuck, before the deadline.
+          </Reveal>
+          <Reveal as="form" className="hero-form" onSubmit={submit} noValidate delay={0.5} y={10}>
             <label className="sr-only" htmlFor="game-url">
               Your game's link
             </label>
@@ -212,9 +215,11 @@ export function Summon({ config, onStarted }) {
               </div>
             )}
 
-          </form>
+          </Reveal>
         </div>
-        <HeroPreview />
+        <Reveal delay={0.25} y={16}>
+          <HeroPreview />
+        </Reveal>
       </div>
 
       <HomeBands />

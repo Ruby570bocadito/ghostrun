@@ -1,6 +1,55 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { gameName, gameSource } from './game.js';
 import { Ghost, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
+import { EASE, STILL } from './fx.jsx';
+
+/** A ghost's new thought types itself out, quickly (at once for people who ask for less motion). */
+function TypeText({ text }) {
+  const reduce = useReducedMotion();
+  const [n, setN] = useState(text.length);
+  const prev = useRef(text);
+  useEffect(() => {
+    if (text === prev.current) return undefined;
+    prev.current = text;
+    if (reduce || STILL) {
+      setN(text.length);
+      return undefined;
+    }
+    setN(0);
+    const ms = Math.min(700, text.length * 14);
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (t) => {
+      const k = Math.min(1, (t - t0) / ms);
+      setN(Math.round(text.length * k));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [text, reduce]);
+  return (
+    <>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">
+        {text.slice(0, n)}
+        {n < text.length && <span className="caret" />}
+      </span>
+    </>
+  );
+}
+
+/** Game time played of the total, as a ring. */
+function Ring({ value, label }) {
+  const r = 8;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg className="ring" viewBox="0 0 20 20" role="img" aria-label={label}>
+      <circle cx="10" cy="10" r={r} className="ring-bg" />
+      <circle cx="10" cy="10" r={r} className="ring-fg" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, Math.max(0, value)))} />
+    </svg>
+  );
+}
 
 function Elapsed({ from, to }) {
   const [now, setNow] = useState(Date.now());
@@ -33,15 +82,25 @@ function LearnedInputs({ inputs }) {
   if (!rows.length) return <span className="tile-inputs muted">trying the controls…</span>;
   return (
     <span className="tile-inputs" title="What this ghost has learned about the controls: inputs that made the screen answer (✓) and inputs that did nothing (✗)">
-      {rows.map(([k, r]) => {
-        const works = r.changed / r.used >= 0.5;
-        return (
-          <span key={k} className={works ? 'works' : 'dead'} aria-label={`${k}: the screen answered ${r.changed} of ${r.used} times`}>
-            {inputLabel(k)}
-            {works ? '✓' : '✗'}
-          </span>
-        );
-      })}
+      <AnimatePresence initial={false}>
+        {rows.map(([k, r]) => {
+          const works = r.changed / r.used >= 0.5;
+          return (
+            <m.span
+              key={k}
+              className={works ? 'works' : 'dead'}
+              aria-label={`${k}: the screen answered ${r.changed} of ${r.used} times`}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+            >
+              {inputLabel(k)}
+              {works ? '✓' : '✗'}
+            </m.span>
+          );
+        })}
+      </AnimatePresence>
     </span>
   );
 }
@@ -58,6 +117,7 @@ function GhostTile({ runId, g, p, viewport, playSeconds }) {
       <header className="tile-head">
         <GhostSprite persona={p.id} color={p.color} size={34} mood={moodFor(g.status)} />
         <b>{p.name}</b>
+        {playSeconds > 0 && <Ring value={(g.t ?? 0) / (playSeconds * 1000)} label={`${clock(g.t ?? 0)} played of ${clock(playSeconds * 1000)}`} />}
         <span className={`pill pill-${g.status}`}>{OUTCOME_LABEL[g.status] ?? g.status}</span>
       </header>
       <div className="screen">
@@ -68,11 +128,31 @@ function GhostTile({ runId, g, p, viewport, playSeconds }) {
             <GhostSprite persona={p.id} color={p.color} size={30} />
           </span>
         )}
+        <AnimatePresence>
+          {g.deaths > 0 && g.status === 'playing' && (
+            <m.span
+              key={g.deaths}
+              className="tile-death"
+              style={at ? { left: `${(at.x / vw) * 100}%`, top: `${(at.y / vh) * 100}%` } : undefined}
+              initial={{ opacity: 0, scale: 2.2 }}
+              animate={{ opacity: [0, 1, 1, 0], scale: [2.2, 1, 1, 1] }}
+              transition={{ duration: 1.1, times: [0, 0.18, 0.7, 1], ease: EASE }}
+              aria-hidden="true"
+            >
+              ✕
+            </m.span>
+          )}
+        </AnimatePresence>
         {stamp && (
-          <span className={`tile-stamp stamp-${g.status}`}>
+          <m.span
+            className={`tile-stamp stamp-${g.status}`}
+            initial={STILL ? false : { opacity: 0, scale: 1.6, rotate: -2 }}
+            animate={{ opacity: 1, scale: 1, rotate: -8 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 18 }}
+          >
             {stamp}
             {g.status === 'quit' && g.steps ? ` · move ${g.steps}` : ''}
-          </span>
+          </m.span>
         )}
       </div>
       <p className={`thought ${g.debrief ? 'after' : ''}`}>
@@ -81,7 +161,9 @@ function GhostTile({ runId, g, p, viewport, playSeconds }) {
             <span className="after-label">After playing:</span> “{g.debrief.stopped_me}”
           </>
         ) : g.thought ? (
-          `“${g.thought}”`
+          <>
+            “<TypeText text={g.thought} />”
+          </>
         ) : g.status === 'error' ? (
           g.error?.message
         ) : (
@@ -154,7 +236,10 @@ export function Haunting({ run, runId, personas, onHome }) {
     <section className="haunting">
       <div className="run-bar">
         <div>
-          <p className="eyebrow">Live playtest</p>
+          <p className="eyebrow live-eyebrow">
+            {run.status === 'running' && <span className="live-dot" aria-hidden="true" />}
+            Live playtest
+          </p>
           <h2 className="report-title">{run.config ? gameName(run.config.url) : 'Connecting…'}</h2>
           {run.config && <p className="run-url small">{gameSource(run.config.url)}</p>}
         </div>
@@ -183,7 +268,13 @@ export function Haunting({ run, runId, personas, onHome }) {
             {groupLog(run.log).map((l, i) => {
               const p = personas[l.ghost];
               return (
-                <li key={`${l.at}-${i}`} className={`log-${l.kind}`}>
+                <m.li
+                  key={`${l.at}-${l.ghost}-${l.kind}-${l.step ?? ''}`}
+                  className={`log-${l.kind}`}
+                  initial={STILL ? false : { opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                >
                   <span className="log-icon" style={{ color: p?.color }}>
                     {LOG_ICON[l.kind]}
                   </span>
@@ -191,13 +282,22 @@ export function Haunting({ run, runId, personas, onHome }) {
                     <b>{p?.name ?? l.ghost}</b> {l.kind === 'death' ? (l.n > 1 ? `died ×${l.n}` : 'died') : l.kind === 'win' ? 'finished!' : l.kind === 'quit' ? 'quit the game' : l.kind === 'confused' ? 'is confused' : l.kind === 'autopilot' ? 'autopilot:' : ''}
                     {l.text && <em> “{l.text}”</em>}
                   </span>
-                </li>
+                </m.li>
               );
             })}
           </ol>
         </aside>
       </div>
-      {run.status === 'analyzing' && <div className="analyzing-banner">Grouping deaths into hotspots and writing the findings…</div>}
+      {run.status === 'analyzing' && (
+        <m.div className="analyzing-banner" initial={STILL ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE }} role="status">
+          <span className="analyzing-dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          Grouping deaths into hotspots and writing the findings…
+        </m.div>
+      )}
     </section>
   );
 }

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { m } from 'motion/react';
 import { Ghost, GhostIcon, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 import { Heatmap, TYPE_LABEL } from './Heatmap.jsx';
 import { Clip } from './Clip.jsx';
@@ -6,6 +7,7 @@ import { DEMO } from './demo.js';
 import { gameName, gameSource } from './game.js';
 import { buildIssues } from './issues.js';
 import { Compare, useBefore, diffFindings } from './Compare.jsx';
+import { CountUp, EASE, Item, Reveal, STILL, Stagger } from './fx.jsx';
 
 
 function useTraces(runId, personaIds) {
@@ -44,16 +46,69 @@ function Novelty({ points, totalSec, reachedMs, label }) {
   const xy = points.map(([s, n]) => [(s / span) * W, H - 2 - (n / top) * (H - 6)]);
   const line = xy.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const playX = reachedMs != null ? (reachedMs / 1000 / span) * W : null;
+  const clip = `nov-${useId().replace(/:/g, '')}`;
   return (
     <svg className="novelty" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
       <title>{label}</title>
+      <clipPath id={clip}>
+        {STILL ? <rect x="0" y="-2" width={W} height={H + 4} /> : <m.rect x="0" y="-2" height={H + 4} initial={{ width: 0 }} whileInView={{ width: W }} viewport={{ once: true }} transition={{ duration: 1.2, ease: EASE }} />}
+      </clipPath>
       <line x1="0" y1={H - 1} x2={W} y2={H - 1} className="novelty-base" />
-      {xy.length > 1 && <polygon points={`${xy[0][0].toFixed(1)},${H - 1} ${line} ${xy.at(-1)[0].toFixed(1)},${H - 1}`} className="novelty-area" />}
-      {xy.length > 1 && <polyline points={line} className="novelty-line" vectorEffect="non-scaling-stroke" />}
+      <g clipPath={`url(#${clip})`}>
+        {xy.length > 1 && <polygon points={`${xy[0][0].toFixed(1)},${H - 1} ${line} ${xy.at(-1)[0].toFixed(1)},${H - 1}`} className="novelty-area" />}
+        {xy.length > 1 && <polyline points={line} className="novelty-line" vectorEffect="non-scaling-stroke" />}
+      </g>
       {playX != null && <line x1={playX} y1="0" x2={playX} y2={H} className="novelty-play" vectorEffect="non-scaling-stroke" />}
     </svg>
   );
 }
+/** A progress bar that fills up when it comes into view. */
+function Bar({ value, label }) {
+  const pct = `${Math.round((value ?? 0) * 100)}%`;
+  return (
+    <span className="progress wide" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((value ?? 0) * 100)}>
+      {STILL ? <span style={{ width: pct }} /> : <m.span initial={{ width: '0%' }} whileInView={{ width: pct }} viewport={{ once: true }} transition={{ duration: 0.9, ease: EASE }} />}
+    </span>
+  );
+}
+
+/** The report's sections, and the one being read: it stays at the top while scrolling. */
+function ReportNav({ sections }) {
+  const [active, setActive] = useState(sections[0]?.[0]);
+  const ids = sections.map(([id]) => id).join(',');
+  useEffect(() => {
+    const els = ids.split(',').map((id) => document.getElementById(id)).filter(Boolean);
+    if (!els.length || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const seen = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (seen[0]) setActive(seen[0].target.id);
+      },
+      { rootMargin: '-130px 0px -55% 0px' },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [ids]);
+  return (
+    <nav className="report-nav" aria-label="Report sections">
+      {sections.map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          className={active === id ? 'on' : ''}
+          aria-current={active === id ? 'location' : undefined}
+          onClick={() => {
+            setActive(id);
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 // "KeyZ" → "Z", as the game's own instructions name it.
 const keyLabel = (k) => k.replace(/^Key(?=[A-Z]$)/, '').replace(/^Digit(?=\d$)/, '');
 const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
@@ -100,7 +155,28 @@ function Replay({ item, runId, byPersona, personas }) {
   const evidence = item.kind === 'quit' ? [{ persona: item.q.persona, clip: [Math.max(0, item.q.clip[0] - 10), item.q.clip[1]] }] : item.f.evidence;
   const [who, setWho] = useState(evidence[0]?.persona);
   const ev = evidence.find((e) => e.persona === who) ?? evidence[0];
-  const frames = useMemo(() => clipFrames(runId, byPersona[ev?.persona], ev?.clip ?? [0, 0]), [runId, byPersona, ev]);
+  const trace = byPersona[ev?.persona];
+  const frames = useMemo(() => clipFrames(runId, trace, ev?.clip ?? [0, 0]), [runId, trace, ev]);
+  // What the ghost had planned for the move each frame belongs to, and where in the clip it died (from its trace).
+  const { captions, marks } = useMemo(() => {
+    if (!trace || !ev?.clip) return { captions: null, marks: [] };
+    const [from, to] = ev.clip;
+    const caps = [];
+    for (let k = from; k <= to; k++) caps.push(trace.steps.find((st) => st.frames && k >= st.frames[0] && k <= st.frames[1])?.thought ?? null);
+    for (let k = 1; k < caps.length; k++) caps[k] ??= caps[k - 1];
+    const at = [];
+    for (const d of (trace.events ?? []).filter((e) => e.type === 'death' && Number.isFinite(e.t))) {
+      let j = -1;
+      for (let k = from; k <= to; k++) {
+        if (trace.frames[k]?.pageT >= d.t) {
+          j = k - from;
+          break;
+        }
+      }
+      if (j >= 0 && !at.includes(j)) at.push(j);
+    }
+    return { captions: caps.some(Boolean) ? caps : null, marks: at };
+  }, [trace, ev]);
   return (
     <div className="replay">
       <div className="clip-tabs" role="group" aria-label="Whose replay">
@@ -116,7 +192,15 @@ function Replay({ item, runId, byPersona, personas }) {
           </button>
         ))}
       </div>
-      <Clip frames={frames} label={`Replay of ${personas[ev?.persona]?.name}`} />
+      <Clip
+        key={`${ev?.persona}-${ev?.clip?.join('-')}`}
+        frames={frames}
+        label={`Replay of ${personas[ev?.persona]?.name}`}
+        captions={captions}
+        marks={marks}
+        who={personas[ev?.persona]?.name.replace('The ', '')}
+        color={personas[ev?.persona]?.color}
+      />
     </div>
   );
 }
@@ -351,6 +435,14 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           )}
         </div>
       </div>
+      <ReportNav
+        sections={[
+          ['fix', 'Problems'],
+          ...(report.ghosts.some((g) => g.debrief) ? [['exit-interview', 'Exit interview']] : []),
+          ['players', 'Who played'],
+          ['method', 'How it was made'],
+        ]}
+      />
       {showRerun && (
         <form className="rerun-form" onSubmit={rerun}>
           <label htmlFor="rerun-url">Fixed your game? Re-run the same ghosts and see what changed. Change the link if the fixed build lives somewhere else.</label>
@@ -416,21 +508,27 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       </div>
       <div className="summary">
         <div className={`stat ${critical ? 'bad' : 'good'}`}>
-          <b>{critical}</b>
+          <b>
+            <CountUp to={critical} />
+          </b>
           <span>problem{critical === 1 ? '' : 's'} to fix</span>
         </div>
         <div className="stat">
-          <b>{fair.length}</b>
+          <b>
+            <CountUp to={fair.length} />
+          </b>
           <span>fair challenge{fair.length === 1 ? '' : 's'}</span>
         </div>
         <div className="stat">
           <b>
-            {finished}/{report.ghostsTotal}
+            <CountUp to={finished} />/{report.ghostsTotal}
           </b>
           <span>ghosts finished</span>
         </div>
         <div className="stat">
-          <b>{report.quits.length}</b>
+          <b>
+            <CountUp to={report.quits.length} />
+          </b>
           <span>quit</span>
         </div>
       </div>
@@ -462,15 +560,19 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
 
       <div className="report-body">
       <div className="report-main">
-      <h3 className="section-title">What to fix first</h3>
+      <h3 className="section-title" id="fix">
+        What to fix first
+      </h3>
       <div className="findings">
         {issues.length === 0 && <p className="panel">Nothing to fix: no place where ghosts died again and again, got stuck or never found an objective.</p>}
-        {issues.map((i) =>
+        {issues.map((i, k) =>
           i.kind === 'goal' ? (
-            <GoalIssue key="goal" issue={i} report={report} personas={personas} />
+            <Reveal key="goal" y={12} delay={Math.min(k, 4) * 0.06}>
+              <GoalIssue issue={i} report={report} personas={personas} />
+            </Reveal>
           ) : (
+            <Reveal key={i.primary.id} y={12} delay={Math.min(k, 4) * 0.06}>
             <Finding
-              key={i.primary.id}
               f={i.primary}
               also={i.related}
               consequences={i.consequences}
@@ -481,6 +583,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
               onHover={setHovered}
               onSelect={setSelected}
             />
+            </Reveal>
           ),
         )}
         {other.map((f) => (
@@ -564,7 +667,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
             After its last move, each ghost answered a few questions about the whole game, in character. These are the ghosts’ own opinions, not measurements: read them as what a
             first-time player might say.
           </p>
-          <div className="exit-grid">
+          <Stagger as="div" className="exit-grid">
             {report.ghosts
               .filter((g) => g.debrief)
               .map((g) => {
@@ -572,7 +675,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                 const d = g.debrief;
                 const noIdea = /^no idea\b/i.test(d.goal);
                 return (
-                  <article key={g.persona} className="exit-card" style={{ '--c': p.color }}>
+                  <Item as="article" key={g.persona} className="exit-card" style={{ '--c': p.color }}>
                     <header>
                       <GhostSprite persona={g.persona} color={p.color} size={32} mood={moodFor(g.outcome)} />
                       <b>{p.name}</b>
@@ -587,26 +690,28 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                       <li className={d.understood_controls ? 'yes' : 'no'}>{d.understood_controls ? 'Worked out the controls' : 'Never worked out the controls'}</li>
                       <li className={d.keep_playing ? 'yes' : 'no'}>{d.keep_playing ? 'Would keep playing' : 'Would stop playing'}</li>
                     </ul>
-                  </article>
+                  </Item>
                 );
               })}
-          </div>
+          </Stagger>
         </section>
       )}
 
-      <h3 className="section-title">Who played</h3>
+      <h3 className="section-title" id="players">
+        Who played
+      </h3>
       {report.ghosts.some((g) => g.sdk === false && g.novelty?.length) && (
         <p className="small muted roster-legend">
           Each line is how many different screens a ghost saw over its game time: it goes flat when the ghost stops finding anything new. The dashed mark is when it
           started to play.
         </p>
       )}
-      <div className="roster">
+      <Stagger as="div" className="roster">
         {report.ghosts.map((g) => {
           const p = personas[g.persona] ?? { name: g.persona, color: '#9bf6ec' };
           const last = byPersona[g.persona]?.steps.at(-1)?.thought;
           return (
-            <div key={g.persona} className="roster-row" style={{ '--c': p.color }}>
+            <Item as="div" key={g.persona} className="roster-row" style={{ '--c': p.color }}>
               <GhostSprite persona={g.persona} color={p.color} size={40} mood={moodFor(g.outcome)} />
               <div className="roster-name">
                 <b>{p.name}</b>
@@ -640,21 +745,21 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                 </>
               ) : (
                 <>
-                  <span className="progress wide" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((g.progress ?? 0) * 100)}>
-                    <span style={{ width: `${(g.progress ?? 0) * 100}%` }} />
-                  </span>
+                  <Bar value={g.progress} label="Level progress" />
                   <span className="mono small">
                     ✕ {g.deaths} · {g.steps} moves
                   </span>
                 </>
               )}
               <em className="roster-quote">{g.error ? g.error.message : last ? `“${last}”` : ''}</em>
-            </div>
+            </Item>
           );
         })}
-      </div>
+      </Stagger>
 
-      <h3 className="section-title">How this was made</h3>
+      <h3 className="section-title" id="method">
+        How this was made
+      </h3>
       {report.ghosts.every((g) => g.sdk === false) ? (
         <p className="method small muted">
           Each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). This game does not tell Ghostrun what happens in it,

@@ -55,8 +55,23 @@ const describe = (id, r) => {
   const stats = r.failure
     ? '$0'
     : `${plural(issues.length, 'problem')} to fix · ${finished}/${r.ghostsTotal} finished · ${Math.round((r.realMs ?? 0) / 1000)} s · $${(r.cost?.total ?? 0).toFixed(3)}`;
-  return { id, title, shows, stats };
+  // Our test games (with or without a planted flaw) or a real jam game by someone else: the gallery's filters.
+  const kind = !r.failure && (url.includes('nilo') || CREDITS[url.split('/').filter(Boolean).pop()]) ? 'real' : 'test';
+  return { id, title, shows, stats, kind };
 };
+
+// A few frames the gallery card plays when pointed at: the moment of the first problem (its replay), else the run.
+const PREVIEW_FRAMES = 8;
+function previewFrames(id, report, traces) {
+  const { issues } = buildIssues(report);
+  const ev = issues.find((i) => i.kind === 'finding')?.primary.evidence?.[0];
+  const trace = (ev && traces[ev.persona]) || Object.values(traces)[0];
+  if (!trace?.frames?.length) return [];
+  const [from, to] = ev?.clip && traces[ev.persona] ? ev.clip : [Math.floor(trace.frames.length * 0.15), trace.frames.length - 1];
+  const span = Math.max(0, to - from);
+  const picks = [...new Set(Array.from({ length: PREVIEW_FRAMES }, (_, k) => from + Math.round((span * k) / (PREVIEW_FRAMES - 1))))];
+  return picks.map((i) => trace.frames[i]).filter(Boolean).map((f) => `/runs/${id}/${trace.persona}/${f.file}`);
+}
 
 // 2) The runs: report (as the server would answer it), traces and frames.
 const all = [...picked];
@@ -70,13 +85,15 @@ for (const id of all) {
   await mkdir(join(out, 'demo', 'runs'), { recursive: true });
   await writeFile(join(out, 'demo', 'runs', `${id}.json`), JSON.stringify({ id, status: report.failure ? 'failed' : 'done', config: report.config, report }));
   let thumb = null;
+  const traces = {};
   for (const g of report.ghosts ?? []) {
     const dir = join('runs', id, g.persona);
     if (!existsSync(dir)) continue;
     await cp(dir, join(out, 'runs', id, g.persona), { recursive: true });
+    traces[g.persona] = JSON.parse(await readFile(join(dir, 'trace.json'), 'utf8'));
     if (!thumb) {
       // The frame with the most on it (the biggest JPEG) makes a better thumbnail than a mostly dark one.
-      const trace = JSON.parse(await readFile(join(dir, 'trace.json'), 'utf8'));
+      const trace = traces[g.persona];
       let best = null;
       for (const f of trace.frames.filter((_, i) => i % 5 === 0)) {
         const size = (await stat(join(dir, f.file)).catch(() => ({ size: 0 }))).size;
@@ -85,7 +102,7 @@ for (const id of all) {
       if (best) thumb = `/runs/${id}/${g.persona}/${best.f.file}`;
     }
   }
-  if (picked.includes(id)) demoRuns.push({ ...describe(id, report), thumb });
+  if (picked.includes(id)) demoRuns.push({ ...describe(id, report), thumb, preview: report.failure ? [] : previewFrames(id, report, traces) });
   console.log(`exported ${id}`);
 }
 
