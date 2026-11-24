@@ -4,7 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DeathSpots, JumpLog, historyLine, jumpFacts, outcomeOf, turnNotes, walkSpeed } from './feedback.mjs';
 import { deadKeysNear } from './keys.mjs';
-import { MAX_TAP_AFTER_PX } from './brains/meta.mjs';
+import { MAX_ACTION_MS, MAX_ACTION_MS_SDK, MAX_TAP_AFTER_PX } from './brains/meta.mjs';
 import { sumUsage } from './brains/prices.mjs';
 import { InputTable, compareGrids, describeChange, grayGrid, isEffect, screenHash } from './screen.mjs';
 
@@ -27,11 +27,15 @@ const STUCK_MS = 12000;
 const UNSTICK = ['Escape', 'Enter', 'click', 'Space', 'KeyZ', 'KeyX', 'Backspace'];
 // Watchdog: some engine games got slower and slower with the frozen clock (Decogear, 23 Nov: from under 1 s to 59 s of
 // wall time per second of game after a minute, with four ghosts). When a second of game costs more than SLOW_RATIO
-// seconds of wall time, the ghost plays on in real time (the game runs on its own while the model thinks); if it is
-// still that slow, or the ghost has used MAX_GHOST_WALL_MS, it stops and says why instead of holding the queue.
-const SLOW_RATIO = 5;
+// seconds of wall time, the ghost plays on in real time (the game runs on its own while the model thinks). Light games
+// cost 0.2-0.7 s per second of game; Escape from Death Hole cost about 3, so its ghosts played 60-80 s in 5-7 minutes
+// (24 Nov): the ratio is now 3 instead of 5.
+const SLOW_RATIO = 3;
 const SLOW_WINDOW_MS = 3000; // game time over which the ratio is measured
-export const MAX_GHOST_WALL_MS = 7 * 60_000;
+// Real-time cap per ghost, so a run takes a predictable time (under 5 minutes) even on a heavy game. A ghost that has
+// played MIN_PLAY_MS by then has had its go ('time_up'); one that has not is reported as 'too_slow'.
+export const MAX_GHOST_WALL_MS = 4.5 * 60_000;
+const MIN_PLAY_MS = 60_000;
 const median = (xs) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)] : 0);
 const grid = (buf) => {
   try {
@@ -80,7 +84,7 @@ const point = (p, w = 2000, h = 2000) =>
   p && Number.isFinite(p.x) && Number.isFinite(p.y) ? { x: clamp(Math.round(p.x), 0, w), y: clamp(Math.round(p.y), 0, h) } : null;
 
 /** Validates and normalises a move coming from any brain. */
-export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
+export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }, { maxActionMs = MAX_ACTION_MS_SDK } = {}) {
   const hold = [...new Set((m?.hold ?? []).filter((k) => typeof k === 'string'))].slice(0, 2);
   const tap = [...new Set((m?.tap ?? []).filter((k) => typeof k === 'string' && !hold.includes(k)))].slice(0, 2);
   const tapAfter = tap.length ? clamp(Math.round(Number(m?.tap_after_px) || 0), 0, MAX_TAP_AFTER_PX) : 0;
@@ -101,7 +105,7 @@ export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
     click: (Array.isArray(a?.click) ? a.click : []).map((c) => point(c, viewport.width - 1, viewport.height - 1)).filter(Boolean).slice(0, 2),
     hold: [...new Set((a?.hold ?? []).filter((k) => typeof k === 'string'))].slice(0, 2),
     tap: [...new Set((a?.tap ?? []).filter((k) => typeof k === 'string'))].slice(0, 2),
-    duration_ms: clamp(Math.round(Number(a?.duration_ms) || 400), 100, 1500),
+    duration_ms: clamp(Math.round(Number(a?.duration_ms) || 400), 100, maxActionMs),
   }));
   return {
     thought: String(m?.thought ?? '').slice(0, 160),
@@ -113,7 +117,7 @@ export function sanitizeMove(m, viewport = { width: 2000, height: 2000 }) {
     hold,
     tap,
     ...(tapAfter ? { tap_after_px: tapAfter } : {}),
-    duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, waiting ? MAX_WAIT_MS : 1500),
+    duration_ms: clamp(Math.round(Number(m?.duration_ms) || 400), 100, waiting ? Math.max(MAX_WAIT_MS, maxActionMs) : maxActionMs),
     confused: Boolean(m?.confused),
     quit: Boolean(m?.quit),
   };
@@ -574,7 +578,7 @@ export async function runGhost({
           throw Object.assign(new Error(`The model gave ${MAX_SAFE_MOVES_IN_A_ROW} unusable answers in a row.`), { kind: 'bad_output' });
         }
       } else safeInARow = 0;
-      const move = sanitizeMove(decision.move, viewport);
+      const move = sanitizeMove(decision.move, viewport, { maxActionMs: trace.sdk ? MAX_ACTION_MS_SDK : MAX_ACTION_MS });
       const t0 = gameMs;
       const frameFrom = trace.frames.length;
 
@@ -744,7 +748,6 @@ export async function runGhost({
         bulletTime = false;
         pace.length = 0;
       }
-      const tooSlow = !bulletTime && trace.realTimeFrom != null && performance.now() - startedWall > MAX_GHOST_WALL_MS;
       const record = {
         step,
         t0,
@@ -778,9 +781,9 @@ export async function runGhost({
         trace.outcome = 'quit';
         break;
       }
-      if (tooSlow || performance.now() - startedWall > MAX_GHOST_WALL_MS) {
-        trace.outcome = 'too_slow';
-        trace.stopReason = { kind: 'wall_time', minutes: Number(((performance.now() - startedWall) / 60000).toFixed(1)) };
+      if (performance.now() - startedWall > MAX_GHOST_WALL_MS) {
+        trace.outcome = gameMs >= MIN_PLAY_MS ? 'time_up' : 'too_slow';
+        trace.stopReason = { kind: 'wall_time', minutes: Number(((performance.now() - startedWall) / 60000).toFixed(1)), gameSeconds: Math.round(gameMs / 1000) };
         break;
       }
       if (stopOnWin && after?.won) {

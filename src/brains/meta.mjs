@@ -14,9 +14,14 @@ export { PRICES, costOf } from './prices.mjs';
 export const SAW = ['playing', 'menu', 'died', 'level_complete', 'other'];
 // v3 (F3, 22 Nov): "run N px, then tap" (tap_after_px) for games with the SDK, and thoughts in a player's words.
 // v4 (after F5): with tap_after_px, duration_ms counts from the tap.
-export const CACHE_KEY = 'ghostrun-ghost-v5';
+export const CACHE_KEY = 'ghostrun-ghost-v6';
 // Longest run-up before a delayed tap, in px.
 export const MAX_TAP_AFTER_PX = 600;
+// Longest action, in game time. v3 speed (24 Nov): on 7 real jam games 27 of 28 ghosts used up their 120 model calls
+// before 150 s of play, because each call moved the game on only 0.4-0.8 s (the rule asked for 200-800 ms actions).
+// Games without the SDK may now use actions up to 3 s and are asked to chain; games with the SDK keep 1.5 s.
+export const MAX_ACTION_MS = 3000;
+export const MAX_ACTION_MS_SDK = 1500;
 
 // Per-model timeouts: Spark took over 30 s on 11% of its moves in the A1 comparison.
 const TIMEOUT_MS = { 'muse-ember-1.0': 20_000, 'muse-spark-1.3': 60_000, 'muse-wonder-1.0': 90_000 };
@@ -36,14 +41,14 @@ function followUps(w, h, sdk, point) {
   return {
     then: {
       type: 'array',
-      description: `Up to 2 more actions to do right after this one without looking again, only when you are sure what comes next (for example: walk to the ledge, then jump; or click a card, then another). Done in order; they stop early if the screen changes completely. Leave empty to see the result first.`,
+      description: `Up to 2 more actions to do right after this one without looking again. Add them whenever you can tell what comes next (walk on, then jump; click a card, then another; keep exploring the same way): every look costs time. Done in order; they stop early if the screen changes completely. Leave empty only when you must see the result first (a jump near danger, a screen you do not know yet).`,
       items: {
         type: 'object',
         properties: {
           click: { type: 'array', description: `Clicks, in pixels of the ${w}x${h} screenshot.`, items: point },
           hold: { type: 'array', items: { type: 'string', enum: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'] } },
           tap: { type: 'array', items: { type: 'string', enum: ['Space', 'ArrowUp', 'Enter', 'KeyE', 'KeyX', 'KeyZ', 'KeyR'] } },
-          duration_ms: { type: 'integer', description: '100 to 1500 ms.' },
+          duration_ms: { type: 'integer', description: `100 to ${MAX_ACTION_MS} ms.` },
         },
         required: ['click', 'hold', 'tap', 'duration_ms'],
         additionalProperties: false,
@@ -115,7 +120,7 @@ export function moveSchema(w, h, { sdk = false } = {}) {
       },
       ...tapAfter,
       ...followUps(w, h, sdk, point),
-      duration_ms: { type: 'integer', description: 'How long the action lasts in game time, 100 to 1500 ms; up to 5000 ms when you only wait (no keys, no clicks), for example while a loading screen, an intro or an animation plays.' },
+      duration_ms: { type: 'integer', description: `How long the action lasts in game time, 100 to ${sdk ? MAX_ACTION_MS_SDK : MAX_ACTION_MS} ms; up to 5000 ms when you only wait (no keys, no clicks), for example while a loading screen, an intro or an animation plays.` },
       confused: { type: 'boolean', description: 'True if you do not understand what to do or why something happened.' },
       quit: { type: 'boolean', description: 'True only if, in character, you would stop playing this game right now and never come back.' },
     },
@@ -167,7 +172,9 @@ const rules = (sdk) => [
   // Also game-over screens: on three real jam games the ghosts reported "restart does nothing" (22 Nov).
   'On a title, menu or game-over screen, after pressing a key or clicking, give the game a second (1000-1500 ms) to change screens before trying something else.',
   'After each action you are told what happened: how far you moved, if you died or reached something, where the screen changed, and whether the view scrolled (which means you moved, even if your character stays in the middle). You also get a table of which inputs have made the screen answer. Trust it over your impression.',
-  'Keep actions short (200-800 ms) near danger. When the way ahead is clear, longer actions (up to 1500 ms) are fine.',
+  sdk
+    ? 'Keep actions short (200-800 ms) near danger. When the way ahead is clear, longer actions (up to 1500 ms) are fine.'
+    : `Every look at the screen takes time, so make each one count. Keep actions short (200-800 ms) only near danger. Otherwise use long actions (1500-${MAX_ACTION_MS} ms): walking, exploring, holding a direction, waiting for something to happen. When you can tell what comes next, add 1-2 follow-up actions instead of looking again.`,
   'Your thought must describe something new you notice this turn. Do not repeat earlier thoughts.',
   'Answer only with the JSON object.',
 ].join('\n');

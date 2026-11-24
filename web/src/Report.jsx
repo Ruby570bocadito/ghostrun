@@ -586,7 +586,9 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                       ? `Stopped after dying ${g.stopReason.count} times at the same spot: more moves would not change the finding.`
                       : g.stopReason?.kind === 'idle'
                         ? `Stopped after ${g.stopReason.moves} moves without reaching anywhere new.`
-                        : undefined
+                        : g.stopReason?.kind === 'wall_time'
+                          ? `Stopped after ${g.stopReason.minutes} minutes of real time, having played ${g.stopReason.gameSeconds ?? '?'} s of the game: this game is slow to run in the test browser.`
+                          : undefined
                   }
                 >
                   {OUTCOME_LABEL[g.outcome] ?? g.outcome}

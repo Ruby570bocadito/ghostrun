@@ -113,7 +113,7 @@ test('"run N px, then tap" is a move field only with taps, and only games with t
   assert.match(systemPrompt(persona, null, 640, 360, { sdk: true }), /keeps your keys held until you land or die/);
   assert.doesNotMatch(systemPrompt(persona, null, 640, 360), /tap_after_px/);
   assert.match(systemPrompt(persona, null, 640, 360), /nothing waits until you reach an edge/);
-  assert.equal(CACHE_KEY, 'ghostrun-ghost-v5');
+  assert.equal(CACHE_KEY, 'ghostrun-ghost-v6');
   assert.match(systemPrompt(persona, null, 640, 360, { sdk: true }), /duration_ms counts from that tap/);
 });
 

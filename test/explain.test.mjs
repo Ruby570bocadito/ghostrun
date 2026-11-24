@@ -51,6 +51,28 @@ async function explain(f, fixes) {
 
 const factsOf = (call) => call.messages[1].content[0].text;
 
+test('a card the analyst does not answer in time is replaced by the plain finding', async () => {
+  const runDir = await mkdtemp(join(tmpdir(), 'ghostrun-explain-'));
+  try {
+    await mkdir(join(runDir, 'newbie'));
+    await writeFile(join(runDir, 'newbie', 'f0.jpg'), Buffer.from('fake-jpeg'));
+    const traces = [{ persona: 'newbie', frames: [{ file: 'f0.jpg' }], steps: [] }];
+    const report = { findings: [finding(), finding({ id: 'F2', type: 'blocker', passed: [] })], ghostsTotal: 4, worldW: 1200, worldH: 400 };
+    let n = 0;
+    // The first card answers at once, the second never does.
+    const create = () => (n++ === 0 ? Promise.resolve({ choices: [{ message: { content: JSON.stringify(card('Add a checkpoint.')) } }], usage: {} }) : new Promise(() => {}));
+    const t0 = Date.now();
+    const out = await explainHotspots(report, { runDir, traces, client: { chat: { completions: { create } } }, deadlineMs: 200 });
+    assert.ok(Date.now() - t0 < 2000);
+    assert.equal(out.cards.length, 2);
+    assert.equal(out.cards[0].suggested_fix, 'Add a checkpoint.');
+    assert.equal(out.cards[1].late, true);
+    assert.match(out.cards[1].title, /blocker around/);
+  } finally {
+    await rm(runDir, { recursive: true, force: true });
+  }
+});
+
 test('a fair challenge is one that most ghosts that reached it got past', () => {
   assert.equal(fairChallenge(finding()), true);
   assert.equal(fairChallenge(finding({ passed: ['newbie', 'reader'] })), true);

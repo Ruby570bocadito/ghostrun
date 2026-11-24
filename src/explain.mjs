@@ -151,8 +151,12 @@ function factsFor(f, report, tracesByPersona = {}) {
 
 // reasoning 'minimal' instead of 'low': on the same 3 runs the cards were as good (one 'low' card even
 // blamed the arrow keys for hidden spikes), for 47% less cost and 45% less time (bench/results/analyst-effort.md).
-export async function explainHotspots(report, { runDir, traces, model = 'muse-spark-1.3', reasoning = 'minimal', client, max = 5 } = {}) {
-  const api = client ?? new OpenAI({ baseURL: 'https://api.meta.ai/v1', apiKey: process.env.MODEL_API_KEY, maxRetries: 2, timeout: 60_000 });
+// One card normally takes 7-12 s; twice the analyst took 48-55 s, and with 2 retries of 60 s it could hold a finished
+// run for minutes (24 Nov).
+const CARD_TIMEOUT_MS = 25_000;
+const ANALYST_DEADLINE_MS = 45_000;
+export async function explainHotspots(report, { runDir, traces, model = 'muse-spark-1.3', reasoning = 'minimal', client, max = 5, deadlineMs = ANALYST_DEADLINE_MS } = {}) {
+  const api = client ?? new OpenAI({ baseURL: 'https://api.meta.ai/v1', apiKey: process.env.MODEL_API_KEY, maxRetries: 1, timeout: CARD_TIMEOUT_MS });
   const byPersona = Object.fromEntries(traces.map((t) => [t.persona, t]));
   const usage = { input: 0, cached: 0, output: 0, reasoning: 0 };
   const findings = (report.findings ?? report.hotspots).filter((f) => f.severity !== 'low').slice(0, max);
@@ -178,8 +182,12 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
     }
   }
 
-  const cards = await Promise.all(
-    findings.map(async (f) => {
+  const plain = (f) => ({ hotspot: f.id, finding: f.id, title: `${f.type} around (${f.center.x}, ${f.center.y})`, what_happens: '', likely_cause: 'unclear', suggested_fix: '', model });
+  let timer;
+  const late = new Promise((resolve) => {
+    timer = setTimeout(() => resolve('late'), deadlineMs);
+  });
+  const work = findings.map(async (f) => {
       const ev = f.evidence[0];
       const trace = byPersona[ev.persona];
       // The screen at the key moment (60% into the clip: just before a death, or the closest approach).
@@ -203,8 +211,10 @@ export async function explainHotspots(report, { runDir, traces, model = 'muse-sp
         if (again.card) card = again.card;
         if (MAKES_EASIER.test(card.suggested_fix)) card = { ...card, suggested_fix: FAIR_FIX };
       }
-      return { hotspot: f.id, finding: f.id, ...(card ?? { title: `${f.type} around (${f.center.x}, ${f.center.y})`, what_happens: '', likely_cause: 'unclear', suggested_fix: '' }), model };
-    }),
-  );
+      return card ? { hotspot: f.id, finding: f.id, ...card, model } : plain(f);
+  });
+  // Cards not ready by the deadline are replaced by the plain finding; an error on one card does not lose the others.
+  const cards = await Promise.all(work.map((w, i) => Promise.race([w.catch(() => plain(findings[i])), late.then(() => ({ ...plain(findings[i]), late: true }))])));
+  clearTimeout(timer);
   return { cards, usage };
 }

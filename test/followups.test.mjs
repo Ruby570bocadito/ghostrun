@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { sanitizeMove } from '../src/ghost.mjs';
 import { describeMove } from '../src/feedback.mjs';
-import { moveSchema } from '../src/brains/meta.mjs';
+import { MAX_ACTION_MS, moveSchema, systemPrompt } from '../src/brains/meta.mjs';
 
 test('follow-up actions are offered only to games without the SDK', () => {
   assert.ok(moveSchema(640, 360).required.includes('then'));
@@ -20,6 +20,26 @@ test('follow-up actions are cleaned: at most 2, keys and clicks only, 100-1500 m
 test('a move with no input may wait up to 5 s; with input, 1.5 s at most', () => {
   assert.equal(sanitizeMove({ duration_ms: 9000 }).duration_ms, 5000);
   assert.equal(sanitizeMove({ tap: ['Space'], duration_ms: 9000 }).duration_ms, 1500);
+});
+
+test('games without the SDK may use actions up to 3 s, main and follow-ups; SDK games keep 1.5 s', () => {
+  const asked = { hold: ['ArrowRight'], duration_ms: 9000, then: [{ hold: ['ArrowRight'], tap: [], click: [], duration_ms: 9000 }] };
+  const free = sanitizeMove(asked, { width: 640, height: 360 }, { maxActionMs: MAX_ACTION_MS });
+  assert.equal(free.duration_ms, 3000);
+  assert.equal(free.then[0].duration_ms, 3000);
+  assert.equal(sanitizeMove(asked, { width: 640, height: 360 }).duration_ms, 1500);
+  // Waiting with no input stays up to 5 s either way.
+  assert.equal(sanitizeMove({ duration_ms: 9000 }, undefined, { maxActionMs: MAX_ACTION_MS }).duration_ms, 5000);
+});
+
+test('the prompt asks for long actions and chains only on games without the SDK', () => {
+  const persona = { name: 'The Newbie', style: '' };
+  assert.match(systemPrompt(persona, null, 640, 360), /Every look at the screen takes time/);
+  assert.match(moveSchema(640, 360).properties.duration_ms.description, /100 to 3000 ms/);
+  const sdk = systemPrompt(persona, null, 640, 360, { sdk: true });
+  assert.doesNotMatch(sdk, /Every look at the screen takes time/);
+  assert.match(sdk, /longer actions \(up to 1500 ms\) are fine/);
+  assert.match(moveSchema(640, 360, { sdk: true }).properties.duration_ms.description, /100 to 1500 ms/);
 });
 
 test('the history tells only the follow-ups that were done', () => {
