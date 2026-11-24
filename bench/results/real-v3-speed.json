@@ -1,0 +1,3248 @@
+{
+ "label": "v3-speed",
+ "generatedAt": "2026-11-24T10:32:50.701Z",
+ "command": "node bench/real-games.mjs v3-speed --url js13kgames.com --url itch.io --since 2026-11-24T09:02Z --until 2026-11-24T09:50Z --compare before,v3",
+ "settings": {
+  "FP_W": 11,
+  "FP_H": 8,
+  "FP_LEVELS": 8,
+  "GRID_W": 64,
+  "GRID_H": 36,
+  "CELL_DELTA": 24,
+  "CHANGED_MEAN": 3,
+  "ANSWER_FRACTION": 0.003,
+  "SAMPLE_MS": 500,
+  "STALL_MS": 10000,
+  "LIMIT_WALL_S": 470,
+  "analysisVersion": 3
+ },
+ "total": {
+  "runs": 12,
+  "ghosts": 48,
+  "moved": 48,
+  "moves": 2961,
+  "runWallS": {
+   "min": 138.44,
+   "median": 224.11,
+   "max": 278.71
+  },
+  "firstFrameS": {
+   "median": 2.8,
+   "max": 26.8
+  },
+  "secPerMove": 2.87,
+  "gameS": {
+   "median": 150.8,
+   "max": 156.8
+  },
+  "reached": 44,
+  "reachedWallS": 18.5,
+  "reachedGameS": 11.1,
+  "reachedStep": 2,
+  "pct": {
+   "loading": 2,
+   "menu": 15,
+   "gameover": 6,
+   "play": 77
+  },
+  "playTimePct": 66,
+  "screens": {
+   "median": 70,
+   "max": 265
+  },
+  "stalled": {
+   "ghosts": 29,
+   "of": 48,
+   "medianS": 48.3,
+   "totalS": 1675.2,
+   "pct": 26
+  },
+  "saidNothing": 92,
+  "falseNothing": 6,
+  "mousePct": 44,
+  "keysPct": 59,
+  "waitPct": 4,
+  "endings": {
+   "L": 10,
+   "A": 7,
+   "R": 31
+  },
+  "quit": 7,
+  "errors": 0,
+  "costUsd": 0.617,
+  "speed": {
+   "ghostWallS": 188,
+   "realPerGameS": 1.45,
+   "calls": 64.5,
+   "gamePerCall": 1.88,
+   "split": {
+    "start": 7,
+    "model": 39,
+    "play": 53,
+    "end": 1
+   },
+   "autopilotWallS": 12.8,
+   "fewerFrames": 12,
+   "realTime": 0,
+   "reportAfterS": {
+    "median": 5.3,
+    "max": 8.9
+   }
+  }
+ },
+ "criteria": [
+  {
+   "criterion": "Ghosts that end in an error",
+   "measured": "0 of 48",
+   "target": "0"
+  },
+  {
+   "criterion": "Time until the first game frame (from the start of the run)",
+   "measured": "itch.io: median 19 s, max 27 s (3 runs) · js13k: median 2 s, max 9 s (9 runs)",
+   "target": "≤ 15 s itch.io, ≤ 8 s js13k"
+  },
+  {
+   "criterion": "Game time per ghost",
+   "measured": "median 150.8 s, max 156.8 s",
+   "target": "≥ 120 s"
+  },
+  {
+   "criterion": "Length of a run of 4 ghosts",
+   "measured": "itch.io (WebGL): median 243 s, max 279 s (3 runs) · js13k: median 195 s, max 278 s (9 runs)",
+   "target": "≤ 300 s WebGL, ≤ 210 s js13k"
+  },
+  {
+   "criterion": "Real games where they reach play (at least half of the ghosts that moved)",
+   "measured": "11 of 12 (not: Decogear)",
+   "target": "≥ 11 of 13"
+  },
+  {
+   "criterion": "\"Nothing happened\" thoughts while the screen did change",
+   "measured": "6 of 92 such thoughts; 0.2 per 100 moves (before: 1.6, −87 %)",
+   "target": "−70 %"
+  },
+  {
+   "criterion": "Clicks in the mouse games (Big Champ, Coiner)",
+   "measured": "49 % of 523 moves",
+   "target": "≥ 60 %"
+  }
+ ],
+ "games": [
+  {
+   "game": "escape-from-death-hole",
+   "name": "Escape from Death Hole",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 269,
+    "runWallS": {
+     "min": 277.4,
+     "median": 277.4,
+     "max": 277.4
+    },
+    "firstFrameS": {
+     "median": 2.2,
+     "max": 2.2
+    },
+    "secPerMove": 3.34,
+    "gameS": {
+     "median": 116.4,
+     "max": 131
+    },
+    "reached": 4,
+    "reachedWallS": 19.5,
+    "reachedGameS": 6.5,
+    "reachedStep": 1.5,
+    "pct": {
+     "loading": 0,
+     "menu": 1,
+     "gameover": 0,
+     "play": 99
+    },
+    "playTimePct": 93,
+    "screens": {
+     "median": 75,
+     "max": 92
+    },
+    "stalled": {
+     "ghosts": 2,
+     "of": 4,
+     "medianS": 17.6,
+     "totalS": 35.2,
+     "pct": 9
+    },
+    "saidNothing": 4,
+    "falseNothing": 0,
+    "mousePct": 1,
+    "keysPct": 99,
+    "waitPct": 1,
+    "endings": {
+     "L": 3,
+     "A": 1
+    },
+    "quit": 1,
+    "errors": 0,
+    "costUsd": 0.0447,
+    "speed": {
+     "ghostWallS": 273,
+     "realPerGameS": 2.34,
+     "calls": 76.5,
+     "gamePerCall": 1.41,
+     "split": {
+      "start": 5,
+      "model": 31,
+      "play": 64,
+      "end": 1
+     },
+     "autopilotWallS": 10.6,
+     "fewerFrames": 4,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 0.5,
+      "max": 0.5
+     }
+    }
+   }
+  },
+  {
+   "game": "find-all-pages",
+   "name": "Find All Pages",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 317,
+    "runWallS": {
+     "min": 221.49,
+     "median": 221.49,
+     "max": 221.49
+    },
+    "firstFrameS": {
+     "median": 1.2,
+     "max": 1.2
+    },
+    "secPerMove": 2.45,
+    "gameS": {
+     "median": 151.1,
+     "max": 151.2
+    },
+    "reached": 4,
+    "reachedWallS": 12.6,
+    "reachedGameS": 10.8,
+    "reachedStep": 5,
+    "pct": {
+     "loading": 0,
+     "menu": 1,
+     "gameover": 0,
+     "play": 98
+    },
+    "playTimePct": 83,
+    "screens": {
+     "median": 25,
+     "max": 47
+    },
+    "stalled": {
+     "ghosts": 4,
+     "of": 4,
+     "medianS": 79.4,
+     "totalS": 311.6,
+     "pct": 52
+    },
+    "saidNothing": 11,
+    "falseNothing": 0,
+    "mousePct": 87,
+    "keysPct": 26,
+    "waitPct": 1,
+    "endings": {
+     "R": 4
+    },
+    "quit": 0,
+    "errors": 0,
+    "costUsd": 0.1066,
+    "speed": {
+     "ghostWallS": 200,
+     "realPerGameS": 1.32,
+     "calls": 77,
+     "gamePerCall": 1.59,
+     "split": {
+      "start": 2,
+      "model": 69,
+      "play": 29,
+      "end": 1
+     },
+     "autopilotWallS": 3.4,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 4.4,
+      "max": 4.4
+     }
+    }
+   }
+  },
+  {
+   "game": "spacetaxi",
+   "name": "SpaceTaxi",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 221,
+    "runWallS": {
+     "min": 182.11,
+     "median": 182.11,
+     "max": 182.11
+    },
+    "firstFrameS": {
+     "median": 1.5,
+     "max": 1.5
+    },
+    "secPerMove": 2.49,
+    "gameS": {
+     "median": 152.1,
+     "max": 156.8
+    },
+    "reached": 4,
+    "reachedWallS": 9.1,
+    "reachedGameS": 5.6,
+    "reachedStep": 1.5,
+    "pct": {
+     "loading": 0,
+     "menu": 4,
+     "gameover": 0,
+     "play": 96
+    },
+    "playTimePct": 91,
+    "screens": {
+     "median": 152.5,
+     "max": 215
+    },
+    "stalled": {
+     "ghosts": 2,
+     "of": 4,
+     "medianS": 66.6,
+     "totalS": 133.1,
+     "pct": 22
+    },
+    "saidNothing": 3,
+    "falseNothing": 0,
+    "mousePct": 1,
+    "keysPct": 99,
+    "waitPct": 0,
+    "endings": {
+     "R": 4
+    },
+    "quit": 0,
+    "errors": 0,
+    "costUsd": 0.0403,
+    "speed": {
+     "ghostWallS": 138,
+     "realPerGameS": 0.94,
+     "calls": 48.5,
+     "gamePerCall": 2.59,
+     "split": {
+      "start": 3,
+      "model": 41,
+      "play": 55,
+      "end": 1
+     },
+     "autopilotWallS": 4.3,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 5.7,
+      "max": 5.7
+     }
+    }
+   }
+  },
+  {
+   "game": "coiner",
+   "name": "Coiner",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 304,
+    "runWallS": {
+     "min": 190.93,
+     "median": 190.93,
+     "max": 190.93
+    },
+    "firstFrameS": {
+     "median": 1.7,
+     "max": 1.7
+    },
+    "secPerMove": 2.17,
+    "gameS": {
+     "median": 151.9,
+     "max": 153.9
+    },
+    "reached": 4,
+    "reachedWallS": 12,
+    "reachedGameS": 10.6,
+    "reachedStep": 1,
+    "pct": {
+     "loading": 0,
+     "menu": 10,
+     "gameover": 0,
+     "play": 90
+    },
+    "playTimePct": 83,
+    "screens": {
+     "median": 91.5,
+     "max": 107
+    },
+    "stalled": {
+     "ghosts": 2,
+     "of": 4,
+     "medianS": 44.8,
+     "totalS": 89.6,
+     "pct": 15
+    },
+    "saidNothing": 11,
+    "falseNothing": 0,
+    "mousePct": 41,
+    "keysPct": 43,
+    "waitPct": 22,
+    "endings": {
+     "R": 4
+    },
+    "quit": 0,
+    "errors": 0,
+    "costUsd": 0.0629,
+    "speed": {
+     "ghostWallS": 178,
+     "realPerGameS": 1.16,
+     "calls": 77,
+     "gamePerCall": 1.84,
+     "split": {
+      "start": 5,
+      "model": 49,
+      "play": 44,
+      "end": 1
+     },
+     "autopilotWallS": 8.3,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 6.5,
+      "max": 6.5
+     }
+    }
+   }
+  },
+  {
+   "game": "backout",
+   "name": "Backout",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 298,
+    "runWallS": {
+     "min": 278.48,
+     "median": 278.48,
+     "max": 278.48
+    },
+    "firstFrameS": {
+     "median": 8.7,
+     "max": 8.7
+    },
+    "secPerMove": 3.28,
+    "gameS": {
+     "median": 132.6,
+     "max": 151.6
+    },
+    "reached": 4,
+    "reachedWallS": 33,
+    "reachedGameS": 14.4,
+    "reachedStep": 1,
+    "pct": {
+     "loading": 0,
+     "menu": 7,
+     "gameover": 4,
+     "play": 89
+    },
+    "playTimePct": 77,
+    "screens": {
+     "median": 220.5,
+     "max": 265
+    },
+    "stalled": {
+     "ghosts": 0,
+     "of": 4,
+     "medianS": null,
+     "totalS": 0,
+     "pct": 0
+    },
+    "saidNothing": 0,
+    "falseNothing": 0,
+    "mousePct": 0,
+    "keysPct": 97,
+    "waitPct": 3,
+    "endings": {
+     "L": 3,
+     "R": 1
+    },
+    "quit": 0,
+    "errors": 0,
+    "costUsd": 0.0483,
+    "speed": {
+     "ghostWallS": 273,
+     "realPerGameS": 2,
+     "calls": 81.5,
+     "gamePerCall": 1.63,
+     "split": {
+      "start": 9,
+      "model": 28,
+      "play": 62,
+      "end": 0
+     },
+     "autopilotWallS": 20.6,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 0.4,
+      "max": 0.4
+     }
+    }
+   }
+  },
+  {
+   "game": "big-champ",
+   "name": "Big Champ",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 219,
+    "runWallS": {
+     "min": 195.22,
+     "median": 195.22,
+     "max": 195.22
+    },
+    "firstFrameS": {
+     "median": 3.4,
+     "max": 3.4
+    },
+    "secPerMove": 2.61,
+    "gameS": {
+     "median": 150.9,
+     "max": 152.1
+    },
+    "reached": 4,
+    "reachedWallS": 19.5,
+    "reachedGameS": 12,
+    "reachedStep": 2,
+    "pct": {
+     "loading": 3,
+     "menu": 11,
+     "gameover": 22,
+     "play": 64
+    },
+    "playTimePct": 58,
+    "screens": {
+     "median": 190,
+     "max": 224
+    },
+    "stalled": {
+     "ghosts": 0,
+     "of": 4,
+     "medianS": null,
+     "totalS": 0,
+     "pct": 0
+    },
+    "saidNothing": 2,
+    "falseNothing": 0,
+    "mousePct": 60,
+    "keysPct": 60,
+    "waitPct": 1,
+    "endings": {
+     "R": 3,
+     "A": 1
+    },
+    "quit": 1,
+    "errors": 0,
+    "costUsd": 0.0462,
+    "speed": {
+     "ghostWallS": 182,
+     "realPerGameS": 1.23,
+     "calls": 61.5,
+     "gamePerCall": 2.14,
+     "split": {
+      "start": 9,
+      "model": 34,
+      "play": 57,
+      "end": 1
+     },
+     "autopilotWallS": 12.8,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 8.9,
+      "max": 8.9
+     }
+    }
+   }
+  },
+  {
+   "game": "dead-again",
+   "name": "Dead Again",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 269,
+    "runWallS": {
+     "min": 226.73,
+     "median": 226.73,
+     "max": 226.73
+    },
+    "firstFrameS": {
+     "median": 4.6,
+     "max": 4.6
+    },
+    "secPerMove": 2.26,
+    "gameS": {
+     "median": 150.6,
+     "max": 151
+    },
+    "reached": 4,
+    "reachedWallS": 12.3,
+    "reachedGameS": 8.9,
+    "reachedStep": 1,
+    "pct": {
+     "loading": 0,
+     "menu": 0,
+     "gameover": 32,
+     "play": 67
+    },
+    "playTimePct": 60,
+    "screens": {
+     "median": 129.5,
+     "max": 163
+    },
+    "stalled": {
+     "ghosts": 0,
+     "of": 4,
+     "medianS": null,
+     "totalS": 0,
+     "pct": 0
+    },
+    "saidNothing": 0,
+    "falseNothing": 0,
+    "mousePct": 26,
+    "keysPct": 82,
+    "waitPct": 1,
+    "endings": {
+     "R": 3,
+     "A": 1
+    },
+    "quit": 1,
+    "errors": 0,
+    "costUsd": 0.044,
+    "speed": {
+     "ghostWallS": 190,
+     "realPerGameS": 1.34,
+     "calls": 76,
+     "gamePerCall": 1.66,
+     "split": {
+      "start": 5,
+      "model": 39,
+      "play": 55,
+      "end": 1
+     },
+     "autopilotWallS": 7.7,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 6,
+      "max": 6
+     }
+    }
+   }
+  },
+  {
+   "game": "delete",
+   "name": "Delete!",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 150,
+    "runWallS": {
+     "min": 138.44,
+     "median": 138.44,
+     "max": 138.44
+    },
+    "firstFrameS": {
+     "median": 1.3,
+     "max": 1.3
+    },
+    "secPerMove": 2.17,
+    "gameS": {
+     "median": 113.3,
+     "max": 151.6
+    },
+    "reached": 4,
+    "reachedWallS": 20.8,
+    "reachedGameS": 19.3,
+    "reachedStep": 1,
+    "pct": {
+     "loading": 21,
+     "menu": 35,
+     "gameover": 1,
+     "play": 42
+    },
+    "playTimePct": 36,
+    "screens": {
+     "median": 47.5,
+     "max": 67
+    },
+    "stalled": {
+     "ghosts": 3,
+     "of": 4,
+     "medianS": 31.4,
+     "totalS": 80.5,
+     "pct": 19
+    },
+    "saidNothing": 8,
+    "falseNothing": 2,
+    "mousePct": 49,
+    "keysPct": 59,
+    "waitPct": 1,
+    "endings": {
+     "R": 2,
+     "A": 2
+    },
+    "quit": 2,
+    "errors": 0,
+    "costUsd": 0.0345,
+    "speed": {
+     "ghostWallS": 107,
+     "realPerGameS": 0.94,
+     "calls": 41.5,
+     "gamePerCall": 2.22,
+     "split": {
+      "start": 17,
+      "model": 43,
+      "play": 39,
+      "end": 1
+     },
+     "autopilotWallS": 16.8,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 5.6,
+      "max": 5.6
+     }
+    }
+   }
+  },
+  {
+   "game": "moon-buggy-racing",
+   "name": "Moon Buggy",
+   "platform": "js13k",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 198,
+    "runWallS": {
+     "min": 186.76,
+     "median": 186.76,
+     "max": 186.76
+    },
+    "firstFrameS": {
+     "median": 1.8,
+     "max": 1.8
+    },
+    "secPerMove": 2.97,
+    "gameS": {
+     "median": 151.2,
+     "max": 153.2
+    },
+    "reached": 4,
+    "reachedWallS": 15.1,
+    "reachedGameS": 8.3,
+    "reachedStep": 3,
+    "pct": {
+     "loading": 2,
+     "menu": 14,
+     "gameover": 18,
+     "play": 67
+    },
+    "playTimePct": 49,
+    "screens": {
+     "median": 22.5,
+     "max": 48
+    },
+    "stalled": {
+     "ghosts": 4,
+     "of": 4,
+     "medianS": 95.3,
+     "totalS": 347.2,
+     "pct": 60
+    },
+    "saidNothing": 6,
+    "falseNothing": 2,
+    "mousePct": 10,
+    "keysPct": 86,
+    "waitPct": 7,
+    "endings": {
+     "R": 3,
+     "A": 1
+    },
+    "quit": 1,
+    "errors": 0,
+    "costUsd": 0.0465,
+    "speed": {
+     "ghostWallS": 156,
+     "realPerGameS": 1.09,
+     "calls": 44.5,
+     "gamePerCall": 2.27,
+     "split": {
+      "start": 5,
+      "model": 35,
+      "play": 59,
+      "end": 1
+     },
+     "autopilotWallS": 7.6,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 5.9,
+      "max": 5.9
+     }
+    }
+   }
+  },
+  {
+   "game": "broken-repair",
+   "name": "Broken Repair",
+   "platform": "itch.io",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 303,
+    "runWallS": {
+     "min": 242.87,
+     "median": 242.87,
+     "max": 242.87
+    },
+    "firstFrameS": {
+     "median": 15.9,
+     "max": 15.9
+    },
+    "secPerMove": 2.84,
+    "gameS": {
+     "median": 152.5,
+     "max": 153
+    },
+    "reached": 4,
+    "reachedWallS": 36.9,
+    "reachedGameS": 13.5,
+    "reachedStep": 6.5,
+    "pct": {
+     "loading": 0,
+     "menu": 16,
+     "gameover": 0,
+     "play": 84
+    },
+    "playTimePct": 81,
+    "screens": {
+     "median": 73.5,
+     "max": 94
+    },
+    "stalled": {
+     "ghosts": 4,
+     "of": 4,
+     "medianS": 31.8,
+     "totalS": 139.4,
+     "pct": 23
+    },
+    "saidNothing": 11,
+    "falseNothing": 2,
+    "mousePct": 98,
+    "keysPct": 3,
+    "waitPct": 0,
+    "endings": {
+     "R": 4
+    },
+    "quit": 0,
+    "errors": 0,
+    "costUsd": 0.0586,
+    "speed": {
+     "ghostWallS": 235,
+     "realPerGameS": 1.55,
+     "calls": 75.5,
+     "gamePerCall": 1.86,
+     "split": {
+      "start": 8,
+      "model": 44,
+      "play": 47,
+      "end": 0
+     },
+     "autopilotWallS": 18.7,
+     "fewerFrames": 4,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 4.9,
+      "max": 4.9
+     }
+    }
+   }
+  },
+  {
+   "game": "decogear",
+   "name": "Decogear",
+   "platform": "itch.io",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 170,
+    "runWallS": {
+     "min": 239.57,
+     "median": 239.57,
+     "max": 239.57
+    },
+    "firstFrameS": {
+     "median": 18.9,
+     "max": 18.9
+    },
+    "secPerMove": 3.96,
+    "gameS": {
+     "median": 150.8,
+     "max": 151.9
+    },
+    "reached": 0,
+    "reachedWallS": null,
+    "reachedGameS": null,
+    "reachedStep": null,
+    "pct": {
+     "loading": 6,
+     "menu": 94,
+     "gameover": 0,
+     "play": 0
+    },
+    "playTimePct": 0,
+    "screens": {
+     "median": 30,
+     "max": 30
+    },
+    "stalled": {
+     "ghosts": 4,
+     "of": 4,
+     "medianS": 128.9,
+     "totalS": 420.1,
+     "pct": 84
+    },
+    "saidNothing": 21,
+    "falseNothing": 0,
+    "mousePct": 46,
+    "keysPct": 72,
+    "waitPct": 6,
+    "endings": {
+     "R": 3,
+     "A": 1
+    },
+    "quit": 1,
+    "errors": 0,
+    "costUsd": 0.0399,
+    "speed": {
+     "ghostWallS": 217,
+     "realPerGameS": 1.51,
+     "calls": 47.5,
+     "gamePerCall": 2.02,
+     "split": {
+      "start": 11,
+      "model": 31,
+      "play": 58,
+      "end": 1
+     },
+     "autopilotWallS": 20.2,
+     "fewerFrames": 4,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 4.9,
+      "max": 4.9
+     }
+    }
+   }
+  },
+  {
+   "game": "prerolled",
+   "name": "Prerolled",
+   "platform": "itch.io",
+   "summary": {
+    "runs": 1,
+    "ghosts": 4,
+    "moved": 4,
+    "moves": 243,
+    "runWallS": {
+     "min": 278.71,
+     "median": 278.71,
+     "max": 278.71
+    },
+    "firstFrameS": {
+     "median": 26.8,
+     "max": 26.8
+    },
+    "secPerMove": 4.1,
+    "gameS": {
+     "median": 116.3,
+     "max": 119.7
+    },
+    "reached": 4,
+    "reachedWallS": 53.1,
+    "reachedGameS": 13,
+    "reachedStep": 9,
+    "pct": {
+     "loading": 5,
+     "menu": 26,
+     "gameover": 0,
+     "play": 70
+    },
+    "playTimePct": 71,
+    "screens": {
+     "median": 69,
+     "max": 79
+    },
+    "stalled": {
+     "ghosts": 4,
+     "of": 4,
+     "medianS": 24.1,
+     "totalS": 118.5,
+     "pct": 25
+    },
+    "saidNothing": 15,
+    "falseNothing": 0,
+    "mousePct": 93,
+    "keysPct": 10,
+    "waitPct": 0,
+    "endings": {
+     "L": 4
+    },
+    "quit": 0,
+    "errors": 0,
+    "costUsd": 0.0445,
+    "speed": {
+     "ghostWallS": 274,
+     "realPerGameS": 2.36,
+     "calls": 60.5,
+     "gamePerCall": 1.84,
+     "split": {
+      "start": 9,
+      "model": 33,
+      "play": 58,
+      "end": 1
+     },
+     "autopilotWallS": 23.4,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 4.6,
+      "max": 4.6
+     }
+    }
+   }
+  }
+ ],
+ "runs": [
+  {
+   "id": "2026-11-24T09-02-23-775Z-5346c98394",
+   "path": "runs/2026-11-24T09-02-23-775Z-5346c98394",
+   "game": "escape-from-death-hole",
+   "name": "Escape from Death Hole",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/escape-from-death-hole",
+   "startedAt": "2026-11-24T09:02:23.885Z",
+   "viewport": {
+    "width": 768,
+    "height": 432
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 277.4,
+   "reportAfterS": 0.5,
+   "firstFrameS": 2.2,
+   "costUsd": 0.0447,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":131},"steps":88,"modelCalls":88,"gameS":131,"wallS":273.2,"bootS":0.8,"firstFrameS":2.2,"secPerMove":3.01,"secPerMoveMedian":2.72,"moveWallS":265.2,"latencyS":1.04,"play":{"step":2,"gameS":5.8,"wallS":15.3,"ghostS":13.9},"realPlayMoves":85,"categories":{"loading":0,"story":0,"menu":1,"name":0,"other":0,"gameover":0,"playing":87,"level_complete":0},"buckets":{"loading":0,"menu":1,"gameover":0,"play":87},"playTimeShare":0.956,"timeline":"MPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":92,"newScreensAt":[0,3,3.5,4.1,5.6,6.1,6.7,7.2,7.5,8,8.6,9.6,10.1,12.1,12.7,13.7,17.2,17.5,19.6,20.2,21.6,22.2,22.6,23.1,23.6,24.7,26.6,27.1,29,39.7,41.2,42.6,43.2,45.1,45.6,48,53.7,56,65.6,66.1,66.5,68.2,69.1,70,70.5,72.6,73.5,75,77.7,79.1,79.7,81.6,82.1,82.6,84.7,85.2,87,87.5,89.2,89.7,91.2,91.7,92.2,93.1,93.6,95.1,97,98.2,99.7,100.7,101.7,102.6,103.6,104.1,104.6,106,106.5,107,108.7,109.2,111.7,112.2,112.7,113.7,114.7,115.7,117.1,117.6,120.6,121.6,124.1,124.6],"stalls":[{"fromS":29,"toS":39.7,"s":10.7,"steps":[26,35]}],"stalledS":10.7,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":88,"both":0,"wait":0},"quitStep":null,"costUsd":0.01425,"movesGameS":126.4,"time":{"startS":5.8,"modelS":91.9,"playS":173.3,"endS":2.1},"autopilotS":4.6,"autopilotWallS":5.1,"fewerFrames":{"stepMs":100,"fromS":8.1},"screensByGhost":58,"frames":577,"sampledFrames":263},
+    {"persona":"speedrunner","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.6,"gameSeconds":124},"steps":78,"modelCalls":78,"gameS":123.6,"wallS":275.9,"bootS":0.7,"firstFrameS":2.2,"secPerMove":3.45,"secPerMoveMedian":3.1,"moveWallS":269.5,"latencyS":1.07,"play":{"step":2,"gameS":6.1,"wallS":16.9,"ghostS":15.4},"realPlayMoves":77,"categories":{"loading":0,"story":0,"menu":1,"name":0,"other":0,"gameover":0,"playing":77,"level_complete":0},"buckets":{"loading":0,"menu":1,"gameover":0,"play":77},"playTimeShare":0.933,"timeline":"MPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":72,"newScreensAt":[0,3,3.5,4.1,5.6,6.1,6.6,7.2,7.7,9.2,9.6,10.2,11,11.7,12.6,13.6,14.1,15,15.5,16,16.6,17.1,17.6,18.7,19.2,22,23,24.6,25.7,26.1,27,27.5,28.2,29.6,30.7,32.6,33,33.5,34.1,41.1,45.7,46,46.5,47.2,54.2,57.2,59,62.1,66.2,68.5,69.2,71,72,73.2,73.6,75.1,75.6,76,76.5,79.2,86.1,90.2,90.7,92.1,92.6,95,96.7,121.2,121.7,122.2,122.7,123.2],"stalls":[{"fromS":96.7,"toS":121.2,"s":24.5,"steps":[66,78]}],"stalledS":24.5,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":78,"both":0,"wait":0},"quitStep":null,"costUsd":0.01225,"movesGameS":116.9,"time":{"startS":5.6,"modelS":83.8,"playS":185.7,"endS":0.9},"autopilotS":4.6,"autopilotWallS":4.8,"fewerFrames":{"stepMs":100,"fromS":8.1},"screensByGhost":43,"frames":544,"sampledFrames":248},
+    {"persona":"reader","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":109},"steps":75,"modelCalls":75,"gameS":109.1,"wallS":272.5,"bootS":1,"firstFrameS":2.4,"secPerMove":3.4,"secPerMoveMedian":3.15,"moveWallS":255.1,"latencyS":1.07,"play":{"step":1,"gameS":6.9,"wallS":23.3,"ghostS":21.9},"realPlayMoves":68,"categories":{"loading":0,"story":0,"menu":0,"name":0,"other":0,"gameover":1,"playing":74,"level_complete":0},"buckets":{"loading":0,"menu":0,"gameover":1,"play":74},"playTimeShare":0.926,"timeline":"PPPPPPPPPPPPPPPPPPPPPPPPPPGPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":78,"newScreensAt":[0,2,2.5,3.1,4.7,5.2,5.7,6.2,7.6,8.1,8.7,9.7,10,10.5,11.1,11.7,12.1,12.7,14,15.2,15.6,16.2,16.5,17,17.6,18.2,19.5,23.1,23.7,24.2,26.7,27.1,29.7,31,31.6,32.1,34.6,35.2,35.7,36,37,37.5,38,38.7,39.2,39.6,40.1,40.7,41.7,44.6,45.7,46.5,47,49.6,52.6,58.2,62.6,63.7,65.7,66.1,66.6,67.1,67.5,68.7,69.6,70.1,70.6,79.6,81,83.6,84.1,84.6,85.6,86.1,91.7,100.1,100.6,106.6],"stalls":[],"stalledS":0,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":1,"keys":74,"both":0,"wait":0},"quitStep":null,"costUsd":0.01307,"movesGameS":102.2,"time":{"startS":16.5,"modelS":79.9,"playS":175.2,"endS":0.9},"autopilotS":7,"autopilotWallS":16.1,"fewerFrames":{"stepMs":100,"fromS":11.2},"screensByGhost":55,"frames":489,"sampledFrames":219},
+    {"persona":"impatient","outcome":"quit","ending":"A","steps":28,"modelCalls":28,"gameS":41.5,"wallS":128,"bootS":0.9,"firstFrameS":2.4,"secPerMove":3.92,"secPerMoveMedian":3.8,"moveWallS":109.8,"latencyS":1.32,"play":{"step":1,"gameS":6.9,"wallS":22,"ghostS":20.5},"realPlayMoves":25,"categories":{"loading":0,"story":0,"menu":0,"name":0,"other":0,"gameover":0,"playing":28,"level_complete":0},"buckets":{"loading":0,"menu":0,"gameover":0,"play":28},"playTimeShare":0.833,"timeline":"PPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":41,"newScreensAt":[0,2,2.5,4.7,5.2,5.7,6.2,6.7,7.2,7.7,8.2,8.7,9.2,9.7,10.2,11.5,12,12.6,13.2,15,16.2,16.7,17.2,18.6,19.2,19.6,23.5,24.7,26.5,28,28.5,29.1,31.7,32.6,33.6,35,35.5,38.5,39,41.2,41.5],"stalls":[],"stalledS":0,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":2,"keys":25,"both":1,"wait":2},"quitStep":28,"costUsd":0.00511,"movesGameS":34.6,"time":{"startS":17.2,"modelS":37.1,"playS":72.7,"endS":1.1},"autopilotS":7,"autopilotWallS":16.3,"fewerFrames":{"stepMs":62,"fromS":10.9},"screensByGhost":26,"frames":187,"sampledFrames":84}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-07-03-428Z-7c458f635c",
+   "path": "runs/2026-11-24T09-07-03-428Z-7c458f635c",
+   "game": "find-all-pages",
+   "name": "Find All Pages",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/find-all-pages",
+   "startedAt": "2026-11-24T09:07:03.580Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 221.49,
+   "reportAfterS": 4.4,
+   "firstFrameS": 1.2,
+   "costUsd": 0.1066,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":74,"modelCalls":74,"gameS":151.1,"wallS":176.7,"bootS":0.7,"firstFrameS":1.5,"secPerMove":2.32,"secPerMoveMedian":2.23,"moveWallS":171.8,"latencyS":1.61,"play":{"step":5,"gameS":11.5,"wallS":12.5,"ghostS":11.7},"realPlayMoves":39,"categories":{"loading":0,"story":0,"menu":0,"name":0,"other":0,"gameover":0,"playing":74,"level_complete":0},"buckets":{"loading":0,"menu":0,"gameover":0,"play":74},"playTimeShare":0.827,"timeline":"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":19,"newScreensAt":[0,2,11.7,12.6,19.2,20.6,43.7,51.6,65.6,71.7,72,72.6,74.7,80.6,93.6,95.7,102.7,110.5,112.6],"stalls":[{"fromS":20.6,"toS":43.7,"s":23.1,"steps":[15,27]},{"fromS":51.6,"toS":65.6,"s":14.1,"steps":[31,36]},{"fromS":80.6,"toS":93.6,"s":13,"steps":[45,53]},{"fromS":112.6,"toS":151.1,"s":38.5,"open":true,"steps":[62,74]}],"stalledS":88.7,"saidNothing":3,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":49,"keys":29,"both":5,"wait":1},"quitStep":null,"costUsd":0.02175,"movesGameS":125,"time":{"startS":4,"modelS":118.8,"playS":52.9,"endS":0.9},"autopilotS":6.1,"autopilotWallS":3.4,"screensByGhost":15,"frames":644,"sampledFrames":303},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":80,"modelCalls":80,"gameS":151.1,"wallS":217.4,"bootS":0.5,"firstFrameS":1.3,"secPerMove":2.66,"secPerMoveMedian":2.21,"moveWallS":212.6,"latencyS":1.93,"play":{"step":5,"gameS":10.1,"wallS":12.7,"ghostS":11.9},"realPlayMoves":58,"categories":{"loading":1,"story":0,"menu":0,"name":0,"other":2,"gameover":0,"playing":77,"level_complete":0},"buckets":{"loading":1,"menu":2,"gameover":0,"play":77},"playTimeShare":0.783,"timeline":"PPLPPPPPPPPPOPPPPPPPPPPPPPPPPPPPPOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":23,"newScreensAt":[0,2,10.6,11.6,17.5,18.5,20.5,35.5,36,45.6,58.1,64,67.7,72.7,75.1,77.5,81.2,85.6,94.7,122.6,134.2,149.5,151.1],"stalls":[{"fromS":20.5,"toS":35.5,"s":15,"steps":[12,19]},{"fromS":45.6,"toS":58.1,"s":12.5,"steps":[22,29]},{"fromS":94.7,"toS":122.6,"s":27.8,"steps":[55,65]},{"fromS":122.6,"toS":134.2,"s":11.6,"steps":[65,73]},{"fromS":134.2,"toS":149.5,"s":15.4,"steps":[73,79]}],"stalledS":82.3,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":75,"keys":30,"both":27,"wait":2},"quitStep":null,"costUsd":0.02975,"movesGameS":120,"time":{"startS":3.9,"modelS":154.3,"playS":58.3,"endS":0.8},"autopilotS":6.1,"autopilotWallS":3.5,"screensByGhost":15,"frames":679,"sampledFrames":303},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":92,"modelCalls":92,"gameS":151.2,"wallS":220.7,"bootS":0.4,"firstFrameS":1.2,"secPerMove":2.34,"secPerMoveMedian":2.09,"moveWallS":215.7,"latencyS":1.65,"play":{"step":5,"gameS":21.2,"wallS":18.7,"ghostS":17.9},"realPlayMoves":63,"categories":{"loading":0,"story":0,"menu":1,"name":0,"other":0,"gameover":0,"playing":91,"level_complete":0},"buckets":{"loading":0,"menu":1,"gameover":0,"play":91},"playTimeShare":0.854,"timeline":"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMPPPPPPPPPPPPPPPPPPPPPPPPP","screens":47,"newScreensAt":[0,2,21.7,22.2,23,23.5,24.1,24.6,25.1,25.7,31.2,31.7,33.1,33.6,34.1,37.6,38.1,39.2,39.7,40,40.5,49.1,50,50.5,51.6,52.1,63.2,68.6,80.2,102.1,108.5,109.1,118.5,119.1,120.7,121.7,122.2,123.7,124.7,126.5,127.5,133.1,133.6,135.1,136.7,137.2,146.1],"stalls":[{"fromS":2,"toS":21.7,"s":19.6,"steps":[1,5]},{"fromS":52.1,"toS":63.2,"s":11,"steps":[32,40]},{"fromS":68.6,"toS":80.2,"s":11.6,"steps":[44,52]},{"fromS":80.2,"toS":102.1,"s":21.9,"steps":[52,60]}],"stalledS":64.1,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":88,"keys":13,"both":9,"wait":0},"quitStep":null,"costUsd":0.02873,"movesGameS":130.1,"time":{"startS":3.7,"modelS":151.8,"playS":63.9,"endS":1.3},"autopilotS":6.1,"autopilotWallS":3.4,"screensByGhost":32,"frames":702,"sampledFrames":303},
+    {"persona":"impatient","outcome":"time_up","ending":"R","steps":71,"modelCalls":71,"gameS":151.1,"wallS":181.9,"bootS":0.5,"firstFrameS":1.4,"secPerMove":2.49,"secPerMoveMedian":2.31,"moveWallS":177.1,"latencyS":1.7,"play":{"step":4,"gameS":9.1,"wallS":11.4,"ghostS":10.6},"realPlayMoves":53,"categories":{"loading":0,"story":0,"menu":1,"name":0,"other":0,"gameover":0,"playing":70,"level_complete":0},"buckets":{"loading":0,"menu":1,"gameover":0,"play":70},"playTimeShare":0.839,"timeline":"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":27,"newScreensAt":[0,2,9.6,11.6,13.7,14.2,22.6,25.6,26.1,32.7,38.7,40.7,63.2,64.2,64.7,82.6,89.2,94.2,95.2,97.6,100.6,101.1,102,104.2,112.7,137.7,140.1],"stalls":[{"fromS":40.7,"toS":63.2,"s":22.5,"steps":[22,30]},{"fromS":64.7,"toS":82.6,"s":18,"steps":[31,38]},{"fromS":112.7,"toS":137.7,"s":25,"steps":[54,65]},{"fromS":140.1,"toS":151.1,"s":11,"open":true,"steps":[66,71]}],"stalledS":76.5,"saidNothing":4,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":63,"keys":10,"both":2,"wait":0},"quitStep":null,"costUsd":0.02251,"movesGameS":130,"time":{"startS":3.9,"modelS":120.9,"playS":56.2,"endS":1},"autopilotS":6.1,"autopilotWallS":3.3,"screensByGhost":21,"frames":654,"sampledFrames":303}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-10-54-423Z-fdf35f898e",
+   "path": "runs/2026-11-24T09-10-54-423Z-fdf35f898e",
+   "game": "spacetaxi",
+   "name": "SpaceTaxi",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/spacetaxi",
+   "startedAt": "2026-11-24T09:10:54.608Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 182.11,
+   "reportAfterS": 5.7,
+   "firstFrameS": 1.5,
+   "costUsd": 0.0403,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":42,"modelCalls":42,"gameS":152,"wallS":125.8,"bootS":0.7,"firstFrameS":1.8,"secPerMove":2.86,"secPerMoveMedian":2.87,"moveWallS":119.9,"latencyS":1.13,"play":{"step":1,"gameS":5.1,"wallS":8.9,"ghostS":7.8},"realPlayMoves":42,"categories":{"loading":0,"story":0,"menu":0,"name":0,"other":0,"gameover":0,"playing":42,"level_complete":0},"buckets":{"loading":0,"menu":0,"gameover":0,"play":42},"playTimeShare":0.952,"timeline":"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":100,"newScreensAt":[0,5.6,6.1,6.6,7.1,7.6,8.1,9.2,9.6,10.1,10.6,11,11.5,12,12.5,13,13.5,14,14.5,15.2,15.7,16.2,17.2,17.7,18.2,18.5,19,19.5,20,20.5,22,24.6,25.1,25.6,26.1,32.2,34.7,37.6,39.2,39.7,45.2,46.2,50.1,60.2,62.7,64.1,65.1,65.6,67.1,68.1,68.6,69.6,70.6,71.1,72.2,72.7,73.2,73.7,74.2,75.7,83.7,92.7,99.7,112.1,116.1,118.7,120.2,120.7,121.2,121.7,122.2,122.7,123.2,123.7,124.2,124.7,125.2,125.7,126.2,126.7,127.2,127.7,128.2,128.7,129.2,129.7,130.6,131.1,131.6,132.1,132.7,133.2,133.7,134.2,134.7,135,135.5,136,137,140],"stalls":[{"fromS":50.1,"toS":60.2,"s":10.1,"steps":[20,22]},{"fromS":99.7,"toS":112.1,"s":12.5,"steps":[31,33]},{"fromS":140,"toS":152,"s":12,"open":true,"steps":[40,42]}],"stalledS":34.6,"saidNothing":1,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":42,"both":0,"wait":0},"quitStep":null,"costUsd":0.00715,"movesGameS":144.8,"time":{"startS":5,"modelS":47.6,"playS":72.3,"endS":0.9},"autopilotS":5.1,"autopilotWallS":4.3,"screensByGhost":29,"frames":624,"sampledFrames":305},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":34,"modelCalls":34,"gameS":156.8,"wallS":118.3,"bootS":0.7,"firstFrameS":1.6,"secPerMove":3.3,"secPerMoveMedian":3.26,"moveWallS":112.3,"latencyS":1.1,"play":{"step":2,"gameS":7.1,"wallS":12.4,"ghostS":11.4},"realPlayMoves":31,"categories":{"loading":0,"story":0,"menu":2,"name":0,"other":0,"gameover":0,"playing":32,"level_complete":0},"buckets":{"loading":0,"menu":2,"gameover":0,"play":32},"playTimeShare":0.82,"timeline":"MPPPMPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":68,"newScreensAt":[0,5.6,6.1,6.6,7.1,7.6,8.1,8.6,9.1,9.6,10.1,10.6,11.1,12.6,13.1,13.6,14.1,14.6,15.6,16.2,16.7,17.2,17.7,18.2,18.7,19.2,19.7,20.2,20.7,21.2,21.7,22.2,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,29.5,40.5,52.2,56.7,75.2,75.7,76.2,76.7,78.2,78.7,79.2,84.2,85.7,99.2,99.7,102.7,114.2,116.2,118.2,118.7,119.2,119.7,120.2,121.2,123.5,124.5],"stalls":[{"fromS":29.5,"toS":40.5,"s":11,"steps":[9,11]},{"fromS":40.5,"toS":52.2,"s":11.7,"steps":[11,14]},{"fromS":56.7,"toS":75.2,"s":18.5,"steps":[15,18]},{"fromS":85.7,"toS":99.2,"s":13.5,"steps":[20,22]},{"fromS":102.7,"toS":114.2,"s":11.5,"steps":[22,25]},{"fromS":124.5,"toS":156.8,"s":32.3,"open":true,"steps":[29,34]}],"stalledS":98.5,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":1,"keys":33,"both":0,"wait":0},"quitStep":null,"costUsd":0.00567,"movesGameS":134.5,"time":{"startS":4.9,"modelS":37.6,"playS":74.8,"endS":1.1},"autopilotS":5.1,"autopilotWallS":4.3,"screensByGhost":17,"frames":638,"sampledFrames":314},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":90,"modelCalls":90,"gameS":152.2,"wallS":181.2,"bootS":0.6,"firstFrameS":1.5,"secPerMove":1.95,"secPerMoveMedian":1.92,"moveWallS":175.4,"latencyS":0.99,"play":{"step":2,"gameS":6.1,"wallS":9.3,"ghostS":8.4},"realPlayMoves":87,"categories":{"loading":0,"story":0,"menu":1,"name":0,"other":1,"gameover":0,"playing":88,"level_complete":0},"buckets":{"loading":0,"menu":2,"gameover":0,"play":88},"playTimeShare":0.944,"timeline":"MPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":205,"newScreensAt":[0,5.6,6.1,6.6,7.1,7.6,8.1,8.6,9.1,10.2,10.5,11.1,11.6,12.1,12.6,13.1,14,14.5,15,16,18.2,18.7,19.2,19.7,20.2,20.7,21,21.5,22.2,22.6,23.1,25.1,26.1,26.6,27.1,29.1,31.2,31.7,32.2,32.7,33.2,33.7,34.2,34.7,35.2,35.7,36.2,37.2,37.7,38.2,38.7,39.2,39.7,40.2,40.7,41.1,42.6,43.1,43.6,44.1,45.6,46.7,47.1,47.7,48.2,48.7,49.2,49.5,50,50.7,51.2,51.7,54.7,56.7,57.2,57.6,58.1,58.6,59.1,60,61.1,61.6,62.1,62.7,63.2,63.6,64.2,64.7,65.2,65.7,66.2,66.6,67.2,67.7,68.2,68.7,69.2,69.6,71.6,73.6,78.2,78.6,79.1,79.6,80.1,80.6,81,83.1,83.6,84,84.5,85.2,85.7,86.2,87.6,88.1,88.6,89.1,92.2,92.7,93.2,93.6,94.1,94.6,95.1,95.6,96,96.5,97.2,97.7,98,98.5,99.2,99.7,100.2,101.2,101.7,102.2,102.7,103.2,104.6,105.1,105.6,106.1,106.6,107.1,107.6,108,108.5,109.2,109.7,110.2,110.7,111.2,111.6,112.1,112.6,113.1,115.1,117.2,119.6,120.1,120.6,121.1,121.6,122,122.5,123.2,123.7,124,124.5,125.2,125.7,126,126.5,127.2,127.7,128.2,128.7,129.2,129.6,130.1,130.6,131.1,131.6,132,132.5,133.1,133.6,134,134.5,135.1,135.6,136,136.5,137.2,137.7,138.2,138.7,139.2,141.1,141.6,149.6,150,151.7],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":89,"both":0,"wait":1},"quitStep":null,"costUsd":0.01445,"movesGameS":147.1,"time":{"startS":4.9,"modelS":89.5,"playS":85.9,"endS":0.9},"autopilotS":5.1,"autopilotWallS":4.3,"screensByGhost":68,"frames":651,"sampledFrames":305},
+    {"persona":"impatient","outcome":"time_up","ending":"R","steps":55,"modelCalls":55,"gameS":150.3,"wallS":149.5,"bootS":0.6,"firstFrameS":1.7,"secPerMove":2.61,"secPerMoveMedian":2.59,"moveWallS":143.6,"latencyS":1.12,"play":{"step":1,"gameS":5.1,"wallS":8.4,"ghostS":7.3},"realPlayMoves":51,"categories":{"loading":0,"story":0,"menu":3,"name":0,"other":1,"gameover":0,"playing":51,"level_complete":0},"buckets":{"loading":0,"menu":4,"gameover":0,"play":51},"playTimeShare":0.926,"timeline":"PPPOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMMM","screens":215,"newScreensAt":[0,5.6,6.1,6.6,7.1,7.6,8.1,9.7,10.2,10.7,11.2,11.7,12.2,12.7,13.2,13.7,14.2,14.7,15.1,15.6,16.1,16.6,17.1,17.6,18.2,18.7,19.1,19.6,20.1,20.6,21.1,21.6,22.1,22.6,23.1,23.6,24.1,24.6,25.1,25.6,26.1,26.6,27.2,27.7,28.1,28.6,29.1,29.6,30.1,30.6,31.1,31.6,32.1,32.6,33.2,33.7,34.2,34.7,35.7,36.2,36.5,37,37.5,38,38.5,39,39.5,40,41,41.5,42.5,43,45.6,46.6,47.1,47.6,48.1,48.6,49.1,49.6,50.1,50.6,51.1,51.6,52.1,52.6,53.1,53.6,54.6,55.1,55.6,56.1,56.6,57.1,58.6,59.1,59.6,60.1,60.6,61.1,61.6,62.1,62.6,63.1,63.6,64.1,67.1,67.6,68.1,68.6,69.1,69.5,70,70.5,71,71.6,72.1,72.6,73.1,73.6,74.1,74.6,75.1,75.6,76.1,76.6,77,78,78.5,79,79.5,80,80.5,81,81.5,83.6,84.1,84.6,86.6,87.1,87.6,88.1,90.6,91.1,91.6,92.1,92.6,93.2,93.7,94.2,94.7,95.2,95.7,96.2,96.5,97,97.5,98,98.5,99,104.5,105,107.5,108,108.5,109,110.5,113.6,115.1,117.1,117.6,118.1,118.6,119.1,119.6,120.1,120.6,122.1,122.6,123.1,123.6,124.1,124.6,125.1,125.6,126.6,127.1,127.7,128.2,128.7,129.2,129.7,130.7,132.7,133.2,133.7,134.2,137.2,138.7,139.2,139.7,140.2,140.7,141.2,141.7,142.2,142.7,143.7,144.2,144.7,145.1,145.6,146.1,146.6,150.1],"stalls":[],"stalledS":0,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":2,"keys":55,"both":2,"wait":0},"quitStep":null,"costUsd":0.00962,"movesGameS":145.2,"time":{"startS":5,"modelS":61.6,"playS":82,"endS":0.9},"autopilotS":5.1,"autopilotWallS":4.4,"screensByGhost":45,"frames":620,"sampledFrames":301}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-14-05-339Z-6ab5112c12",
+   "path": "runs/2026-11-24T09-14-05-339Z-6ab5112c12",
+   "game": "coiner",
+   "name": "Coiner",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/coiner",
+   "startedAt": "2026-11-24T09:14:05.480Z",
+   "viewport": {
+    "width": 640,
+    "height": 508
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 190.93,
+   "reportAfterS": 6.5,
+   "firstFrameS": 1.7,
+   "costUsd": 0.0629,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":77,"modelCalls":77,"gameS":150.8,"wallS":177.7,"bootS":0.6,"firstFrameS":1.8,"secPerMove":2.15,"secPerMoveMedian":2.11,"moveWallS":165.3,"latencyS":1.09,"play":{"step":1,"gameS":10.6,"wallS":11.9,"ghostS":10.8},"realPlayMoves":48,"categories":{"loading":0,"story":0,"menu":8,"name":0,"other":0,"gameover":0,"playing":69,"level_complete":0},"buckets":{"loading":0,"menu":8,"gameover":0,"play":69},"playTimeShare":0.844,"timeline":"PPPPPPPMPPPPPPPPPPPMPPPPPPPPPMPPPPPPPPMPPPPPPPMPPPPPPPMPPPPPPPPPMPPPPPPPMPPPP","screens":102,"newScreensAt":[0,1.5,2,2.5,3,3.5,4,4.5,5.5,6,8.6,9.1,9.6,10.1,10.6,11.1,11.6,12.2,13.5,14,14.5,15,15.5,16,16.5,17,17.5,21.5,23.6,25.6,27.2,29.7,30.2,31.2,31.7,32.7,33.2,33.7,34.2,44,47.6,51.6,52.1,52.6,53.1,54.6,60.7,61.2,61.7,62.2,62.5,63,63.5,64.5,65,65.5,66,68.1,68.6,69.1,69.6,70.1,70.6,74.7,76.7,77.2,77.7,79,80,82,84.6,87.1,87.6,88.1,91.2,93.6,96.7,97.2,99.2,99.7,101.5,103.1,103.6,104.1,104.6,105.1,115,116.7,117,118.5,123.1,123.6,130.1,130.6,133.2,134.2,139.2,139.7,145.7,149.6,150.1,150.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":46,"keys":11,"both":1,"wait":21},"quitStep":null,"costUsd":0.01459,"movesGameS":140.2,"time":{"startS":8.9,"modelS":83.9,"playS":81.4,"endS":3.5},"autopilotS":10.6,"autopilotWallS":8.3,"screensByGhost":50,"frames":636,"sampledFrames":302},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":89,"modelCalls":89,"gameS":153.9,"wallS":189.8,"bootS":0.6,"firstFrameS":1.7,"secPerMove":2.02,"secPerMoveMedian":1.95,"moveWallS":180.1,"latencyS":1.17,"play":{"step":1,"gameS":10.6,"wallS":12,"ghostS":10.9},"realPlayMoves":57,"categories":{"loading":0,"story":0,"menu":8,"name":0,"other":0,"gameover":0,"playing":81,"level_complete":0},"buckets":{"loading":0,"menu":8,"gameover":0,"play":81},"playTimeShare":0.813,"timeline":"PPPPPPPPMPPPPPPPPPPPPPPPPMPPPPPPPPPPPPPMPPPPPPPPPPPPMPPPPPPPPPPPMPPPPPPPMPPPPPMPPPPPPPMPP","screens":63,"newScreensAt":[0,1.5,2,2.5,3,3.5,4,4.5,5.5,6,8.6,9.1,9.6,10.1,10.6,11.1,12,12.6,13.1,13.5,14,15.6,16.2,16.7,17.2,17.7,22.1,23.1,24.2,24.7,26.2,27,27.6,29,30.2,30.5,31,32.1,33.1,33.6,34.1,34.6,35.1,39.6,40.2,43.7,47,47.6,51.1,69.5,70.1,70.7,78.1,78.6,84.1,88.5,89.5,106.1,120.1,121.2,123.6,124.1,124.6],"stalls":[{"fromS":51.1,"toS":69.5,"s":18.4,"steps":[38,50]},{"fromS":89.5,"toS":106.1,"s":16.6,"steps":[64,71]},{"fromS":106.1,"toS":120.1,"s":13.9,"steps":[71,76]},{"fromS":124.6,"toS":153.9,"s":29.3,"open":true,"steps":[78,89]}],"stalledS":78.2,"saidNothing":1,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":10,"keys":56,"both":1,"wait":24},"quitStep":null,"costUsd":0.01664,"movesGameS":139,"time":{"startS":8.9,"modelS":104,"playS":76.1,"endS":0.8},"autopilotS":10.6,"autopilotWallS":8.3,"screensByGhost":57,"frames":671,"sampledFrames":308},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":77,"modelCalls":77,"gameS":151.2,"wallS":177.8,"bootS":0.6,"firstFrameS":1.8,"secPerMove":2.15,"secPerMoveMedian":2.1,"moveWallS":165.3,"latencyS":1.15,"play":{"step":1,"gameS":10.6,"wallS":11.6,"ghostS":10.5},"realPlayMoves":54,"categories":{"loading":0,"story":0,"menu":8,"name":0,"other":0,"gameover":0,"playing":69,"level_complete":0},"buckets":{"loading":0,"menu":8,"gameover":0,"play":69},"playTimeShare":0.846,"timeline":"PPPPPPPMPPPPPPPPPPPMPPPPPPMPPPPPPPPMPPPPPPPPMPPPPPPPMPPPPPPPPPMPPPPPPPPPMPPPP","screens":81,"newScreensAt":[0,1.5,2,2.5,3,3.5,4,4.5,5.5,6,8.6,9.1,9.6,10.1,10.6,11.1,11.7,12.6,13.1,13.6,15.6,16.1,16.6,17.1,17.6,21.6,22.1,27.1,28.1,29.7,31.1,32.6,33.1,33.6,34,39.2,46.7,48.2,48.7,50.1,50.6,57.1,57.6,58,58.5,59,66.6,67.1,67.6,68.1,68.6,69.1,69.6,72.7,73.2,74.7,75.2,84.1,85.1,85.6,88.1,93.1,94.6,98.2,98.7,104.2,105.2,108.2,117,121,121.5,122.1,128.7,131,134,134.5,138.1,138.6,139.6,148.6,150.6],"stalls":[],"stalledS":0,"saidNothing":3,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":35,"keys":31,"both":4,"wait":15},"quitStep":null,"costUsd":0.01538,"movesGameS":140.6,"time":{"startS":8.8,"modelS":88.9,"playS":76.4,"endS":3.8},"autopilotS":10.6,"autopilotWallS":8.2,"screensByGhost":56,"frames":641,"sampledFrames":303},
+    {"persona":"impatient","outcome":"time_up","ending":"R","steps":61,"modelCalls":61,"gameS":152.5,"wallS":158.2,"bootS":0.7,"firstFrameS":1.8,"secPerMove":2.43,"secPerMoveMedian":2.43,"moveWallS":148.2,"latencyS":1.17,"play":{"step":1,"gameS":10.6,"wallS":12.1,"ghostS":11},"realPlayMoves":48,"categories":{"loading":0,"story":0,"menu":7,"name":0,"other":0,"gameover":0,"playing":54,"level_complete":0},"buckets":{"loading":0,"menu":7,"gameover":0,"play":54},"playTimeShare":0.813,"timeline":"PPPPPPPMPPPPPPPPPPPMPPPPPPPMPPPPPPPMPPPPPPMPPPPPMPPPPPPMPPPPP","screens":107,"newScreensAt":[0,1.5,2,2.5,3,3.5,4,4.5,5.5,6,8.6,9.1,9.6,10.1,10.6,11.1,11.7,12.5,13,13.5,14,15.6,16.1,16.6,17.1,17.6,22.2,22.7,23.7,24.2,25,25.5,26,29.7,31.2,31.7,33.2,33.7,34.2,35.2,35.7,41.7,42.2,42.7,43.2,43.7,44.2,44.7,45.2,45.7,46.2,46.7,50.6,51.1,51.6,52.6,53.1,53.6,54.1,57.2,57.7,63.7,65.7,66.2,67.2,67.7,68.2,68.7,72.7,73.2,73.7,74.2,74.7,75.2,75.7,79.7,84.6,89.6,91.6,92.1,101.7,102.2,110.2,112.7,113.2,114.7,119.7,122.2,125.7,126.2,127.2,127.7,139.1,139.6,140.1,142.1,142.6,143.1,143.6,144.1,145.6,146.6,147.1,149.6,150.2,150.7,151.2],"stalls":[{"fromS":127.7,"toS":139.1,"s":11.4,"steps":[54,56]}],"stalledS":11.4,"saidNothing":7,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":33,"keys":33,"both":11,"wait":6},"quitStep":null,"costUsd":0.01235,"movesGameS":139,"time":{"startS":9,"modelS":71.1,"playS":77.1,"endS":1},"autopilotS":10.6,"autopilotWallS":8.4,"screensByGhost":50,"frames":630,"sampledFrames":305}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-17-26-415Z-2c7ec99bfa",
+   "path": "runs/2026-11-24T09-17-26-415Z-2c7ec99bfa",
+   "game": "backout",
+   "name": "Backout",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/backout",
+   "startedAt": "2026-11-24T09:17:26.549Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 278.48,
+   "reportAfterS": 0.4,
+   "firstFrameS": 8.7,
+   "costUsd": 0.0483,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":132},"steps":84,"modelCalls":84,"gameS":131.8,"wallS":274.4,"bootS":4.7,"firstFrameS":8.8,"secPerMove":2.94,"secPerMoveMedian":2.86,"moveWallS":247.4,"latencyS":0.99,"play":{"step":1,"gameS":14.4,"wallS":32.8,"ghostS":28.6},"realPlayMoves":71,"categories":{"loading":0,"story":0,"menu":5,"name":0,"other":0,"gameover":3,"playing":75,"level_complete":1},"buckets":{"loading":0,"menu":5,"gameover":3,"play":76},"playTimeShare":0.787,"timeline":"PPPPPPMPPPPPPMPPPMPPPPPPPPPPPPPPPPPPMPPPPPPMPPPPPPPPPPPPPPPPPPPPPPGPPPPPPPGPPPCPGPPP","screens":216,"newScreensAt":[0,0.5,1,1.5,9.5,13.6,14.1,14.7,15,15.5,16.1,16.7,17.1,17.6,18.1,18.6,19.1,19.6,20.1,20.6,21.1,21.6,22.1,22.6,23.1,23.6,24.1,24.7,25.2,25.7,26,26.5,27.1,27.6,28.2,28.6,29.1,29.5,30,30.7,31,31.5,32,33,33.7,34.2,34.7,35.2,35.7,36,36.5,37.2,37.7,38.1,38.6,39.1,39.5,40,40.7,41.2,41.6,42.1,42.6,43,43.5,44.2,44.7,45.1,45.6,46.1,46.5,47,47.7,48.2,48.6,49.1,49.6,50,50.5,51.2,51.7,52.1,52.6,53.1,53.5,54,54.7,55.2,55.6,56.1,57,57.5,58.2,58.7,59.1,59.6,60.1,60.5,61,61.7,62.2,62.7,63.2,63.7,65.1,65.5,66,66.7,67.2,67.6,68.1,68.6,69,69.5,70.2,70.7,71.1,71.6,72.1,72.6,73.1,73.6,74,74.5,75.2,75.7,76.1,76.6,77.5,78,78.7,79.2,80.1,80.6,81.5,82.2,82.7,83.1,83.6,84.1,84.5,85,85.7,86.2,87.1,87.6,88,88.5,89.2,89.7,90.6,91.1,91.5,92,93.6,94.1,94.6,95,95.5,96.7,97.1,97.6,98.1,98.5,99,99.7,100.2,100.6,101.1,102,103.2,103.7,104.1,104.6,105.1,106.6,107,108.2,108.7,109.1,109.6,110.1,110.5,111,111.7,113.1,113.6,114,114.5,115.2,115.7,116.6,117.6,118,118.5,119.7,120.1,120.6,121.5,122,122.7,123.2,123.7,124.1,124.6,125.2,126.1,126.6,127.1,128.6,129.1,129.6,130.1,130.6,131.1,131.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":80,"both":0,"wait":4},"quitStep":null,"costUsd":0.01305,"movesGameS":117.4,"time":{"startS":25.6,"modelS":83.5,"playS":163.9,"endS":1.4},"autopilotS":14.5,"autopilotWallS":21,"screensByGhost":85,"frames":567,"sampledFrames":264},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":51,"modelCalls":51,"gameS":151.6,"wallS":261.8,"bootS":4.6,"firstFrameS":8.8,"secPerMove":4.64,"secPerMoveMedian":4.88,"moveWallS":236.4,"latencyS":0.93,"play":{"step":1,"gameS":13.9,"wallS":33,"ghostS":28.8},"realPlayMoves":43,"categories":{"loading":0,"story":0,"menu":8,"name":0,"other":0,"gameover":0,"playing":43,"level_complete":0},"buckets":{"loading":0,"menu":8,"gameover":0,"play":43},"playTimeShare":0.78,"timeline":"PPPPPPPPPPMPPPPMPPPMPMPPPPPPPPMPPMPPPPPPPPPPPPPMMPP","screens":265,"newScreensAt":[0,0.5,1,4,8,10.1,10.7,11.2,11.7,12.2,12.7,13.2,13.7,14.2,14.7,15.1,15.6,16.2,16.7,17.2,17.5,18,18.6,19.1,19.6,20.1,20.6,21.1,21.6,22.1,22.6,23.1,23.6,24.1,24.6,25.1,25.6,26.1,26.6,27.1,27.6,28.1,28.6,29.1,29.6,30.1,30.6,31.1,31.6,32.1,32.6,33.1,33.6,35.1,35.6,36.1,36.6,37.1,37.6,38.1,38.6,39.1,39.6,40.1,40.6,41.1,41.6,42.1,42.6,43.1,44.1,44.6,45.1,45.6,46.1,46.6,47.1,47.6,48.1,48.6,49.1,49.6,50.1,50.6,51.1,52,52.5,53,53.7,54.2,54.7,55.2,55.7,56.2,56.7,57.2,57.7,58.2,58.7,59.7,60.2,61.2,61.7,62.2,62.7,63.2,63.7,64.2,65.2,65.7,66.2,66.6,67.1,67.7,68.2,68.7,69.2,69.7,70.7,71.2,71.7,72.2,72.7,73.2,73.7,74.2,74.7,75.2,76.2,76.7,77.2,77.7,78.2,78.7,79.2,79.7,80.2,80.7,81,81.5,82.5,83,83.5,84,84.5,85,85.5,86,86.5,87,87.5,88,88.5,89,89.5,90,90.5,91,91.5,92,92.5,93,94,94.5,96,96.5,97,97.5,98,98.5,99,99.7,100.2,100.7,101.2,101.7,102.2,102.7,103.2,103.7,104.2,104.7,105.2,105.7,106.2,106.7,107.2,107.7,108.2,108.7,109.2,109.7,110.2,110.7,111.2,111.7,112.2,112.7,113.2,113.7,114.2,114.7,115.2,115.7,116.7,117.2,118.2,118.7,119.2,119.7,120.2,120.7,121.2,121.7,122.2,122.7,123.7,124.2,124.7,125.2,125.7,126.2,128.2,128.7,129.2,129.7,130.2,130.7,131.2,131.7,132.2,132.7,133.2,133.7,134.2,134.7,135.7,136.2,137.2,137.7,138.2,138.7,139.7,140.2,141.2,141.7,142.2,142.7,143.2,143.7,144.6,145.1,145.6,146.1,146.6,147.1,147.6,148.1,148.6,149.1,149.6,150.1,150.6,151.1,151.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":51,"both":0,"wait":0},"quitStep":null,"costUsd":0.00807,"movesGameS":137.7,"time":{"startS":24.6,"modelS":47.4,"playS":189,"endS":0.9},"autopilotS":14,"autopilotWallS":20,"screensByGhost":61,"frames":617,"sampledFrames":304},
+    {"persona":"reader","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":133},"steps":79,"modelCalls":79,"gameS":133.4,"wallS":273.5,"bootS":4.5,"firstFrameS":8.7,"secPerMove":3.14,"secPerMoveMedian":3.01,"moveWallS":247.9,"latencyS":1.04,"play":{"step":2,"gameS":15.3,"wallS":33.7,"ghostS":29.6},"realPlayMoves":62,"categories":{"loading":0,"story":1,"menu":4,"name":0,"other":0,"gameover":6,"playing":67,"level_complete":1},"buckets":{"loading":1,"menu":4,"gameover":6,"play":68},"playTimeShare":0.723,"timeline":"MPPPPPCPPMPMPPPPPPPPPPPPPPPPPPPPPPPGPPGPGPGPGPSPPPPPPPPGPPPPMPPPPPPPPPPPPPPPPPP","screens":225,"newScreensAt":[0,0.5,1,1.5,2,3.5,5.5,6,7.5,14.6,15.1,15.6,16.1,16.6,17.1,17.6,18.1,18.6,19.1,19.6,20.2,20.5,21,21.6,22.1,23,23.6,24.1,24.6,25.1,25.6,26.1,26.6,27.1,27.6,28.1,28.6,29.1,29.6,30.1,30.6,31.1,31.6,32.1,33.2,33.7,34.2,34.7,35.1,35.6,36.2,36.7,37.2,37.7,38.2,38.7,39.2,39.7,40.2,40.6,41.2,41.6,42.1,42.6,43,43.5,44.2,44.7,45.1,45.6,46.1,46.5,48.2,48.6,49.1,49.6,50,50.5,51.2,51.7,52.1,52.6,53.1,53.5,54,54.7,55.2,55.6,56.1,56.6,57,57.5,58.2,58.7,59.1,59.6,60.1,60.5,61,61.7,62.2,62.6,63.1,63.6,64,64.5,65.2,65.7,66.2,66.6,67.1,67.6,68,68.5,69.2,69.7,70.2,70.6,71.1,71.6,72,72.5,73.2,73.7,74.6,75.1,75.6,76,76.5,77.2,77.7,78.2,78.6,79.6,80,80.5,81.2,81.7,82.2,82.6,83.1,83.6,84,84.5,85.2,85.7,86.2,87.1,88,88.5,89,89.5,90.7,91.2,91.6,92.1,92.6,93.1,93.6,94.1,94.5,95,95.7,96.2,96.6,97.1,97.6,98,98.5,99,100.2,100.7,101.2,101.7,102.1,102.6,103.1,103.5,104,104.5,105,106,106.5,107.2,107.7,108.2,109.2,109.6,110.1,110.6,112.2,112.7,113.1,113.6,114.1,114.5,115,115.7,116.2,116.6,117.1,117.6,118.5,119.2,119.7,120.1,121.5,122,122.7,123.2,123.6,124.6,125,125.5,126.7,127.6,128.5,129,129.7,130.2,130.6,131.1,131.6,132.1,132.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":74,"both":0,"wait":5},"quitStep":null,"costUsd":0.01326,"movesGameS":119.3,"time":{"startS":24.6,"modelS":82,"playS":165.9,"endS":1},"autopilotS":14.1,"autopilotWallS":20.1,"screensByGhost":85,"frames":570,"sampledFrames":267},
+    {"persona":"impatient","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":125},"steps":84,"modelCalls":84,"gameS":125.1,"wallS":273.2,"bootS":4.7,"firstFrameS":9,"secPerMove":2.94,"secPerMoveMedian":2.84,"moveWallS":246.6,"latencyS":1.06,"play":{"step":1,"gameS":14.4,"wallS":32.9,"ghostS":28.7},"realPlayMoves":76,"categories":{"loading":0,"story":0,"menu":4,"name":0,"other":0,"gameover":3,"playing":76,"level_complete":1},"buckets":{"loading":0,"menu":4,"gameover":3,"play":77},"playTimeShare":0.778,"timeline":"PPPPGPPMPPMPPPMPPPPMPPPPPPPPPPPPGPPPPPPPPPPPPPPCPPPPPPPPGPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":200,"newScreensAt":[0,0.5,1,1.5,3.5,9.5,13.6,14.1,14.7,15.2,15.7,16.2,16.7,17.2,17.7,18.2,18.6,19.1,19.7,20.2,20.7,21.2,21.7,22.2,22.7,23.2,23.7,24.2,24.7,25.2,26.2,27,27.5,28,28.5,29.1,29.6,30.1,30.6,31.2,31.7,32.1,32.6,33.2,33.7,34.2,34.7,35.2,35.6,36.2,37,37.6,38.1,38.6,39.1,39.6,40.2,40.5,41,41.6,42.2,42.6,43.2,43.5,44,45.1,45.6,46.2,46.5,47,47.6,48.2,48.6,49.1,49.6,50.1,50.6,51.1,51.6,52.2,52.7,53.2,53.6,54.2,54.5,55,56.2,57,57.6,58.2,58.6,59,59.5,60.2,61.7,62.2,63.2,64.1,65.5,66,66.6,67.2,67.6,68.1,68.5,69,70.2,70.5,71,71.6,72.2,73.2,73.7,74.7,75.2,75.7,76.7,77.7,78.2,79.2,79.7,80.2,81.2,81.7,82.2,82.6,83.2,83.7,84.1,84.6,85.2,86.2,86.7,87.2,87.7,88.2,88.7,89.2,89.7,90.1,90.7,91,91.5,92,92.7,93.2,93.6,94.1,94.6,95.1,95.6,96.1,96.7,97.1,98.1,99.7,100.1,100.6,101.1,101.7,102.1,102.6,103.1,103.7,104,104.5,105.1,105.6,106.1,106.7,107.1,107.6,108.1,109,109.6,110.1,110.7,111.1,111.6,112.7,113.1,114.2,114.7,115.2,115.7,116,116.5,117.2,117.6,118,118.5,119.1,120.2,121.1,121.7,122.2,122.5,123,123.7,124.5],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":84,"both":0,"wait":0},"quitStep":null,"costUsd":0.01394,"movesGameS":110.7,"time":{"startS":25.8,"modelS":89.5,"playS":157.1,"endS":0.9},"autopilotS":14.5,"autopilotWallS":21.1,"screensByGhost":88,"frames":567,"sampledFrames":251}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-22-07-798Z-d73c85b35d",
+   "path": "runs/2026-11-24T09-22-07-798Z-d73c85b35d",
+   "game": "big-champ",
+   "name": "Big Champ",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/big-champ",
+   "startedAt": "2026-11-24T09:22:07.955Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 195.22,
+   "reportAfterS": 8.9,
+   "firstFrameS": 3.4,
+   "costUsd": 0.0462,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":67,"modelCalls":67,"gameS":150.9,"wallS":183.5,"bootS":0.8,"firstFrameS":3.4,"secPerMove":2.53,"secPerMoveMedian":2.45,"moveWallS":169.8,"latencyS":0.98,"play":{"step":2,"gameS":11.8,"wallS":18.2,"ghostS":16.6},"realPlayMoves":47,"categories":{"loading":0,"story":4,"menu":4,"name":0,"other":0,"gameover":12,"playing":47,"level_complete":0},"buckets":{"loading":4,"menu":4,"gameover":12,"play":47},"playTimeShare":0.629,"timeline":"MPPPPGMPPPPGMPPPPGMPPPPGSPPPGGPPPPPGSPPPPGSPPPGPPPPGSPPPPGPPPPPGPPP","screens":197,"newScreensAt":[0,1.5,2,2.5,3,3.5,4.5,5,5.5,6,6.5,7.1,7.6,8.6,9.6,10.1,10.6,11.1,11.6,12.1,13.1,13.6,14.1,14.6,15.1,15.6,16.1,16.6,17.2,17.7,18.2,18.7,19.2,19.7,20.2,20.7,21.5,22,22.7,23.2,23.7,24.2,26.1,26.6,27.1,28.2,28.6,29.1,29.7,30.2,30.7,31.2,31.5,32,32.5,33.5,34.6,35.1,35.5,36.5,37.2,38.2,38.7,39.2,39.7,40.2,41.2,41.7,42,42.5,43.1,43.7,44.2,44.7,45.7,47.1,50.7,51,51.5,52.1,52.6,54.1,54.7,55.2,56.1,57.2,58.1,58.7,59.2,59.6,61.1,61.6,63.6,64,65.5,66.1,67.6,68.1,68.6,70.1,70.5,71,72.2,72.7,73.2,74.1,74.6,75.6,76.1,76.6,77.7,78.2,78.5,79,79.6,80.1,80.5,81.6,82.1,83.1,83.6,84.1,84.6,85.6,86.5,87.7,88.7,89.2,89.6,90.6,91.1,91.6,92.1,93.1,93.6,94.1,94.6,95.1,96.7,98.2,98.6,100.1,100.6,101,102,102.5,104,104.5,105.1,106.6,107.6,108.2,109.6,111.1,111.5,112,112.5,113,113.5,114.2,114.5,115,116.2,116.5,117,117.5,118.5,121.7,122.6,123.1,123.6,125.1,125.6,126.1,126.6,127.1,127.6,128.1,128.6,130.6,131.1,131.6,134.2,135.2,136.7,137.2,137.7,138.5,139.6,140.1,143.6,145,147.2,148.5,149.6,150.1,150.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":23,"keys":54,"both":10,"wait":0},"quitStep":null,"costUsd":0.01023,"movesGameS":140.3,"time":{"startS":12.7,"modelS":66,"playS":103.8,"endS":0.9},"autopilotS":10.6,"autopilotWallS":11.9,"screensByGhost":62,"frames":662,"sampledFrames":302},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":56,"modelCalls":56,"gameS":150.8,"wallS":180,"bootS":0.9,"firstFrameS":3.5,"secPerMove":2.96,"secPerMoveMedian":2.7,"moveWallS":165.8,"latencyS":1.02,"play":{"step":2,"gameS":12.1,"wallS":19.9,"ghostS":18.3},"realPlayMoves":28,"categories":{"loading":0,"story":1,"menu":9,"name":0,"other":0,"gameover":18,"playing":28,"level_complete":0},"buckets":{"loading":1,"menu":9,"gameover":18,"play":28},"playTimeShare":0.469,"timeline":"MPPGGMPPGGMPPPGMPPPGGMPPPGGSPPPGGMPPPGGMPPPGMPPPGGMPPPGG","screens":183,"newScreensAt":[0,1.5,2,2.5,3,4,4.5,6.5,7.1,8.1,8.6,9.1,9.6,11.1,11.6,12.1,12.6,13.1,13.6,14.1,15.1,15.6,16.1,16.6,17.1,17.6,18.1,18.6,19.6,20.1,20.6,21.1,21.6,22.1,22.6,23.1,24,25,25.5,26,26.5,27,27.5,28,28.5,29.1,29.7,30.2,30.6,31.6,32.1,34.1,34.5,36,37,37.5,38.6,39.1,39.6,40.6,41.1,41.6,43.1,43.6,44.1,44.6,45.5,46.5,49.7,50.2,51.7,52.5,53,54.5,55,57.1,57.6,58.1,58.6,60.1,62,62.5,63.5,64.2,64.7,66.2,66.7,67.2,67.7,68.2,68.7,69,70.1,70.6,71.6,72.1,72.6,73.2,73.7,74.2,75.2,76.6,77.6,79.1,80.1,80.6,82,82.7,83.2,84,84.5,85,85.7,86.2,86.7,87.2,87.7,88.2,90.6,93,94.2,95.2,96.2,97.2,97.7,98.2,98.6,99.7,100.2,100.6,101.1,101.7,102.2,102.6,103.1,105.2,106.2,106.7,107.2,110.1,111.6,113.1,113.6,114.1,114.5,116.1,116.6,117.7,118.1,119.1,119.6,120.6,121.1,123.6,125,125.5,126,126.5,127.2,128,128.5,130.1,130.7,131.2,132,132.5,133.1,134.6,136,136.5,137,139.6,140.1,140.7,141,142,142.5,143.5,144.6,145.5,146,148.2,150.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":30,"keys":54,"both":28,"wait":0},"quitStep":null,"costUsd":0.00845,"movesGameS":140.2,"time":{"startS":13.4,"modelS":57.3,"playS":108.5,"endS":0.8},"autopilotS":10.6,"autopilotWallS":12.5,"screensByGhost":54,"frames":635,"sampledFrames":302},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":74,"modelCalls":74,"gameS":152.1,"wallS":193.6,"bootS":1,"firstFrameS":3.6,"secPerMove":2.4,"secPerMoveMedian":2.33,"moveWallS":177.9,"latencyS":0.9,"play":{"step":3,"gameS":13.7,"wallS":22.9,"ghostS":21.2},"realPlayMoves":50,"categories":{"loading":0,"story":1,"menu":9,"name":0,"other":0,"gameover":12,"playing":52,"level_complete":0},"buckets":{"loading":1,"menu":9,"gameover":12,"play":52},"playTimeShare":0.656,"timeline":"MPPPPPGGMMPPPPPPPPGGMPPPPPPGGPPPPPPGSMPPPPPPGMPPPPPPGPPPPGMPPPPGMPPPPGMPPP","screens":224,"newScreensAt":[0,1.5,2,2.5,3,3.5,4,4.5,5.5,6,7.1,8.2,8.7,11.7,12.2,13.2,14.2,14.7,15.2,15.7,16.2,16.7,17.2,17.7,18.2,18.7,19.2,19.7,20.2,21.2,21.7,22.2,22.7,23.2,23.7,24.2,25.2,25.7,26.2,26.7,27.2,28.2,28.7,29.2,29.5,30,30.5,31,31.6,32.1,32.6,33.2,33.7,34.2,34.5,35,35.6,36.1,36.6,37.2,37.7,38.2,38.5,39,39.5,40,40.5,41,41.5,42,43.5,44,44.5,45.1,46.1,46.7,47.2,48,48.5,49.6,50.1,50.7,51.2,51.7,52,52.5,53.1,54.6,56.1,57.5,58.1,58.6,59.1,59.7,60.7,61,61.5,62.1,62.6,63.1,63.7,64.2,65,65.5,66.1,66.6,67.1,68.1,68.6,69.1,70.1,71.1,71.6,72.1,72.5,73,73.6,74.1,74.6,76.2,76.5,77,77.7,78.7,79.1,79.6,80.2,80.7,81.1,81.6,84.2,85.2,86.2,87.7,88.1,88.6,89.1,89.6,90,90.5,91.1,91.7,92.2,92.6,93.1,93.7,94,94.5,95.2,95.7,96.2,96.5,97,98.1,100.1,101.5,103.2,103.7,104.2,105,105.7,106.2,106.5,107,107.6,108.2,109.6,110.1,113,114.7,115.5,116.2,117.1,117.6,118.1,118.7,119.1,119.6,120.1,120.6,121.1,121.7,122.2,122.7,123.2,123.7,124.6,125.1,125.6,127.5,128,128.7,130,130.5,131.6,132.1,132.6,133.2,133.7,134.1,134.6,135.2,136.6,137.1,137.5,138,138.6,140.1,141.6,142.5,143,143.7,144.6,145.1,145.7,146,147.2,147.7,148.2,149.1,149.5,150,151.1,151.7],"stalls":[],"stalledS":0,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":70,"keys":8,"both":6,"wait":2},"quitStep":null,"costUsd":0.01147,"movesGameS":140.7,"time":{"startS":14.7,"modelS":66.4,"playS":111.5,"endS":1},"autopilotS":11.5,"autopilotWallS":13.7,"screensByGhost":68,"frames":684,"sampledFrames":305},
+    {"persona":"impatient","outcome":"quit","ending":"A","steps":22,"modelCalls":22,"gameS":59.1,"wallS":72.5,"bootS":1,"firstFrameS":3.6,"secPerMove":2.62,"secPerMoveMedian":2.66,"moveWallS":57.6,"latencyS":0.97,"play":{"step":2,"gameS":11.8,"wallS":19.1,"ghostS":17.4},"realPlayMoves":13,"categories":{"loading":0,"story":0,"menu":3,"name":0,"other":0,"gameover":6,"playing":13,"level_complete":0},"buckets":{"loading":0,"menu":3,"gameover":6,"play":13},"playTimeShare":0.516,"timeline":"MPPPPPGMPPPGGPPPGMPPGG","screens":80,"newScreensAt":[0,1.5,2,2.5,3,4.5,5,6,7.1,8.1,8.6,9.6,10.1,10.6,11.1,11.6,12.6,13.1,13.6,14.1,14.6,15.1,15.6,16.1,16.6,17.1,17.6,18,18.5,19,19.7,20.2,20.7,21.2,22.1,22.6,23.1,23.6,24.1,25.6,26.1,26.6,28.1,28.6,29.1,29.6,30.1,30.6,31.1,31.6,33,34.7,35.6,36.1,36.6,38.1,38.6,39.1,39.6,40.6,41.1,42.1,42.6,43.1,44,44.5,45.1,45.6,47.7,49.2,49.7,50.2,50.7,51.2,52.2,52.7,54.2,54.7,55.7,56.7],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":8,"keys":15,"both":2,"wait":1},"quitStep":22,"costUsd":0.00329,"movesGameS":48.5,"time":{"startS":14,"modelS":21.3,"playS":36.4,"endS":0.9},"autopilotS":10.6,"autopilotWallS":13,"screensByGhost":30,"frames":246,"sampledFrames":119}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-25-33-966Z-851a2f005b",
+   "path": "runs/2026-11-24T09-25-33-966Z-851a2f005b",
+   "game": "dead-again",
+   "name": "Dead Again",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/dead-again",
+   "startedAt": "2026-11-24T09:25:34.096Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 226.73,
+   "reportAfterS": 6,
+   "firstFrameS": 4.6,
+   "costUsd": 0.044,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":108,"modelCalls":108,"gameS":150.3,"wallS":225.1,"bootS":0.8,"firstFrameS":4.6,"secPerMove":2,"secPerMoveMedian":1.96,"moveWallS":216.1,"latencyS":0.92,"play":{"step":1,"gameS":8.8,"wallS":11.8,"ghostS":10.2},"realPlayMoves":78,"categories":{"loading":0,"story":0,"menu":0,"name":0,"other":0,"gameover":28,"playing":80,"level_complete":0},"buckets":{"loading":0,"menu":0,"gameover":28,"play":80},"playTimeShare":0.643,"timeline":"PPPPPPPPPPGGGPPPPPPPGGGPPPPPPPPPGGGPPPPPPPPPPPPPPGGGGPPPPPGGGPPPPPPPPPGGGGPPPPPPPPPPGGGPGPPPPPPPPPPPPPPGGGGP","screens":133,"newScreensAt":[0,0.5,2.5,3,9.5,10.1,10.6,11.1,11.7,12.2,12.6,13.2,13.6,15.6,19.2,20,20.5,22.1,23.1,23.6,24,25.2,26.2,26.7,27.2,28.6,29.2,29.7,30.6,31.1,32.5,33.1,35.7,36.6,37.1,38.2,40.1,40.6,42.1,42.6,45.5,46.5,49.7,51.6,53.1,54.1,55.1,56.1,56.6,57.1,63.1,63.6,64.1,64.6,65.7,70.2,72.6,73.7,74,74.5,75,76,76.5,77.2,78.2,78.7,79.2,79.7,80.2,83.7,85.7,87.1,94.1,95.1,95.7,96.6,98.7,99.1,99.6,100,100.6,101.2,101.6,102.1,106.1,106.7,107.2,107.6,108.1,108.6,110.1,111.1,112.7,113.6,114.2,114.5,115.7,116.1,116.6,118.2,118.5,119.2,119.7,120.2,120.5,121.1,121.7,122.6,123.2,123.5,125.1,126.1,127.7,128.1,128.6,131.6,132.7,133,133.6,134.2,138.2,138.5,139.1,139.7,140.6,145,145.7,146.2,146.7,147.2,147.7,148.1,149.1],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":23,"keys":92,"both":8,"wait":1},"quitStep":null,"costUsd":0.01584,"movesGameS":141.5,"time":{"startS":8.2,"modelS":99.6,"playS":116.5,"endS":0.8},"autopilotS":8.8,"autopilotWallS":7.5,"screensByGhost":79,"frames":697,"sampledFrames":301},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":49,"modelCalls":49,"gameS":151,"wallS":162.1,"bootS":0.8,"firstFrameS":4.6,"secPerMove":3.12,"secPerMoveMedian":3.08,"moveWallS":152.8,"latencyS":0.93,"play":{"step":1,"gameS":8.8,"wallS":12.2,"ghostS":10.5},"realPlayMoves":31,"categories":{"loading":1,"story":0,"menu":0,"name":0,"other":0,"gameover":17,"playing":31,"level_complete":0},"buckets":{"loading":1,"menu":0,"gameover":17,"play":31},"playTimeShare":0.638,"timeline":"PPGGGLPPPPPPGPGPPGGGPPPPPGGPPPPPGGPPPPGGGPPGGPPPP","screens":126,"newScreensAt":[0,0.5,1,2,2.5,9.6,10.2,11.6,13.1,13.6,14.6,15.1,15.6,16.5,17.6,19.6,20.1,20.6,21.1,21.6,22.1,22.6,24.1,27.1,28.5,29,29.5,30.5,32.7,33.2,33.7,34.2,34.7,35.6,36.6,37.1,37.6,38.1,39.1,39.6,42.2,43.7,44.7,45.2,47.2,47.7,50.1,50.6,51.1,52.1,53.6,54.1,54.6,59.1,60.1,64.6,65.1,65.7,66.7,68.1,68.6,69.1,69.6,70.1,70.6,71.1,71.6,72.1,72.6,73.1,73.6,74.1,74.6,75,75.6,79.1,79.5,80,82.6,83.6,85.5,87,87.7,90.7,91.2,92.7,93.2,94.2,94.7,95.2,96.7,97.2,98.6,99.6,100.1,100.6,101.1,109.7,110.2,111.2,112.7,113.2,114.2,120.6,122.6,125.1,126.1,126.6,127.1,130.1,130.6,131.6,133,133.5,134,134.5,135,141.7,142.2,143.2,143.7,144.7,148.2,149.7,150.2,150.7],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":16,"keys":47,"both":14,"wait":0},"quitStep":null,"costUsd":0.00754,"movesGameS":142.2,"time":{"startS":8.5,"modelS":45.3,"playS":107.5,"endS":0.8},"autopilotS":8.8,"autopilotWallS":7.8,"screensByGhost":41,"frames":627,"sampledFrames":302},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":103,"modelCalls":103,"gameS":150.8,"wallS":218,"bootS":0.7,"firstFrameS":4.7,"secPerMove":2.03,"secPerMoveMedian":2.02,"moveWallS":208.9,"latencyS":0.94,"play":{"step":1,"gameS":8.9,"wallS":12.3,"ghostS":10.7},"realPlayMoves":68,"categories":{"loading":0,"story":0,"menu":1,"name":0,"other":0,"gameover":33,"playing":69,"level_complete":0},"buckets":{"loading":0,"menu":1,"gameover":33,"play":69},"playTimeShare":0.648,"timeline":"PPGGGMPPPPPPPPPPGGGGPPPPPPPPPGGGGGPPPPPPPPGGGGPPPPGGGGPPPPPPPPPGGGGGPPPPPPPPPGGGGPPPPPPPPPPPPPGGGGPPPPP","screens":163,"newScreensAt":[0,0.5,1,2.5,3,9.7,10.2,10.5,11,11.6,12.1,12.6,13.6,14.1,14.6,15.1,15.6,16.1,16.6,17.1,18,18.5,19.1,19.6,20.7,21.7,22,22.5,23.1,23.6,24.1,24.7,25.2,25.7,26.5,27.1,27.5,28,29.2,29.7,30.2,31,31.6,32.2,32.5,34.1,34.6,35.6,36.1,37,37.5,38,39,39.7,40.5,41.1,41.7,42,43.1,43.6,44.1,45.1,45.5,46,46.7,47.2,48.1,49,49.5,50.1,51.1,52,56.1,56.6,57.1,58,59.7,61.6,62,63.7,64.1,64.7,65,65.5,66.2,67.6,69.1,70,70.5,71.7,72.2,75.5,76,77.2,78.1,78.6,81.5,82.7,84.6,85.1,85.6,86.1,86.6,87.1,87.6,88.1,88.5,91.1,92.5,93.2,93.7,94.1,94.6,95.1,95.7,96.2,96.7,98.1,98.6,100.5,101.2,102.2,104.1,104.6,105,105.5,106.2,106.7,108.5,109,109.7,110.2,112,112.5,113.7,114.6,118.7,119.2,119.7,120.6,121.1,123.7,125.1,125.6,127.7,129.1,130,130.7,133,134.2,134.7,135.6,136.1,136.5,137,139.1,140.1,142,142.6,144.5,145.7,146.6,147.1],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":30,"keys":72,"both":0,"wait":1},"quitStep":null,"costUsd":0.01551,"movesGameS":141.9,"time":{"startS":8.3,"modelS":96.9,"playS":112,"endS":0.7},"autopilotS":9,"autopilotWallS":7.6,"screensByGhost":84,"frames":665,"sampledFrames":302},
+    {"persona":"impatient","outcome":"quit","ending":"A","steps":9,"modelCalls":9,"gameS":30.8,"wallS":39.7,"bootS":0.9,"firstFrameS":4.7,"secPerMove":3.27,"secPerMoveMedian":3.14,"moveWallS":29.4,"latencyS":1.1,"play":{"step":1,"gameS":10.4,"wallS":12.8,"ghostS":11.1},"realPlayMoves":1,"categories":{"loading":0,"story":0,"menu":0,"name":0,"other":0,"gameover":8,"playing":1,"level_complete":0},"buckets":{"loading":0,"menu":0,"gameover":8,"play":1},"playTimeShare":0.039,"timeline":"PGGGGGGGG","screens":29,"newScreensAt":[0,0.5,1,2.5,3,9.7,11,12.1,12.6,13.1,13.6,14.6,15.6,16.2,17.1,17.6,18.2,18.7,19.1,19.6,20.6,21.1,21.6,22.1,22.6,23.1,26.6,28.1,30.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":1,"keys":9,"both":1,"wait":0},"quitStep":9,"costUsd":0.00152,"movesGameS":20.4,"time":{"startS":9.4,"modelS":9.9,"playS":19.5,"endS":1},"autopilotS":10.5,"autopilotWallS":8.5,"screensByGhost":14,"frames":133,"sampledFrames":62}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-29-30-089Z-db8ef23ada",
+   "path": "runs/2026-11-24T09-29-30-089Z-db8ef23ada",
+   "game": "delete",
+   "name": "Delete!",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/delete",
+   "startedAt": "2026-11-24T09:29:30.309Z",
+   "viewport": {
+    "width": 752,
+    "height": 456
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 138.44,
+   "reportAfterS": 5.6,
+   "firstFrameS": 1.3,
+   "costUsd": 0.0345,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":53,"modelCalls":53,"gameS":151.6,"wallS":137.6,"bootS":0.6,"firstFrameS":1.5,"secPerMove":2.25,"secPerMoveMedian":2.11,"moveWallS":119.3,"latencyS":1.21,"play":{"step":2,"gameS":20.1,"wallS":22.5,"ghostS":21.6},"realPlayMoves":12,"categories":{"loading":1,"story":8,"menu":1,"name":0,"other":26,"gameover":1,"playing":16,"level_complete":0},"buckets":{"loading":9,"menu":27,"gameover":1,"play":16},"playTimeShare":0.269,"timeline":"OPPPPPPLOOOOSOOOOOPOOOPOOPOOOOOSOSSMGOOOSSSPOPOPPPPPS","screens":67,"newScreensAt":[0,1,2,3.5,4,6,6.5,8,8.5,10.1,10.7,13.2,15.2,15.5,17,17.5,19.5,20,20.6,21.2,21.5,22.2,23,23.7,24.2,24.6,25.1,25.7,26.2,30.1,31.7,33.7,40.7,41.2,43.7,45.2,45.7,50.7,53.2,53.7,65.6,66.1,72.6,80.1,80.6,84.6,89.1,90.6,92.1,92.6,95.1,98.1,98.6,101.1,103.1,104.5,108.7,128.1,128.6,130.1,137.6,138.1,140.1,140.6,143.1,146.1,149.1],"stalls":[{"fromS":53.7,"toS":65.6,"s":12,"steps":[20,25]},{"fromS":108.7,"toS":128.1,"s":19.4,"steps":[42,49]}],"stalledS":31.4,"saidNothing":3,"falseNothing":1,"falseNothingThoughts":[{"step":33,"mean":5.55,"fraction":0.0959,"thought":"I am a tiny box in this editor and Reset Game is cut off on the right, I keep clicking it but nothing happens and I am c"}],"inputs":{"mouse":22,"keys":33,"both":2,"wait":0},"quitStep":null,"costUsd":0.01145,"movesGameS":127.3,"time":{"startS":17.6,"modelS":64,"playS":55.3,"endS":0.7},"autopilotS":19.3,"autopilotWallS":17,"screensByGhost":43,"frames":620,"sampledFrames":304},
+    {"persona":"speedrunner","outcome":"quit","ending":"A","steps":31,"modelCalls":31,"gameS":76,"wallS":83.6,"bootS":0.6,"firstFrameS":1.5,"secPerMove":2.11,"secPerMoveMedian":2.03,"moveWallS":65.3,"latencyS":1.14,"play":{"step":1,"gameS":19.3,"wallS":20.7,"ghostS":19.8},"realPlayMoves":2,"categories":{"loading":4,"story":6,"menu":5,"name":0,"other":12,"gameover":1,"playing":3,"level_complete":0},"buckets":{"loading":10,"menu":17,"gameover":1,"play":3},"playTimeShare":0.071,"timeline":"PPLPOOLOSGMOSMOSSMOOOOOLOMSMSOL","screens":32,"newScreensAt":[0,2,4,4.5,6,7,8,8.5,10.1,10.7,14.2,15.2,15.5,17,18,19.5,20,20.5,21,21.6,22.7,25.1,33.7,39.1,39.6,47.6,48.6,49.1,50.6,54.1,71.1,71.6],"stalls":[{"fromS":54.1,"toS":71.1,"s":17,"steps":[22,29]}],"stalledS":17,"saidNothing":4,"falseNothing":1,"falseNothingThoughts":[{"step":18,"mean":3.41,"fraction":0.0421,"thought":"Reset does nothing, dragging that tool list up to find a Play button."}],"inputs":{"mouse":20,"keys":12,"both":2,"wait":1},"quitStep":31,"costUsd":0.00645,"movesGameS":51.7,"time":{"startS":17.4,"modelS":35.3,"playS":30,"endS":0.8},"autopilotS":19.3,"autopilotWallS":16.8,"screensByGhost":22,"frames":321,"sampledFrames":152},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":52,"modelCalls":52,"gameS":150.5,"wallS":130.2,"bootS":0.5,"firstFrameS":1.3,"secPerMove":2.16,"secPerMoveMedian":2.07,"moveWallS":112.2,"latencyS":1.07,"play":{"step":1,"gameS":19.3,"wallS":19.9,"ghostS":19.1},"realPlayMoves":34,"categories":{"loading":6,"story":4,"menu":0,"name":0,"other":4,"gameover":0,"playing":38,"level_complete":0},"buckets":{"loading":10,"menu":4,"gameover":0,"play":38},"playTimeShare":0.617,"timeline":"PPPPLPPPPPPPPLSOLPPLPPSPPPOLPPLPPPOPOPPSPPPPPSPPPPPP","screens":61,"newScreensAt":[0,1,2,3.5,4,4.5,6,6.5,8,9.5,10.1,10.7,13.2,15.2,15.5,17,17.5,20.1,20.6,21.1,22.7,24.7,25.1,26.2,26.6,29.7,31.2,32.6,33,41,42.2,44.2,49.6,51.1,55.6,56.5,57,58.7,61.1,63.1,64.2,66.7,67.2,70.6,75.6,79.1,83.6,84.1,89.1,92,93,105.2,107.7,109.2,129.1,132.5,136.5,138,139.5,142,146.5],"stalls":[{"fromS":93,"toS":105.2,"s":12.2,"steps":[35,40]},{"fromS":109.2,"toS":129.1,"s":19.9,"steps":[41,46]}],"stalledS":32.1,"saidNothing":1,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":25,"keys":34,"both":7,"wait":0},"quitStep":null,"costUsd":0.01027,"movesGameS":128.4,"time":{"startS":17.2,"modelS":55.8,"playS":56.3,"endS":0.8},"autopilotS":19.3,"autopilotWallS":16.7,"screensByGhost":42,"frames":621,"sampledFrames":302},
+    {"persona":"impatient","outcome":"quit","ending":"A","steps":14,"modelCalls":14,"gameS":45.1,"wallS":47.2,"bootS":0.6,"firstFrameS":1.4,"secPerMove":2.05,"secPerMoveMedian":2.1,"moveWallS":28.6,"latencyS":1.17,"play":{"step":1,"gameS":19.3,"wallS":20.8,"ghostS":20},"realPlayMoves":5,"categories":{"loading":2,"story":1,"menu":4,"name":0,"other":1,"gameover":0,"playing":6,"level_complete":0},"buckets":{"loading":3,"menu":5,"gameover":0,"play":6},"playTimeShare":0.315,"timeline":"PPPPLPMMMSPLMO","screens":34,"newScreensAt":[0,2,2.5,4,4.5,6,6.5,8,8.5,10.1,10.7,13.2,15.2,15.5,17,17.5,19.5,20,20.5,21,21.5,22.5,23,25,26,26.6,27.2,27.7,29.2,32.7,33.2,34.7,35.6,40.6],"stalls":[],"stalledS":0,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":6,"keys":9,"both":2,"wait":1},"quitStep":14,"costUsd":0.00264,"movesGameS":25.8,"time":{"startS":17.3,"modelS":16.4,"playS":12.2,"endS":1.3},"autopilotS":19.3,"autopilotWallS":16.7,"screensByGhost":27,"frames":188,"sampledFrames":91}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-31-56-045Z-7797922cef",
+   "path": "runs/2026-11-24T09-31-56-045Z-7797922cef",
+   "game": "moon-buggy-racing",
+   "name": "Moon Buggy",
+   "platform": "js13k",
+   "url": "https://play.js13kgames.com/moon-buggy-racing",
+   "startedAt": "2026-11-24T09:31:56.166Z",
+   "viewport": {
+    "width": 640,
+    "height": 608
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 186.76,
+   "reportAfterS": 5.9,
+   "firstFrameS": 1.8,
+   "costUsd": 0.0465,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":42,"modelCalls":42,"gameS":150.8,"wallS":146.2,"bootS":0.7,"firstFrameS":1.8,"secPerMove":3.26,"secPerMoveMedian":2.59,"moveWallS":137,"latencyS":1.02,"play":{"step":3,"gameS":8.2,"wallS":14.5,"ghostS":13.4},"realPlayMoves":23,"categories":{"loading":1,"story":0,"menu":6,"name":0,"other":0,"gameover":6,"playing":29,"level_complete":0},"buckets":{"loading":1,"menu":6,"gameover":6,"play":29},"playTimeShare":0.444,"timeline":"MPPPPPPPPPGGPPPPPPPMPPPGMPPPGPPMLPGMPGPMPP","screens":16,"newScreensAt":[0,3.1,6.6,9.5,10,13.5,14.1,16.2,45.1,46.6,47.6,116.5,124.7,147.2,147.5,148.5],"stalls":[{"fromS":16.2,"toS":45.1,"s":28.9,"steps":[10,22]},{"fromS":47.6,"toS":116.5,"s":68.9,"steps":[23,37]},{"fromS":124.7,"toS":147.2,"s":22.6,"steps":[39,41]}],"stalledS":120.4,"saidNothing":3,"falseNothing":1,"falseNothingThoughts":[{"step":6,"mean":3.07,"fraction":0.0573,"thought":"Distance is ticking up myself but my ship won't budge sideways, maybe up is the real steer key."}],"inputs":{"mouse":0,"keys":38,"both":0,"wait":4},"quitStep":null,"costUsd":0.00765,"movesGameS":107.5,"time":{"startS":8.1,"modelS":43,"playS":94,"endS":1},"autopilotS":6.1,"autopilotWallS":7.4,"screensByGhost":12,"frames":626,"sampledFrames":302},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":70,"modelCalls":70,"gameS":153.2,"wallS":185.6,"bootS":0.8,"firstFrameS":2,"secPerMove":2.52,"secPerMoveMedian":2.3,"moveWallS":176.4,"latencyS":1.08,"play":{"step":2,"gameS":8.8,"wallS":14.7,"ghostS":13.6},"realPlayMoves":37,"categories":{"loading":1,"story":0,"menu":14,"name":0,"other":0,"gameover":14,"playing":41,"level_complete":0},"buckets":{"loading":1,"menu":14,"gameover":14,"play":41},"playTimeShare":0.426,"timeline":"MPPPGMPGMPPPGMPPPMPPPPGPPGMPGMPPPLPPPGPPPPMPGPPMPGPMPPPPMGMPGPMPMGPGPG","screens":48,"newScreensAt":[0,3.1,6.6,9,9.5,10,10.5,11,15.7,16.2,20.7,24.7,30,30.5,31.2,31.7,36.6,37.1,37.7,44.6,50.5,56.7,63.2,63.7,65.1,69.2,70.2,70.7,72.2,73.1,76.1,81.6,84.2,85.2,94.1,94.6,95.1,105.7,109.1,111.2,111.5,120.2,120.7,121,121.5,132.1,147.1,147.7],"stalls":[{"fromS":95.1,"toS":105.7,"s":10.6,"steps":[48,53]},{"fromS":121.5,"toS":132.1,"s":10.6,"steps":[60,63]},{"fromS":132.1,"toS":147.1,"s":15,"steps":[63,68]}],"stalledS":36.2,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":0,"keys":65,"both":0,"wait":5},"quitStep":null,"costUsd":0.01164,"movesGameS":138.5,"time":{"startS":8.3,"modelS":75.9,"playS":100.5,"endS":0.9},"autopilotS":6.1,"autopilotWallS":7.5,"screensByGhost":25,"frames":652,"sampledFrames":307},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":47,"modelCalls":47,"gameS":151.5,"wallS":165.4,"bootS":0.9,"firstFrameS":2.1,"secPerMove":3.31,"secPerMoveMedian":2.79,"moveWallS":155.4,"latencyS":1.18,"play":{"step":3,"gameS":8.2,"wallS":15.5,"ghostS":14.3},"realPlayMoves":30,"categories":{"loading":1,"story":0,"menu":4,"name":0,"other":0,"gameover":9,"playing":33,"level_complete":0},"buckets":{"loading":1,"menu":4,"gameover":9,"play":33},"playTimeShare":0.519,"timeline":"MPPPPPPPGPPPPPPPPMPPPGPPGLPGPPPMPGPGPMPGPPGPPPG","screens":29,"newScreensAt":[0,3.1,6.6,9,9.6,10.2,11.1,18.2,29.1,59.6,60.1,60.6,61.2,98.2,98.7,99.2,109.1,109.6,116.2,126.2,133.1,133.6,134.1,134.6,135.1,135.6,145.6,146.1,147.1],"stalls":[{"fromS":18.2,"toS":29.1,"s":10.9,"steps":[12,17]},{"fromS":29.1,"toS":59.6,"s":30.5,"steps":[17,23]},{"fromS":61.2,"toS":98.2,"s":37,"steps":[24,33]},{"fromS":135.6,"toS":145.6,"s":10,"steps":[42,45]}],"stalledS":88.4,"saidNothing":1,"falseNothing":1,"falseNothingThoughts":[{"step":5,"mean":5.78,"fraction":0.1293,"thought":"No text explains controls and arrows didn't move me, so I'll try dragging my ship."}],"inputs":{"mouse":5,"keys":43,"both":1,"wait":0},"quitStep":null,"costUsd":0.00895,"movesGameS":110.4,"time":{"startS":8.5,"modelS":55.5,"playS":99.9,"endS":1.5},"autopilotS":6.1,"autopilotWallS":7.7,"screensByGhost":14,"frames":638,"sampledFrames":304},
+    {"persona":"impatient","outcome":"quit","ending":"A","steps":39,"modelCalls":39,"gameS":119.8,"wallS":128.8,"bootS":0.8,"firstFrameS":2,"secPerMove":3.06,"secPerMoveMedian":2.94,"moveWallS":119.2,"latencyS":1.09,"play":{"step":3,"gameS":8.4,"wallS":15.4,"ghostS":14.2},"realPlayMoves":23,"categories":{"loading":0,"story":0,"menu":4,"name":0,"other":0,"gameover":6,"playing":29,"level_complete":0},"buckets":{"loading":0,"menu":4,"gameover":6,"play":29},"playTimeShare":0.587,"timeline":"MPPPPPGMPPPPPPGPPGPPPPPPGMPPPMPPPGPPPPG","screens":14,"newScreensAt":[0,3.1,6.6,9.2,9.6,13.2,13.7,14.1,35.1,36.6,50.7,51.2,52.7,75.6],"stalls":[{"fromS":14.1,"toS":35.1,"s":21,"steps":[6,15]},{"fromS":36.6,"toS":50.7,"s":14.1,"steps":[15,22]},{"fromS":52.7,"toS":75.6,"s":22.9,"steps":[23,29]},{"fromS":75.6,"toS":119.8,"s":44.2,"open":true,"steps":[29,39]}],"stalledS":102.2,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":14,"keys":25,"both":4,"wait":4},"quitStep":39,"costUsd":0.00738,"movesGameS":93,"time":{"startS":8.4,"modelS":42.4,"playS":76.7,"endS":1.3},"autopilotS":6.1,"autopilotWallS":7.6,"screensByGhost":10,"frames":500,"sampledFrames":240}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-35-12-495Z-8ffa6199a7",
+   "path": "runs/2026-11-24T09-35-12-495Z-8ffa6199a7",
+   "game": "broken-repair",
+   "name": "Broken Repair",
+   "platform": "itch.io",
+   "url": "https://eduardscarpato.itch.io/broken-repair",
+   "playUrl": "https://html-classic.itch.zone/html/19945651/index.html?v=1792666792",
+   "startedAt": "2026-11-24T09:35:12.723Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 242.87,
+   "reportAfterS": 4.9,
+   "firstFrameS": 15.9,
+   "costUsd": 0.0586,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":77,"modelCalls":77,"gameS":153,"wallS":235.2,"bootS":0.5,"firstFrameS":17.1,"secPerMove":2.83,"secPerMoveMedian":2.45,"moveWallS":217.7,"latencyS":1.35,"play":{"step":6,"gameS":12.8,"wallS":35.2,"ghostS":33.4},"realPlayMoves":70,"categories":{"loading":0,"story":0,"menu":3,"name":0,"other":1,"gameover":0,"playing":73,"level_complete":0},"buckets":{"loading":0,"menu":4,"gameover":0,"play":73},"playTimeShare":0.923,"timeline":"MPPOMPPPPPPPMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":94,"newScreensAt":[0,6.1,8.2,8.6,9.1,10.1,10.6,11.1,12.1,13.1,14.1,14.6,15.5,16.5,17.5,19.7,20.7,21.2,22.1,23.1,24.1,25.1,25.6,27.1,27.6,28.5,29.5,31.5,32,32.7,33.2,34.7,35.7,36.7,37.2,38.1,39.1,41.1,43.1,43.6,44.5,48.7,50.7,51.2,53.1,55.6,56.1,57.6,64.2,64.7,66.2,66.7,68.2,70.2,73.6,75.6,76.1,78.2,79.2,80.2,81.2,82.2,83.2,84.2,86.2,86.7,89.1,91.5,93.7,94.7,95.7,96.7,97.7,100.1,101.1,102.1,102.6,105.1,106.1,111.7,112.2,114.1,116.1,119.5,129.7,137.1,138.5,143.1,145.1,145.6,147.7,148.2,150.1,151.1],"stalls":[{"fromS":119.5,"toS":129.7,"s":10.2,"steps":[63,68]}],"stalledS":10.2,"saidNothing":1,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":77,"keys":0,"both":0,"wait":0},"quitStep":null,"costUsd":0.01342,"movesGameS":145.6,"time":{"startS":16.7,"modelS":104.2,"playS":113.5,"endS":0.8},"autopilotS":7.5,"autopilotWallS":16.3,"fewerFrames":{"stepMs":55,"fromS":73.3},"screensByGhost":69,"frames":638,"sampledFrames":307},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":68,"modelCalls":68,"gameS":153,"wallS":233.9,"bootS":0.6,"firstFrameS":15.9,"secPerMove":3.15,"secPerMoveMedian":2.72,"moveWallS":214.5,"latencyS":1.38,"play":{"step":7,"gameS":14.2,"wallS":38.6,"ghostS":36.9},"realPlayMoves":41,"categories":{"loading":0,"story":0,"menu":7,"name":0,"other":4,"gameover":0,"playing":57,"level_complete":0},"buckets":{"loading":0,"menu":11,"gameover":0,"play":57},"playTimeShare":0.862,"timeline":"MPPOOOPPPPPOPPPPPPPPPPPMMMMMMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":60,"newScreensAt":[0,2,7.6,9.5,10,10.5,11,13.7,14.7,15.2,15.7,16.6,19.1,20,21,21.5,22,22.5,23.7,25.2,29.6,40.1,42.6,53.7,57.1,59.7,60.2,61.7,62.2,64.2,72.2,76.2,77.7,78.7,81.2,83.7,94.5,101.5,102,104.5,105,106,107.5,108.7,109.7,115.7,117.2,118.5,119,119.7,120.2,120.7,121.2,123.2,123.7,126.2,127.7,128.7,130.7,137.2],"stalls":[{"fromS":29.6,"toS":40.1,"s":10.5,"steps":[18,23]},{"fromS":42.6,"toS":53.7,"s":11.1,"steps":[24,31]},{"fromS":83.7,"toS":94.5,"s":10.9,"steps":[44,48]},{"fromS":137.2,"toS":153,"s":15.8,"open":true,"steps":[64,68]}],"stalledS":48.3,"saidNothing":1,"falseNothing":1,"falseNothingThoughts":[{"step":8,"mean":21.52,"fraction":0.1992,"thought":"Grabbed the GameToy but it didn't move, dragging it from its actual spot to the table."}],"inputs":{"mouse":67,"keys":1,"both":0,"wait":0},"quitStep":null,"costUsd":0.01232,"movesGameS":145.7,"time":{"startS":18.5,"modelS":94.1,"playS":120.4,"endS":0.8},"autopilotS":6.6,"autopilotWallS":18,"fewerFrames":{"stepMs":58,"fromS":73.7},"screensByGhost":40,"frames":630,"sampledFrames":306},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":84,"modelCalls":84,"gameS":151.9,"wallS":241.2,"bootS":1,"firstFrameS":17.4,"secPerMove":2.62,"secPerMoveMedian":2.28,"moveWallS":219.7,"latencyS":1.35,"play":{"step":3,"gameS":11.6,"wallS":30.1,"ghostS":28.4},"realPlayMoves":64,"categories":{"loading":0,"story":0,"menu":2,"name":0,"other":11,"gameover":0,"playing":71,"level_complete":0},"buckets":{"loading":0,"menu":13,"gameover":0,"play":71},"playTimeShare":0.796,"timeline":"MPPOPPPPPPPPPPPPPPPPPPPPPPOPOPMPOOPOPPOPPPPPPPPPPPOPOPOPPPPOPPPPPPPPPPPPPPPPPPPPPPPP","screens":87,"newScreensAt":[0,5,10.6,12.1,12.6,13.1,14.2,15,15.5,16.2,16.7,18.2,18.7,19.7,20.6,21.7,22.2,22.7,23.7,24.2,24.6,25.1,26.1,26.6,28.1,28.6,30.6,31.1,32.6,38.1,39,39.5,40.2,42.2,42.7,43.7,44.2,46.2,48.1,50.1,50.6,51.1,56.6,57.7,61,62.6,63.5,64.7,65.2,67,67.5,68.5,70.7,72.2,74.5,75,76,76.5,77.5,78,79,81.6,82.1,85.1,91.6,94.1,98.1,99.6,102.1,102.6,103.6,105.6,106.1,107.1,111.1,111.6,113.1,113.6,116.1,117.7,118.7,119.7,125.7,134.5,135.7,136.2,136.7],"stalls":[{"fromS":136.7,"toS":151.9,"s":15.2,"open":true,"steps":[76,84]}],"stalledS":15.2,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":84,"keys":0,"both":0,"wait":0},"quitStep":null,"costUsd":0.01669,"movesGameS":142.3,"time":{"startS":20.4,"modelS":113.2,"playS":106.5,"endS":1},"autopilotS":9.6,"autopilotWallS":19.5,"fewerFrames":{"stepMs":55,"fromS":72},"screensByGhost":57,"frames":650,"sampledFrames":304},
+    {"persona":"impatient","outcome":"time_up","ending":"R","steps":74,"modelCalls":74,"gameS":150,"wallS":230.6,"bootS":1.2,"firstFrameS":17.4,"secPerMove":2.83,"secPerMoveMedian":2.33,"moveWallS":209.3,"latencyS":1.41,"play":{"step":17,"gameS":44.4,"wallS":71,"ghostS":69.3},"realPlayMoves":43,"categories":{"loading":1,"story":0,"menu":18,"name":0,"other":1,"gameover":0,"playing":54,"level_complete":0},"buckets":{"loading":1,"menu":19,"gameover":0,"play":54},"playTimeShare":0.662,"timeline":"MMMMLMMMMMMMMMMMPPPOPPPPPPPPPPPPPMMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMPPP","screens":49,"newScreensAt":[0,4,9.1,11.5,36.1,43.6,44.1,44.6,46.1,47.7,48.6,49.1,50.1,52,52.5,53,53.5,55.2,55.7,56.7,57.2,58.2,58.7,60.6,63.2,64.2,64.7,66.1,66.6,68.6,82.2,82.7,91.1,93.6,94.1,96.6,97.1,100.6,103.6,104.2,105.2,108.6,111.1,112.1,113.1,114.1,115.1,128.5,142.6],"stalls":[{"fromS":11.5,"toS":36.1,"s":24.6,"steps":[3,15]},{"fromS":68.6,"toS":82.2,"s":13.6,"steps":[29,33]},{"fromS":115.1,"toS":128.5,"s":13.4,"steps":[51,62]},{"fromS":128.5,"toS":142.6,"s":14.1,"steps":[62,70]}],"stalledS":65.7,"saidNothing":9,"falseNothing":1,"falseNothingThoughts":[{"step":46,"mean":22.05,"fraction":0.326,"thought":"Dragging the dirty toy did nothing, so those top icons must be the scrub tool I need first."}],"inputs":{"mouse":68,"keys":9,"both":3,"wait":0},"quitStep":null,"costUsd":0.01317,"movesGameS":130,"time":{"startS":20.5,"modelS":104.1,"playS":105.2,"endS":0.8},"autopilotS":8.6,"autopilotWallS":19.3,"fewerFrames":{"stepMs":55,"fromS":85.1},"screensByGhost":36,"frames":636,"sampledFrames":301}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-39-23-578Z-24a0a42074",
+   "path": "runs/2026-11-24T09-39-23-578Z-24a0a42074",
+   "game": "prerolled",
+   "name": "Prerolled",
+   "platform": "itch.io",
+   "url": "https://red-sauce.itch.io/prerolled",
+   "playUrl": "https://html-classic.itch.zone/html/20378631/prerolled_web/index.html?v=1794170499",
+   "startedAt": "2026-11-24T09:39:23.726Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 278.71,
+   "reportAfterS": 4.6,
+   "firstFrameS": 26.8,
+   "costUsd": 0.0445,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":117},"steps":67,"modelCalls":67,"gameS":117,"wallS":274.4,"bootS":1,"firstFrameS":27.4,"secPerMove":3.71,"secPerMoveMedian":3.19,"moveWallS":248.7,"latencyS":1.37,"play":{"step":24,"gameS":31.3,"wallS":90.2,"ghostS":86.8},"realPlayMoves":17,"categories":{"loading":2,"story":0,"menu":16,"name":0,"other":8,"gameover":0,"playing":41,"level_complete":0},"buckets":{"loading":2,"menu":24,"gameover":0,"play":41},"playTimeShare":0.556,"timeline":"MOOOOOOPPPPPPPOPPLPPPPPPPPPPLPPPPPPPPPPPPOPMMPPPPPPPPPMMMMMMMMMMMMM","screens":73,"newScreensAt":[0,1,2.5,3,3.6,4.1,4.6,5.1,5.6,6.6,7,7.5,8,8.7,9.2,9.7,10.2,11.1,31.6,38.1,45.2,45.7,46.2,49.2,50.7,51.7,55.6,58.1,60,62.2,62.7,63.1,63.6,64.6,65.5,66,66.5,67.2,67.7,68.2,68.7,69.7,70.2,70.6,71.6,72.1,73.6,77,78,84.7,85.1,85.6,86.1,87.1,88.1,88.6,90.1,91.1,91.6,94.6,98.1,98.5,99.5,102.7,103.7,107.2,108.2,109.2,110.7,111.2,112.2,115.1,116.1],"stalls":[{"fromS":11.1,"toS":31.6,"s":20.5,"steps":[7,24]}],"stalledS":20.5,"saidNothing":11,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":56,"keys":13,"both":2,"wait":0},"quitStep":null,"costUsd":0.01072,"movesGameS":113.2,"time":{"startS":24.2,"modelS":91.8,"playS":156.9,"endS":1.5},"autopilotS":3.1,"autopilotWallS":23.3,"screensByGhost":36,"frames":483,"sampledFrames":235},
+    {"persona":"speedrunner","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.6,"gameSeconds":116},"steps":59,"modelCalls":59,"gameS":115.6,"wallS":275.4,"bootS":0.5,"firstFrameS":26.8,"secPerMove":4.23,"secPerMoveMedian":4.12,"moveWallS":249.8,"latencyS":1.48,"play":{"step":9,"gameS":13.1,"wallS":52.9,"ghostS":49.6},"realPlayMoves":39,"categories":{"loading":0,"story":2,"menu":6,"name":0,"other":8,"gameover":0,"playing":43,"level_complete":0},"buckets":{"loading":2,"menu":14,"gameover":0,"play":43},"playTimeShare":0.764,"timeline":"MOOSPPOSPOPPPPOOOMOMMMMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP","screens":79,"newScreensAt":[0,0.5,1.5,2,2.5,3,3.5,4.2,4.7,5.2,5.7,6.1,6.6,7.6,9,9.5,12.2,13.6,14.6,15.1,15.5,17.2,17.7,18.2,24.1,34.2,35.1,35.6,36.1,36.6,37.1,37.6,38.1,39,40.2,40.7,41.2,41.7,42.1,42.6,43.1,43.6,44.1,46,49.7,54.1,56.5,57.7,62.1,62.6,68.7,71.1,83.6,85.6,86.1,88,88.5,89.2,89.7,90.7,91.7,92.2,92.7,93.1,93.6,94.1,94.6,98.2,98.7,99.2,101.1,101.6,102.1,102.6,103.1,103.5,109.2,109.7,111.7],"stalls":[{"fromS":24.1,"toS":34.2,"s":10.1,"steps":[14,20]},{"fromS":71.1,"toS":83.6,"s":12.5,"steps":[39,45]}],"stalledS":22.6,"saidNothing":0,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":58,"keys":4,"both":3,"wait":0},"quitStep":null,"costUsd":0.00962,"movesGameS":113.1,"time":{"startS":24,"modelS":87.4,"playS":162.4,"endS":1.7},"autopilotS":2.5,"autopilotWallS":23.5,"screensByGhost":38,"frames":480,"sampledFrames":232},
+    {"persona":"reader","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":120},"steps":55,"modelCalls":55,"gameS":119.7,"wallS":273.8,"bootS":0.9,"firstFrameS":27.4,"secPerMove":4.52,"secPerMoveMedian":4.08,"moveWallS":248.6,"latencyS":1.55,"play":{"step":7,"gameS":11.8,"wallS":50.8,"ghostS":47.4},"realPlayMoves":38,"categories":{"loading":0,"story":5,"menu":7,"name":0,"other":1,"gameover":0,"playing":42,"level_complete":0},"buckets":{"loading":5,"menu":8,"gameover":0,"play":42},"playTimeShare":0.805,"timeline":"MSSSSSPPPPPPPPPOPPPMMPPPPPPPPPPPPPPPPMPPPPPPMPPPPPMPPPM","screens":60,"newScreensAt":[0,0.5,3,3.6,4.1,4.6,5.1,5.6,6.6,7.1,7.6,8.1,8.6,9.1,9.6,10.1,10.6,12.1,13.6,14.1,16.2,16.7,17.2,17.7,18.6,19.1,19.6,22.2,22.7,25.1,30.1,34.2,34.7,35.1,35.6,36.1,38.1,38.6,39.5,41,41.5,42.2,42.7,43.2,48.7,53.1,55.1,57.5,70.6,75.7,76.2,89.6,90,90.5,101.6,105.1,105.5,106,118.2,118.7],"stalls":[{"fromS":57.5,"toS":70.6,"s":13.1,"steps":[31,36]},{"fromS":76.2,"toS":89.6,"s":13.4,"steps":[38,44]},{"fromS":90.5,"toS":101.6,"s":11.1,"steps":[45,50]},{"fromS":106,"toS":118.2,"s":12.2,"steps":[51,54]}],"stalledS":49.8,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":55,"keys":2,"both":2,"wait":0},"quitStep":null,"costUsd":0.01016,"movesGameS":113.7,"time":{"startS":24.1,"modelS":85.4,"playS":163.3,"endS":1},"autopilotS":3.1,"autopilotWallS":23.3,"screensByGhost":29,"frames":501,"sampledFrames":240},
+    {"persona":"impatient","outcome":"time_up","ending":"L","stopReason":{"kind":"wall_time","minutes":4.5,"gameSeconds":112},"steps":62,"modelCalls":62,"gameS":112.5,"wallS":274.4,"bootS":0.9,"firstFrameS":26.8,"secPerMove":4.01,"secPerMoveMedian":3.06,"moveWallS":248.5,"latencyS":1.51,"play":{"step":9,"gameS":12.9,"wallS":53.2,"ghostS":49.8},"realPlayMoves":31,"categories":{"loading":1,"story":2,"menu":11,"name":0,"other":5,"gameover":0,"playing":43,"level_complete":0},"buckets":{"loading":3,"menu":16,"gameover":0,"play":43},"playTimeShare":0.72,"timeline":"MSSMOOMPPPPPPPPPPPPPPPOOMMPMPPMMPPOPMMPPPPPPPPPPPMPPLPPPPPPPPP","screens":65,"newScreensAt":[0,0.5,1.5,2,3,3.5,4,4.7,5.2,6.2,6.7,7.1,7.6,8.1,8.6,9.1,9.5,10,10.7,13.1,14.6,15.1,18.2,19.1,20.1,24,24.6,26.7,30.6,32,32.7,37.5,38,38.7,39.2,54.2,54.7,55.2,60.1,60.6,61.1,62.5,63.7,64.7,66.1,76.7,78.2,81.1,81.5,82,85.2,85.7,86.1,86.6,88.5,89,89.5,90,90.5,91.2,91.7,92.2,93.2,101.7,105.2],"stalls":[{"fromS":39.2,"toS":54.2,"s":15,"steps":[28,36]},{"fromS":66.1,"toS":76.7,"s":10.6,"steps":[43,48]}],"stalledS":25.6,"saidNothing":2,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":58,"keys":5,"both":1,"wait":0},"quitStep":null,"costUsd":0.01025,"movesGameS":107.8,"time":{"startS":24.4,"modelS":93.5,"playS":155,"endS":1.5},"autopilotS":3.3,"autopilotWallS":23.5,"screensByGhost":29,"frames":471,"sampledFrames":225}
+   ]
+  },
+  {
+   "id": "2026-11-24T09-44-09-942Z-16c13919ca",
+   "path": "runs/2026-11-24T09-44-09-942Z-16c13919ca",
+   "game": "decogear",
+   "name": "Decogear",
+   "platform": "itch.io",
+   "url": "https://boghog.itch.io/decogear",
+   "playUrl": "https://html-classic.itch.zone/html/20494966/index.html?v=1794593674",
+   "startedAt": "2026-11-24T09:44:10.104Z",
+   "viewport": {
+    "width": 640,
+    "height": 360
+   },
+   "maxSteps": 120,
+   "playSeconds": 150,
+   "wallS": 239.57,
+   "reportAfterS": 4.9,
+   "firstFrameS": 18.9,
+   "costUsd": 0.0399,
+   "costFrom": "report",
+   "ghosts": [
+    {"persona":"newbie","outcome":"time_up","ending":"R","steps":57,"modelCalls":57,"gameS":150.9,"wallS":236.9,"bootS":0.5,"firstFrameS":19.2,"secPerMove":3.78,"secPerMoveMedian":3,"moveWallS":215.6,"latencyS":1.46,"play":null,"realPlayMoves":0,"categories":{"loading":1,"story":2,"menu":43,"name":7,"other":4,"gameover":0,"playing":0,"level_complete":0},"buckets":{"loading":3,"menu":54,"gameover":0,"play":0},"playTimeShare":0,"timeline":"LSSNONMNNMMMMMMNMMMMMMMMMMMMMMOMMMMMNMMMMNMMMMMMOMMMOMMMM","screens":30,"newScreensAt":[0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14.5,15,19.6,21.6],"stalls":[{"fromS":21.6,"toS":150.9,"s":129.3,"open":true,"steps":[9,57]}],"stalledS":129.3,"saidNothing":9,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":23,"keys":41,"both":10,"wait":3},"quitStep":null,"costUsd":0.01273,"movesGameS":99.3,"time":{"startS":20.6,"modelS":83.5,"playS":132.1,"endS":0.7},"autopilotS":6.5,"autopilotWallS":20.2,"fewerFrames":{"stepMs":50,"fromS":23.1},"screensByGhost":17,"frames":641,"sampledFrames":302},
+    {"persona":"speedrunner","outcome":"time_up","ending":"R","steps":38,"modelCalls":38,"gameS":151.9,"wallS":197,"bootS":0.6,"firstFrameS":19,"secPerMove":4.62,"secPerMoveMedian":3.92,"moveWallS":175.4,"latencyS":1.36,"play":null,"realPlayMoves":0,"categories":{"loading":1,"story":1,"menu":19,"name":16,"other":1,"gameover":0,"playing":0,"level_complete":0},"buckets":{"loading":2,"menu":36,"gameover":0,"play":0},"playTimeShare":0,"timeline":"LOSNNMMMNMNNMMMNNNNNNMMNMNMNMMMMMMMNMN","screens":30,"newScreensAt":[0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,7,7.5,8,8.5,9,9.5,10,10.5,11.2,11.7,12.2,12.7,13.1,13.6,14.1,14.6,15.1,26.2],"stalls":[{"fromS":15.1,"toS":26.2,"s":11.2,"steps":[4,9]},{"fromS":26.2,"toS":151.9,"s":125.7,"open":true,"steps":[9,38]}],"stalledS":136.9,"saidNothing":4,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":29,"keys":26,"both":17,"wait":0},"quitStep":null,"costUsd":0.00868,"movesGameS":105.3,"time":{"startS":20.8,"modelS":51.7,"playS":123.7,"endS":0.8},"autopilotS":6.5,"autopilotWallS":20.3,"fewerFrames":{"stepMs":75,"fromS":29.7},"screensByGhost":16,"frames":640,"sampledFrames":304},
+    {"persona":"reader","outcome":"time_up","ending":"R","steps":57,"modelCalls":57,"gameS":150.6,"wallS":236.6,"bootS":0.7,"firstFrameS":21.2,"secPerMove":3.76,"secPerMoveMedian":3.13,"moveWallS":214.5,"latencyS":1.34,"play":null,"realPlayMoves":0,"categories":{"loading":1,"story":3,"menu":41,"name":12,"other":0,"gameover":0,"playing":0,"level_complete":0},"buckets":{"loading":4,"menu":53,"gameover":0,"play":0},"playTimeShare":0,"timeline":"SMLSSNMMNMNNMMMMMMMMMMMNMMNMMMMMMMMMMMNMMMMNMNMMMMNMMMNMN","screens":30,"newScreensAt":[0,0.5,1.5,2,2.5,3,3.5,4,4.5,5,5.5,7.2,7.7,8.2,8.7,9.2,9.7,10.2,10.7,11.2,11.7,12.2,12.7,13.2,13.7,14.7,15.2,15.7,19.1,22.1],"stalls":[{"fromS":22.1,"toS":150.6,"s":128.5,"open":true,"steps":[11,57]}],"stalledS":128.5,"saidNothing":4,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":18,"keys":45,"both":10,"wait":4},"quitStep":null,"costUsd":0.01218,"movesGameS":101,"time":{"startS":20.8,"modelS":76.6,"playS":137.9,"endS":1.2},"autopilotS":4.5,"autopilotWallS":20.2,"fewerFrames":{"stepMs":52,"fromS":25.3},"screensByGhost":15,"frames":646,"sampledFrames":302},
+    {"persona":"impatient","outcome":"quit","ending":"A","steps":18,"modelCalls":18,"gameS":49.1,"wallS":89.2,"bootS":0.6,"firstFrameS":18.9,"secPerMove":3.74,"secPerMoveMedian":3.15,"moveWallS":67.3,"latencyS":1.21,"play":null,"realPlayMoves":0,"categories":{"loading":0,"story":1,"menu":7,"name":8,"other":2,"gameover":0,"playing":0,"level_complete":0},"buckets":{"loading":1,"menu":17,"gameover":0,"play":0},"playTimeShare":0,"timeline":"OMSONNMNMNNMMMNNMN","screens":28,"newScreensAt":[0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11.2,11.7,12.2,12.7,13.2,14.2,14.7,23.7],"stalls":[{"fromS":23.7,"toS":49.1,"s":25.4,"open":true,"steps":[9,18]}],"stalledS":25.4,"saidNothing":4,"falseNothing":0,"falseNothingThoughts":[],"inputs":{"mouse":9,"keys":10,"both":4,"wait":3},"quitStep":18,"costUsd":0.00309,"movesGameS":37.6,"time":{"startS":20.7,"modelS":21.7,"playS":45.5,"endS":1.3},"autopilotS":6.5,"autopilotWallS":20,"fewerFrames":{"stepMs":47,"fromS":25.2},"screensByGhost":16,"frames":206,"sampledFrames":99}
+   ]
+  }
+ ],
+ "compares": [
+  {
+   "label": "before",
+   "total": {
+    "runs": 60,
+    "ghosts": 238,
+    "moved": 216,
+    "moves": 7608,
+    "runWallS": {
+     "min": 31.25,
+     "median": 64.25,
+     "max": 488.11
+    },
+    "firstFrameS": {
+     "median": 1.15,
+     "max": 43.3
+    },
+    "secPerMove": 2.12,
+    "gameS": {
+     "median": 23.8,
+     "max": 43.8
+    },
+    "reached": 191,
+    "reachedWallS": 5.4,
+    "reachedGameS": 1.2,
+    "reachedStep": 2,
+    "pct": {
+     "loading": 4,
+     "menu": 11,
+     "gameover": 5,
+     "play": 80
+    },
+    "playTimePct": 74,
+    "screens": {
+     "median": 30.5,
+     "max": 64
+    },
+    "stalled": {
+     "ghosts": 18,
+     "of": 216,
+     "medianS": 12.1,
+     "totalS": 240.8,
+     "pct": 5
+    },
+    "saidNothing": 591,
+    "falseNothing": 121,
+    "mousePct": 21,
+    "keysPct": 78,
+    "waitPct": 3,
+    "endings": {
+     "T": 166,
+     "A": 32,
+     "E": 22,
+     "L": 4,
+     "C": 14
+    },
+    "quit": 32,
+    "errors": 22,
+    "costUsd": 1.3437,
+    "speed": {
+     "ghostWallS": 59,
+     "realPerGameS": 3.26,
+     "calls": 40,
+     "gamePerCall": 0.68,
+     "split": {
+      "start": 3,
+      "model": 48,
+      "play": 49,
+      "end": 0
+     },
+     "autopilotWallS": null,
+     "fewerFrames": 0,
+     "realTime": 0,
+     "reportAfterS": {
+      "median": 4.5,
+      "max": 11.4
+     }
+    }
+   },
+   "games": [
+    {
+     "game": "escape-from-death-hole",
+     "name": "Escape from Death Hole",
+     "platform": "js13k",
+     "summary": {
+      "runs": 6,
+      "ghosts": 24,
+      "moved": 24,
+      "moves": 931,
+      "runWallS": {
+       "min": 96.49,
+       "median": 101.83000000000001,
+       "max": 130.83
+      },
+      "firstFrameS": {
+       "median": 0.75,
+       "max": 3.2
+      },
+      "secPerMove": 2.44,
+      "gameS": {
+       "median": 20.8,
+       "max": 25.7
+      },
+      "reached": 24,
+      "reachedWallS": 13.9,
+      "reachedGameS": 3.3,
+      "reachedStep": 5,
+      "pct": {
+       "loading": 1,
+       "menu": 11,
+       "gameover": 1,
+       "play": 87
+      },
+      "playTimePct": 83,
+      "screens": {
+       "median": 30,
+       "max": 38
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 24,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 69,
+      "falseNothing": 7,
+      "mousePct": 8,
+      "keysPct": 94,
+      "waitPct": 0,
+      "endings": {
+       "T": 23,
+       "A": 1
+      },
+      "quit": 1,
+      "errors": 0,
+      "costUsd": 0.152,
+      "speed": {
+       "ghostWallS": 94,
+       "realPerGameS": 4.81,
+       "calls": 40,
+       "gamePerCall": 0.51,
+       "split": {
+        "start": 1,
+        "model": 42,
+        "play": 57,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 2,
+        "max": 5
+       }
+      }
+     }
+    },
+    {
+     "game": "find-all-pages",
+     "name": "Find All Pages",
+     "platform": "js13k",
+     "summary": {
+      "runs": 6,
+      "ghosts": 24,
+      "moved": 24,
+      "moves": 808,
+      "runWallS": {
+       "min": 60.72,
+       "median": 71.86,
+       "max": 81.72
+      },
+      "firstFrameS": {
+       "median": 0.6,
+       "max": 1.2
+      },
+      "secPerMove": 1.63,
+      "gameS": {
+       "median": 21.9,
+       "max": 38.7
+      },
+      "reached": 19,
+      "reachedWallS": 4.2,
+      "reachedGameS": 1.2,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 7,
+       "menu": 18,
+       "gameover": 0,
+       "play": 74
+      },
+      "playTimePct": 72,
+      "screens": {
+       "median": 9,
+       "max": 28
+      },
+      "stalled": {
+       "ghosts": 7,
+       "of": 24,
+       "medianS": 13,
+       "totalS": 101.8,
+       "pct": 19
+      },
+      "saidNothing": 110,
+      "falseNothing": 2,
+      "mousePct": 57,
+      "keysPct": 48,
+      "waitPct": 1,
+      "endings": {
+       "T": 15,
+       "A": 9
+      },
+      "quit": 9,
+      "errors": 0,
+      "costUsd": 0.1922,
+      "speed": {
+       "ghostWallS": 59,
+       "realPerGameS": 2.48,
+       "calls": 40,
+       "gamePerCall": 0.66,
+       "split": {
+        "start": 1,
+        "model": 81,
+        "play": 18,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 4.6,
+        "max": 7.1
+       }
+      }
+     }
+    },
+    {
+     "game": "spacetaxi",
+     "name": "SpaceTaxi",
+     "platform": "js13k",
+     "summary": {
+      "runs": 6,
+      "ghosts": 24,
+      "moved": 24,
+      "moves": 960,
+      "runWallS": {
+       "min": 56.35,
+       "median": 58.644999999999996,
+       "max": 62.74
+      },
+      "firstFrameS": {
+       "median": 0.6499999999999999,
+       "max": 1.4
+      },
+      "secPerMove": 1.39,
+      "gameS": {
+       "median": 28.5,
+       "max": 38
+      },
+      "reached": 24,
+      "reachedWallS": 4.1,
+      "reachedGameS": 0.8,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 1,
+       "menu": 8,
+       "gameover": 1,
+       "play": 90
+      },
+      "playTimePct": 88,
+      "screens": {
+       "median": 46,
+       "max": 64
+      },
+      "stalled": {
+       "ghosts": 2,
+       "of": 24,
+       "medianS": 10.3,
+       "totalS": 20.5,
+       "pct": 3
+      },
+      "saidNothing": 20,
+      "falseNothing": 6,
+      "mousePct": 1,
+      "keysPct": 99,
+      "waitPct": 0,
+      "endings": {
+       "T": 24
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.1394,
+      "speed": {
+       "ghostWallS": 56,
+       "realPerGameS": 2.01,
+       "calls": 40,
+       "gamePerCall": 0.7,
+       "split": {
+        "start": 1,
+        "model": 68,
+        "play": 31,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 5.2,
+        "max": 6
+       }
+      }
+     }
+    },
+    {
+     "game": "coiner",
+     "name": "Coiner",
+     "platform": "js13k",
+     "summary": {
+      "runs": 6,
+      "ghosts": 24,
+      "moved": 24,
+      "moves": 890,
+      "runWallS": {
+       "min": 55.69,
+       "median": 57.905,
+       "max": 61.47
+      },
+      "firstFrameS": {
+       "median": 0.8,
+       "max": 1.1
+      },
+      "secPerMove": 1.33,
+      "gameS": {
+       "median": 25.1,
+       "max": 35.2
+      },
+      "reached": 24,
+      "reachedWallS": 3.6,
+      "reachedGameS": 1.1,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 0,
+       "menu": 5,
+       "gameover": 0,
+       "play": 95
+      },
+      "playTimePct": 93,
+      "screens": {
+       "median": 38,
+       "max": 52
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 24,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 123,
+      "falseNothing": 16,
+      "mousePct": 22,
+      "keysPct": 65,
+      "waitPct": 15,
+      "endings": {
+       "T": 21,
+       "A": 3
+      },
+      "quit": 3,
+      "errors": 0,
+      "costUsd": 0.1551,
+      "speed": {
+       "ghostWallS": 52,
+       "realPerGameS": 2.08,
+       "calls": 40,
+       "gamePerCall": 0.65,
+       "split": {
+        "start": 1,
+        "model": 76,
+        "play": 23,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 4,
+        "max": 7.3
+       }
+      }
+     }
+    },
+    {
+     "game": "backout",
+     "name": "Backout",
+     "platform": "js13k",
+     "summary": {
+      "runs": 5,
+      "ghosts": 20,
+      "moved": 20,
+      "moves": 800,
+      "runWallS": {
+       "min": 71.85,
+       "median": 83,
+       "max": 85.02
+      },
+      "firstFrameS": {
+       "median": 6.5,
+       "max": 8.1
+      },
+      "secPerMove": 1.75,
+      "gameS": {
+       "median": 21,
+       "max": 30.8
+      },
+      "reached": 20,
+      "reachedWallS": 11.5,
+      "reachedGameS": 1,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 0,
+       "menu": 4,
+       "gameover": 2,
+       "play": 94
+      },
+      "playTimePct": 90,
+      "screens": {
+       "median": 42,
+       "max": 58
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 20,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 9,
+      "falseNothing": 3,
+      "mousePct": 1,
+      "keysPct": 95,
+      "waitPct": 5,
+      "endings": {
+       "T": 20
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.1128,
+      "speed": {
+       "ghostWallS": 75,
+       "realPerGameS": 3.51,
+       "calls": 40,
+       "gamePerCall": 0.54,
+       "split": {
+        "start": 8,
+        "model": 53,
+        "play": 39,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 0.1,
+        "max": 4
+       }
+      }
+     }
+    },
+    {
+     "game": "big-champ",
+     "name": "Big Champ",
+     "platform": "js13k",
+     "summary": {
+      "runs": 7,
+      "ghosts": 28,
+      "moved": 24,
+      "moves": 802,
+      "runWallS": {
+       "min": 31.25,
+       "median": 60.459999999999994,
+       "max": 84.85
+      },
+      "firstFrameS": {
+       "median": 1.9,
+       "max": 2.4
+      },
+      "secPerMove": 1.56,
+      "gameS": {
+       "median": 28.4,
+       "max": 34
+      },
+      "reached": 20,
+      "reachedWallS": 6,
+      "reachedGameS": 2,
+      "reachedStep": 3,
+      "pct": {
+       "loading": 2,
+       "menu": 14,
+       "gameover": 18,
+       "play": 65
+      },
+      "playTimePct": 62,
+      "screens": {
+       "median": 45,
+       "max": 55
+      },
+      "stalled": {
+       "ghosts": 1,
+       "of": 24,
+       "medianS": 11.5,
+       "totalS": 11.5,
+       "pct": 2
+      },
+      "saidNothing": 71,
+      "falseNothing": 21,
+      "mousePct": 29,
+      "keysPct": 73,
+      "waitPct": 1,
+      "endings": {
+       "A": 6,
+       "T": 18,
+       "E": 4
+      },
+      "quit": 6,
+      "errors": 4,
+      "costUsd": 0.1341,
+      "speed": {
+       "ghostWallS": 58,
+       "realPerGameS": 2.21,
+       "calls": 40,
+       "gamePerCall": 0.72,
+       "split": {
+        "start": 1,
+        "model": 62,
+        "play": 37,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 3.7,
+        "max": 5.2
+       }
+      }
+     }
+    },
+    {
+     "game": "dead-again",
+     "name": "Dead Again",
+     "platform": "js13k",
+     "summary": {
+      "runs": 5,
+      "ghosts": 20,
+      "moved": 16,
+      "moves": 599,
+      "runWallS": {
+       "min": 57.6,
+       "median": 60.21,
+       "max": 69.35
+      },
+      "firstFrameS": {
+       "median": 2.5,
+       "max": 4
+      },
+      "secPerMove": 1.46,
+      "gameS": {
+       "median": 25.8,
+       "max": 34.6
+      },
+      "reached": 16,
+      "reachedWallS": 5.2,
+      "reachedGameS": 1.2,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 1,
+       "menu": 3,
+       "gameover": 16,
+       "play": 80
+      },
+      "playTimePct": 72,
+      "screens": {
+       "median": 31.5,
+       "max": 49
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 16,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 46,
+      "falseNothing": 20,
+      "mousePct": 21,
+      "keysPct": 80,
+      "waitPct": 1,
+      "endings": {
+       "E": 4,
+       "T": 13,
+       "A": 3
+      },
+      "quit": 3,
+      "errors": 4,
+      "costUsd": 0.0877,
+      "speed": {
+       "ghostWallS": 57,
+       "realPerGameS": 2.21,
+       "calls": 40,
+       "gamePerCall": 0.67,
+       "split": {
+        "start": 1,
+        "model": 64,
+        "play": 34,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 4.6,
+        "max": 5.8
+       }
+      }
+     }
+    },
+    {
+     "game": "delete",
+     "name": "Delete!",
+     "platform": "js13k",
+     "summary": {
+      "runs": 4,
+      "ghosts": 16,
+      "moved": 16,
+      "moves": 545,
+      "runWallS": {
+       "min": 61.44,
+       "median": 64.25,
+       "max": 69.29
+      },
+      "firstFrameS": {
+       "median": 0.55,
+       "max": 1
+      },
+      "secPerMove": 1.53,
+      "gameS": {
+       "median": 25.1,
+       "max": 43.8
+      },
+      "reached": 16,
+      "reachedWallS": 1.9,
+      "reachedGameS": 0,
+      "reachedStep": 1,
+      "pct": {
+       "loading": 9,
+       "menu": 14,
+       "gameover": 1,
+       "play": 76
+      },
+      "playTimePct": 68,
+      "screens": {
+       "median": 25,
+       "max": 34
+      },
+      "stalled": {
+       "ghosts": 2,
+       "of": 16,
+       "medianS": 10.6,
+       "totalS": 21.1,
+       "pct": 5
+      },
+      "saidNothing": 53,
+      "falseNothing": 24,
+      "mousePct": 24,
+      "keysPct": 79,
+      "waitPct": 1,
+      "endings": {
+       "T": 10,
+       "A": 6
+      },
+      "quit": 6,
+      "errors": 0,
+      "costUsd": 0.1158,
+      "speed": {
+       "ghostWallS": 60,
+       "realPerGameS": 1.97,
+       "calls": 40,
+       "gamePerCall": 0.78,
+       "split": {
+        "start": 0,
+        "model": 73,
+        "play": 26,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 5.2,
+        "max": 6.7
+       }
+      }
+     }
+    },
+    {
+     "game": "moon-buggy-racing",
+     "name": "Moon Buggy",
+     "platform": "js13k",
+     "summary": {
+      "runs": 4,
+      "ghosts": 16,
+      "moved": 16,
+      "moves": 591,
+      "runWallS": {
+       "min": 50.47,
+       "median": 54.07,
+       "max": 58.01
+      },
+      "firstFrameS": {
+       "median": 0.6499999999999999,
+       "max": 0.7
+      },
+      "secPerMove": 1.22,
+      "gameS": {
+       "median": 27.5,
+       "max": 40.1
+      },
+      "reached": 16,
+      "reachedWallS": 5.1,
+      "reachedGameS": 1.6,
+      "reachedStep": 3.5,
+      "pct": {
+       "loading": 5,
+       "menu": 7,
+       "gameover": 11,
+       "play": 77
+      },
+      "playTimePct": 68,
+      "screens": {
+       "median": 15,
+       "max": 22
+      },
+      "stalled": {
+       "ghosts": 2,
+       "of": 16,
+       "medianS": 13,
+       "totalS": 25.9,
+       "pct": 6
+      },
+      "saidNothing": 38,
+      "falseNothing": 11,
+      "mousePct": 4,
+      "keysPct": 94,
+      "waitPct": 4,
+      "endings": {
+       "T": 14,
+       "A": 2
+      },
+      "quit": 2,
+      "errors": 0,
+      "costUsd": 0.1187,
+      "speed": {
+       "ghostWallS": 47,
+       "realPerGameS": 1.76,
+       "calls": 40,
+       "gamePerCall": 0.7,
+       "split": {
+        "start": 1,
+        "model": 74,
+        "play": 25,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 6.3,
+        "max": 7.6
+       }
+      }
+     }
+    },
+    {
+     "game": "nilo",
+     "name": "NILO",
+     "platform": "js13k",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 160,
+      "runWallS": {
+       "min": 54.96,
+       "median": 54.96,
+       "max": 54.96
+      },
+      "firstFrameS": {
+       "median": 0.7,
+       "max": 0.7
+      },
+      "secPerMove": 1.31,
+      "gameS": {
+       "median": 25.3,
+       "max": 25.6
+      },
+      "reached": 4,
+      "reachedWallS": 6.8,
+      "reachedGameS": 1.5,
+      "reachedStep": 4,
+      "pct": {
+       "loading": 2,
+       "menu": 6,
+       "gameover": 0,
+       "play": 93
+      },
+      "playTimePct": 94,
+      "screens": {
+       "median": 11,
+       "max": 18
+      },
+      "stalled": {
+       "ghosts": 2,
+       "of": 4,
+       "medianS": 16.8,
+       "totalS": 33.5,
+       "pct": 34
+      },
+      "saidNothing": 11,
+      "falseNothing": 5,
+      "mousePct": 9,
+      "keysPct": 91,
+      "waitPct": 0,
+      "endings": {
+       "T": 4
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.0435,
+      "speed": {
+       "ghostWallS": 53,
+       "realPerGameS": 2.15,
+       "calls": 40,
+       "gamePerCall": 0.61,
+       "split": {
+        "start": 1,
+        "model": 75,
+        "play": 24,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 5,
+        "max": 5
+       }
+      }
+     }
+    },
+    {
+     "game": "broken-repair",
+     "name": "Broken Repair",
+     "platform": "itch.io",
+     "summary": {
+      "runs": 5,
+      "ghosts": 20,
+      "moved": 10,
+      "moves": 300,
+      "runWallS": {
+       "min": 238.74,
+       "median": 401.66,
+       "max": 488.11
+      },
+      "firstFrameS": {
+       "median": 18.5,
+       "max": 33.8
+      },
+      "secPerMove": 12.06,
+      "gameS": {
+       "median": 25.2,
+       "max": 41.1
+      },
+      "reached": 8,
+      "reachedWallS": 89.4,
+      "reachedGameS": 7.4,
+      "reachedStep": 7.5,
+      "pct": {
+       "loading": 10,
+       "menu": 19,
+       "gameover": 0,
+       "play": 70
+      },
+      "playTimePct": 63,
+      "screens": {
+       "median": 22,
+       "max": 38
+      },
+      "stalled": {
+       "ghosts": 2,
+       "of": 10,
+       "medianS": 13.3,
+       "totalS": 26.5,
+       "pct": 9
+      },
+      "saidNothing": 21,
+      "falseNothing": 0,
+      "mousePct": 79,
+      "keysPct": 17,
+      "waitPct": 6,
+      "endings": {
+       "E": 10,
+       "T": 4,
+       "A": 2,
+       "L": 4
+      },
+      "quit": 2,
+      "errors": 10,
+      "costUsd": 0.051,
+      "speed": {
+       "ghostWallS": 398,
+       "realPerGameS": 13.02,
+       "calls": 28.5,
+       "gamePerCall": 0.93,
+       "split": {
+        "start": 0,
+        "model": 11,
+        "play": 89,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 0.2,
+        "max": 4.1
+       }
+      }
+     }
+    },
+    {
+     "game": "decogear",
+     "name": "Decogear",
+     "platform": "itch.io",
+     "summary": {
+      "runs": 4,
+      "ghosts": 14,
+      "moved": 14,
+      "moves": 222,
+      "runWallS": {
+       "min": 48.58,
+       "median": 96.525,
+       "max": 164.44
+      },
+      "firstFrameS": {
+       "median": 27.049999999999997,
+       "max": 43.3
+      },
+      "secPerMove": 5.13,
+      "gameS": {
+       "median": 19,
+       "max": 24
+      },
+      "reached": 0,
+      "reachedWallS": null,
+      "reachedGameS": null,
+      "reachedStep": null,
+      "pct": {
+       "loading": 39,
+       "menu": 57,
+       "gameover": 0,
+       "play": 5
+      },
+      "playTimePct": 3,
+      "screens": {
+       "median": 26,
+       "max": 33
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 14,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 20,
+      "falseNothing": 6,
+      "mousePct": 25,
+      "keysPct": 70,
+      "waitPct": 12,
+      "endings": {
+       "C": 14
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.0414,
+      "speed": {
+       "ghostWallS": 112,
+       "realPerGameS": 5.84,
+       "calls": 16,
+       "gamePerCall": 1.13,
+       "split": {
+        "start": 22,
+        "model": 19,
+        "play": 59,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 5.3,
+        "max": 11.4
+       }
+      }
+     }
+    },
+    {
+     "game": "prerolled",
+     "name": "Prerolled",
+     "platform": "itch.io",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 0,
+      "moves": 0,
+      "runWallS": null,
+      "firstFrameS": {
+       "median": 17,
+       "max": 17
+      },
+      "secPerMove": null,
+      "gameS": null,
+      "reached": 0,
+      "reachedWallS": null,
+      "reachedGameS": null,
+      "reachedStep": null,
+      "pct": {
+       "loading": null,
+       "menu": null,
+       "gameover": null,
+       "play": null
+      },
+      "playTimePct": null,
+      "screens": null,
+      "stalled": {
+       "ghosts": 0,
+       "of": 0,
+       "medianS": null,
+       "totalS": 0,
+       "pct": null
+      },
+      "saidNothing": 0,
+      "falseNothing": 0,
+      "mousePct": null,
+      "keysPct": null,
+      "waitPct": null,
+      "endings": {
+       "E": 4
+      },
+      "quit": 0,
+      "errors": 4,
+      "costUsd": 0,
+      "speed": {
+       "ghostWallS": null,
+       "realPerGameS": null,
+       "calls": null,
+       "gamePerCall": null,
+       "split": {
+        "start": null,
+        "model": null,
+        "play": null,
+        "end": null
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 0.1,
+        "max": 0.1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "label": "v3",
+   "total": {
+    "runs": 12,
+    "ghosts": 48,
+    "moved": 48,
+    "moves": 5295,
+    "runWallS": {
+     "min": 179.21,
+     "median": 273.65999999999997,
+     "max": 423.66
+    },
+    "firstFrameS": {
+     "median": 3.1,
+     "max": 31.6
+    },
+    "secPerMove": 2.08,
+    "gameS": {
+     "median": 99,
+     "max": 156.1
+    },
+    "reached": 45,
+    "reachedWallS": 12.7,
+    "reachedGameS": 9.6,
+    "reachedStep": 2,
+    "pct": {
+     "loading": 0,
+     "menu": 6,
+     "gameover": 6,
+     "play": 88
+    },
+    "playTimePct": 71,
+    "screens": {
+     "median": 88.5,
+     "max": 220
+    },
+    "stalled": {
+     "ghosts": 15,
+     "of": 48,
+     "medianS": 37,
+     "totalS": 696.5,
+     "pct": 15
+    },
+    "saidNothing": 132,
+    "falseNothing": 8,
+    "mousePct": 32,
+    "keysPct": 63,
+    "waitPct": 5,
+    "endings": {
+     "T": 36,
+     "A": 6,
+     "R": 4,
+     "L": 2
+    },
+    "quit": 6,
+    "errors": 0,
+    "costUsd": 0.9742,
+    "speed": {
+     "ghostWallS": 243,
+     "realPerGameS": 2.46,
+     "calls": 120,
+     "gamePerCall": 0.78,
+     "split": {
+      "start": 6,
+      "model": 58,
+      "play": 36,
+      "end": 1
+     },
+     "autopilotWallS": null,
+     "fewerFrames": 0,
+     "realTime": 4,
+     "reportAfterS": {
+      "median": 6.4,
+      "max": 55.2
+     }
+    }
+   },
+   "games": [
+    {
+     "game": "escape-from-death-hole",
+     "name": "Escape from Death Hole",
+     "platform": "js13k",
+     "summary": {
+      "runs": 2,
+      "ghosts": 8,
+      "moved": 8,
+      "moves": 933,
+      "runWallS": {
+       "min": 409.69,
+       "median": 416.675,
+       "max": 423.66
+      },
+      "firstFrameS": {
+       "median": 2.7,
+       "max": 3.8
+      },
+      "secPerMove": 3.1,
+      "gameS": {
+       "median": 69.7,
+       "max": 156.1
+      },
+      "reached": 8,
+      "reachedWallS": 12.2,
+      "reachedGameS": 5.8,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 0,
+       "menu": 1,
+       "gameover": 2,
+       "play": 97
+      },
+      "playTimePct": 77,
+      "screens": {
+       "median": 77.5,
+       "max": 89
+      },
+      "stalled": {
+       "ghosts": 1,
+       "of": 8,
+       "medianS": 49.9,
+       "totalS": 49.9,
+       "pct": 8
+      },
+      "saidNothing": 10,
+      "falseNothing": 0,
+      "mousePct": 3,
+      "keysPct": 97,
+      "waitPct": 0,
+      "endings": {
+       "T": 5,
+       "L": 2,
+       "R": 1
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.1514,
+      "speed": {
+       "ghostWallS": 365,
+       "realPerGameS": 4.71,
+       "calls": 120,
+       "gamePerCall": 0.55,
+       "split": {
+        "start": 1,
+        "model": 42,
+        "play": 56,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 1,
+       "reportAfterS": {
+        "median": 4.9,
+        "max": 5
+       }
+      }
+     }
+    },
+    {
+     "game": "find-all-pages",
+     "name": "Find All Pages",
+     "platform": "js13k",
+     "summary": {
+      "runs": 2,
+      "ghosts": 8,
+      "moved": 8,
+      "moves": 924,
+      "runWallS": {
+       "min": 279.94,
+       "median": 285.345,
+       "max": 290.75
+      },
+      "firstFrameS": {
+       "median": 1.25,
+       "max": 1.3
+      },
+      "secPerMove": 2.07,
+      "gameS": {
+       "median": 109.8,
+       "max": 116.5
+      },
+      "reached": 8,
+      "reachedWallS": 11.9,
+      "reachedGameS": 9.2,
+      "reachedStep": 4.5,
+      "pct": {
+       "loading": 0,
+       "menu": 0,
+       "gameover": 0,
+       "play": 99
+      },
+      "playTimePct": 93,
+      "screens": {
+       "median": 30.5,
+       "max": 67
+      },
+      "stalled": {
+       "ghosts": 8,
+       "of": 8,
+       "medianS": 36.3,
+       "totalS": 297.5,
+       "pct": 36
+      },
+      "saidNothing": 59,
+      "falseNothing": 1,
+      "mousePct": 68,
+      "keysPct": 32,
+      "waitPct": 0,
+      "endings": {
+       "T": 7,
+       "A": 1
+      },
+      "quit": 1,
+      "errors": 0,
+      "costUsd": 0.2656,
+      "speed": {
+       "ghostWallS": 244,
+       "realPerGameS": 2.38,
+       "calls": 120,
+       "gamePerCall": 0.83,
+       "split": {
+        "start": 1,
+        "model": 86,
+        "play": 12,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 6.2,
+        "max": 6.3
+       }
+      }
+     }
+    },
+    {
+     "game": "spacetaxi",
+     "name": "SpaceTaxi",
+     "platform": "js13k",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 480,
+      "runWallS": {
+       "min": 219.54,
+       "median": 219.54,
+       "max": 219.54
+      },
+      "firstFrameS": {
+       "median": 1,
+       "max": 1
+      },
+      "secPerMove": 1.6,
+      "gameS": {
+       "median": 106.4,
+       "max": 150.2
+      },
+      "reached": 4,
+      "reachedWallS": 7.1,
+      "reachedGameS": 5.9,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 0,
+       "menu": 4,
+       "gameover": 1,
+       "play": 94
+      },
+      "playTimePct": 87,
+      "screens": {
+       "median": 171.5,
+       "max": 220
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 4,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 9,
+      "falseNothing": 0,
+      "mousePct": 2,
+      "keysPct": 98,
+      "waitPct": 1,
+      "endings": {
+       "T": 3,
+       "R": 1
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.0755,
+      "speed": {
+       "ghostWallS": 192,
+       "realPerGameS": 1.83,
+       "calls": 120,
+       "gamePerCall": 0.85,
+       "split": {
+        "start": 1,
+        "model": 68,
+        "play": 30,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 7.5,
+        "max": 7.5
+       }
+      }
+     }
+    },
+    {
+     "game": "coiner",
+     "name": "Coiner",
+     "platform": "js13k",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 454,
+      "runWallS": {
+       "min": 179.21,
+       "median": 179.21,
+       "max": 179.21
+      },
+      "firstFrameS": {
+       "median": 1.2,
+       "max": 1.2
+      },
+      "secPerMove": 1.42,
+      "gameS": {
+       "median": 89.9,
+       "max": 107.1
+      },
+      "reached": 4,
+      "reachedWallS": 7.8,
+      "reachedGameS": 10.6,
+      "reachedStep": 1,
+      "pct": {
+       "loading": 0,
+       "menu": 4,
+       "gameover": 0,
+       "play": 96
+      },
+      "playTimePct": 83,
+      "screens": {
+       "median": 86.5,
+       "max": 107
+      },
+      "stalled": {
+       "ghosts": 1,
+       "of": 4,
+       "medianS": 11.1,
+       "totalS": 11.1,
+       "pct": 3
+      },
+      "saidNothing": 9,
+      "falseNothing": 0,
+      "mousePct": 36,
+      "keysPct": 44,
+      "waitPct": 20,
+      "endings": {
+       "T": 3,
+       "A": 1
+      },
+      "quit": 1,
+      "errors": 0,
+      "costUsd": 0.0865,
+      "speed": {
+       "ghostWallS": 168,
+       "realPerGameS": 1.81,
+       "calls": 120,
+       "gamePerCall": 0.72,
+       "split": {
+        "start": 3,
+        "model": 80,
+        "play": 16,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 6.9,
+        "max": 6.9
+       }
+      }
+     }
+    },
+    {
+     "game": "backout",
+     "name": "Backout",
+     "platform": "js13k",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 480,
+      "runWallS": {
+       "min": 267.38,
+       "median": 267.38,
+       "max": 267.38
+      },
+      "firstFrameS": {
+       "median": 7,
+       "max": 7
+      },
+      "secPerMove": 1.81,
+      "gameS": {
+       "median": 93.6,
+       "max": 110
+      },
+      "reached": 4,
+      "reachedWallS": 48,
+      "reachedGameS": 19.6,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 0,
+       "menu": 2,
+       "gameover": 3,
+       "play": 95
+      },
+      "playTimePct": 72,
+      "screens": {
+       "median": 154,
+       "max": 191
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 4,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 2,
+      "falseNothing": 1,
+      "mousePct": 0,
+      "keysPct": 68,
+      "waitPct": 32,
+      "endings": {
+       "T": 4
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.0734,
+      "speed": {
+       "ghostWallS": 246,
+       "realPerGameS": 2.71,
+       "calls": 120,
+       "gamePerCall": 0.6,
+       "split": {
+        "start": 12,
+        "model": 57,
+        "play": 31,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 7.6,
+        "max": 7.6
+       }
+      }
+     }
+    },
+    {
+     "game": "big-champ",
+     "name": "Big Champ",
+     "platform": "js13k",
+     "summary": {
+      "runs": 2,
+      "ghosts": 8,
+      "moved": 8,
+      "moves": 838,
+      "runWallS": {
+       "min": 199.21,
+       "median": 223.91500000000002,
+       "max": 248.62
+      },
+      "firstFrameS": {
+       "median": 3.9000000000000004,
+       "max": 4.7
+      },
+      "secPerMove": 1.66,
+      "gameS": {
+       "median": 116.3,
+       "max": 143.4
+      },
+      "reached": 8,
+      "reachedWallS": 23.2,
+      "reachedGameS": 12.1,
+      "reachedStep": 2,
+      "pct": {
+       "loading": 1,
+       "menu": 8,
+       "gameover": 19,
+       "play": 72
+      },
+      "playTimePct": 57,
+      "screens": {
+       "median": 149.5,
+       "max": 172
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 8,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 13,
+      "falseNothing": 0,
+      "mousePct": 36,
+      "keysPct": 62,
+      "waitPct": 3,
+      "endings": {
+       "T": 6,
+       "A": 2
+      },
+      "quit": 2,
+      "errors": 0,
+      "costUsd": 0.123,
+      "speed": {
+       "ghostWallS": 192,
+       "realPerGameS": 1.8,
+       "calls": 120,
+       "gamePerCall": 0.91,
+       "split": {
+        "start": 9,
+        "model": 55,
+        "play": 35,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 27.1,
+        "max": 47.8
+       }
+      }
+     }
+    },
+    {
+     "game": "dead-again",
+     "name": "Dead Again",
+     "platform": "js13k",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 438,
+      "runWallS": {
+       "min": 188.4,
+       "median": 188.4,
+       "max": 188.4
+      },
+      "firstFrameS": {
+       "median": 3.1,
+       "max": 3.1
+      },
+      "secPerMove": 1.45,
+      "gameS": {
+       "median": 96.4,
+       "max": 108.9
+      },
+      "reached": 4,
+      "reachedWallS": 11.6,
+      "reachedGameS": 8.8,
+      "reachedStep": 1,
+      "pct": {
+       "loading": 0,
+       "menu": 0,
+       "gameover": 21,
+       "play": 79
+      },
+      "playTimePct": 60,
+      "screens": {
+       "median": 90,
+       "max": 102
+      },
+      "stalled": {
+       "ghosts": 1,
+       "of": 4,
+       "medianS": 11.1,
+       "totalS": 11.1,
+       "pct": 3
+      },
+      "saidNothing": 4,
+      "falseNothing": 2,
+      "mousePct": 12,
+      "keysPct": 90,
+      "waitPct": 0,
+      "endings": {
+       "T": 3,
+       "A": 1
+      },
+      "quit": 1,
+      "errors": 0,
+      "costUsd": 0.063,
+      "speed": {
+       "ghostWallS": 181,
+       "realPerGameS": 1.82,
+       "calls": 120,
+       "gamePerCall": 0.76,
+       "split": {
+        "start": 5,
+        "model": 66,
+        "play": 28,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 4.8,
+        "max": 4.8
+       }
+      }
+     }
+    },
+    {
+     "game": "broken-repair",
+     "name": "Broken Repair",
+     "platform": "itch.io",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 480,
+      "runWallS": {
+       "min": 306.81,
+       "median": 306.81,
+       "max": 306.81
+      },
+      "firstFrameS": {
+       "median": 19.1,
+       "max": 19.1
+      },
+      "secPerMove": 2.25,
+      "gameS": {
+       "median": 131.6,
+       "max": 135.3
+      },
+      "reached": 4,
+      "reachedWallS": 33.9,
+      "reachedGameS": 9.4,
+      "reachedStep": 2.5,
+      "pct": {
+       "loading": 1,
+       "menu": 6,
+       "gameover": 0,
+       "play": 93
+      },
+      "playTimePct": 87,
+      "screens": {
+       "median": 151.5,
+       "max": 179
+      },
+      "stalled": {
+       "ghosts": 0,
+       "of": 4,
+       "medianS": null,
+       "totalS": 0,
+       "pct": 0
+      },
+      "saidNothing": 9,
+      "falseNothing": 3,
+      "mousePct": 99,
+      "keysPct": 1,
+      "waitPct": 0,
+      "endings": {
+       "T": 4
+      },
+      "quit": 0,
+      "errors": 0,
+      "costUsd": 0.0814,
+      "speed": {
+       "ghostWallS": 293,
+       "realPerGameS": 2.26,
+       "calls": 120,
+       "gamePerCall": 1.02,
+       "split": {
+        "start": 8,
+        "model": 50,
+        "play": 42,
+        "end": 0
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 0,
+       "reportAfterS": {
+        "median": 4.9,
+        "max": 4.9
+       }
+      }
+     }
+    },
+    {
+     "game": "decogear",
+     "name": "Decogear",
+     "platform": "itch.io",
+     "summary": {
+      "runs": 1,
+      "ghosts": 4,
+      "moved": 4,
+      "moves": 268,
+      "runWallS": {
+       "min": 389.86,
+       "median": 389.86,
+       "max": 389.86
+      },
+      "firstFrameS": {
+       "median": 31.6,
+       "max": 31.6
+      },
+      "secPerMove": 3.17,
+      "gameS": {
+       "median": 117,
+       "max": 152.3
+      },
+      "reached": 1,
+      "reachedWallS": 214.2,
+      "reachedGameS": 41.7,
+      "reachedStep": 45,
+      "pct": {
+       "loading": 1,
+       "menu": 71,
+       "gameover": 0,
+       "play": 28
+      },
+      "playTimePct": 9,
+      "screens": {
+       "median": 27.5,
+       "max": 118
+      },
+      "stalled": {
+       "ghosts": 4,
+       "of": 4,
+       "medianS": 86.4,
+       "totalS": 326.9,
+       "pct": 73
+      },
+      "saidNothing": 17,
+      "falseNothing": 1,
+      "mousePct": 19,
+      "keysPct": 84,
+      "waitPct": 1,
+      "endings": {
+       "T": 1,
+       "R": 2,
+       "A": 1
+      },
+      "quit": 1,
+      "errors": 0,
+      "costUsd": 0.0544,
+      "speed": {
+       "ghostWallS": 273,
+       "realPerGameS": 2.45,
+       "calls": 58.5,
+       "gamePerCall": 0.91,
+       "split": {
+        "start": 21,
+        "model": 33,
+        "play": 45,
+        "end": 1
+       },
+       "autopilotWallS": null,
+       "fewerFrames": 0,
+       "realTime": 3,
+       "reportAfterS": {
+        "median": 55.2,
+        "max": 55.2
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 # Real jam games — before
 
-60 runs, 238 ghosts, 7608 moves on 13 games, measured from the recorded runs with no AI (`node bench/real-games.mjs before --url js13kgames.com --url itch.io --url third-party/ --until 2026-11-23T17:45Z`, 2026-11-23 18:31 UTC). How each number is measured: [below](#how-it-is-measured).
+60 runs, 238 ghosts, 7608 moves on 13 games, measured from the recorded runs with no AI (`node bench/real-games.mjs before --url js13kgames.com --url itch.io --url third-party/ --until 2026-11-23T17:45Z`, 2026-11-24 10:32 UTC). How each number is measured: [below](#how-it-is-measured).
 
 ## By game
 
@@ -21,7 +21,7 @@
 | Prerolled | 1 | 0/4 | – | – | – | – | – · – · – · – | – | – | – | 0 / 0 | – | 4E | $0.000 |
 | **Total** | 60 | 216/238 | 31–488 | 2.1 | 24 / 44 | 5 s (191/216) | 4 · 11 · 5 · 80 | 74 | 31 / 64 | 18/216 · 5 % | 121 / 591 | 21 · 78 | 166T 32A 22E 4L 14C | $1.344 |
 
-Endings: T = used its 40 moves · R = played all its game time · W = won · S = stopped early (nothing new) · A = gave up · E = error · L = 8-minute limit · C = cancelled. "Ghosts" a/b: b ghosts, a of them made at least one move (the others failed to start).
+Endings: T = used its moves · R = played all its game time · W = won · S = stopped early (nothing new) · A = gave up · E = error · L = real-time limit (8 minutes for the run, or the ghost's own budget of 4.5 minutes, however much it had played) · C = cancelled. "Ghosts" a/b: b ghosts, a of them made at least one move (the others failed to start).
 
 ## Targets of rediseno/PLAN-V3.md, section 2
 
@@ -34,6 +34,27 @@ Endings: T = used its 40 moves · R = played all its game time · W = won · S =
 | Real games where they reach play (at least half of the ghosts that moved) | 11 of 13 (not: Decogear, Prerolled) | ≥ 11 of 13 |
 | "Nothing happened" thoughts while the screen did change | 121 of 591 such thoughts; 1.6 per 100 moves | −70 % |
 | Clicks in the mouse games (Big Champ, Coiner) | 25 % of 1692 moves | ≥ 60 % |
+
+## Where the real time goes
+
+| Game | Ghosts | Run length (s) | Report after the last ghost (s) | Real s per ghost (median) | Game s per ghost (median) | Real s per game s | Model answers per ghost (median) | Game s per answer | % of real time: start · model · playing · end | Autopilot real s (median) | Ghosts drawing fewer frames · in real time |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Escape from Death Hole | 24 | 96–131 | 2 (max 5) | 94 | 21 | 4.81 | 40 | 0.51 | 1 · 42 · 57 · 0 | – | 0 · 0 |
+| Find All Pages | 24 | 61–82 | 5 (max 7) | 59 | 22 | 2.48 | 40 | 0.66 | 1 · 81 · 18 · 0 | – | 0 · 0 |
+| SpaceTaxi | 24 | 56–63 | 5 (max 6) | 56 | 29 | 2.01 | 40 | 0.70 | 1 · 68 · 31 · 1 | – | 0 · 0 |
+| Coiner | 24 | 56–61 | 4 (max 7) | 52 | 25 | 2.08 | 40 | 0.65 | 1 · 76 · 23 · 1 | – | 0 · 0 |
+| Backout | 20 | 72–85 | 0 (max 4) | 75 | 21 | 3.51 | 40 | 0.54 | 8 · 53 · 39 · 0 | – | 0 · 0 |
+| Big Champ | 24/28 | 31–85 | 4 (max 5) | 58 | 28 | 2.21 | 40 | 0.72 | 1 · 62 · 37 · 0 | – | 0 · 0 |
+| Dead Again | 16/20 | 58–69 | 5 (max 6) | 57 | 26 | 2.21 | 40 | 0.67 | 1 · 64 · 34 · 0 | – | 0 · 0 |
+| Delete! | 16 | 61–69 | 5 (max 7) | 60 | 25 | 1.97 | 40 | 0.78 | 0 · 73 · 26 · 0 | – | 0 · 0 |
+| Moon Buggy | 16 | 50–58 | 6 (max 8) | 47 | 28 | 1.76 | 40 | 0.70 | 1 · 74 · 25 · 0 | – | 0 · 0 |
+| NILO | 4 | 55 | 5 | 53 | 25 | 2.15 | 40 | 0.61 | 1 · 75 · 24 · 0 | – | 0 · 0 |
+| Broken Repair | 10/20 | 239–488 | 0 (max 4) | 398 | 25 | 13.02 | 29 | 0.93 | 0 · 11 · 89 · 0 | – | 0 · 0 |
+| Decogear | 14 | 49–164 | 5 (max 11) | 112 | 19 | 5.84 | 16 | 1.13 | 22 · 19 · 59 · 0 | – | 0 · 0 |
+| Prerolled | 0/4 | – | 0 | – | – | – | – | – | – · – · – · – | – | 0 · 0 |
+| **Total** | 216/238 | 31–488 | 5 (max 11) | 59 | 24 | 3.26 | 40 | 0.68 | 3 · 48 · 49 · 0 | – | 0 · 0 |
+
+A run lasts as long as its slowest ghost. Start: to the first screen a ghost decided on (browser, page, game loading, autopilot). Model: waiting for its answers. Playing: the rest of the moves (drawing the game with its clock frozen, screenshots, our own checks). End: after the last move (exit interview, closing).
 
 ## Escape from Death Hole
 
@@ -195,5 +216,7 @@ itch.io · https://red-sauce.itch.io/prerolled
 - **Moves %**: what the ghost said it saw, refined by its thought (the categories of `rediseno/v3/real-games/analyze_runs.py`): loading = loading, black screens and intros that play by themselves; menu = menus, title and name screens and anything else that is not the game; game over = it saw itself die or a game-over screen; play = playing or level complete. **% of game time playing**: the same, weighted by each move's game time.
 - **Distinct screens**: a fingerprint of the frame every 0.5 s of game time, as Go-Explore's cells (the frame in grey shrunk to 11×8, 8 levels); the number of different fingerprints a ghost saw. The character moving to a new place makes a new fingerprint, as in Go-Explore; so do animations, which inflate the count on busy screens. **New screens every 5 s**: the novelty curve, averaged over the ghosts of the run. **Stall**: at least 10 s of game time without a fingerprint never seen before (also at the end of the game); the tables give the ghosts with at least one, and the share of all the game time spent in stalls (longer games have more room for them, so compare shares).
 - **False "nothing happened"**: thoughts saying the last input did nothing (the regular expression of `rediseno/v3/real-games/modes.py`) while that move clearly changed the screen the ghost saw before and after it (mean grey change ≥ 3 levels on the grid, as the first analysis: a new screen, the view scrolling, something big moving), not counting loading screens. Smaller changes (a cursor, an animated background) are not counted, so this is a floor. "All" is every such thought, true or not (the first move of each ghost is left out, as before).
-- **% click · keys**: moves with a click or drag, and moves with keys (a move can have both; the rest were waits).
+- **% click · keys**: moves with a click or drag, and moves with keys (a move can have both, also among the actions it chained after its first; the rest were waits).
+- **Where the real time goes**: per ghost, from its start (`startedAt`) to its end (`endedAt`), split in start (to the first screen it decided on), model (each move's `latencyMs`), playing (the rest of each move's real time) and end (after its last move); shares of the real time of all the ghosts. **Real s per game s**: their real time over their game time (`trace.gameMs`, with the autopilot's). **Game s per answer**: the game time of their moves over the model's answers. **Report after the last ghost**: from the last ghost's end to `report.json` being written (the analyst; not in the run length). **Autopilot real s**: `trace.autopilot.wallMs` (recorded since 24 Nov). **Fewer frames · real time**: ghosts the watchdog moved to drawing fewer frames (`frameStepMs`), or to playing on in real time (`realTimeFrom`).
+- **Endings**: `trace.outcome` as one letter; a ghost stopped by its own real-time budget is L even when the trace says time_up (`stopReason.kind` wall_time: it had played at least 60 s, not all its game time).
 - **Cost**: the run's `report.json` cost (ghosts and analyst); priced from the traces when there is no report.

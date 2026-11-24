@@ -353,10 +353,12 @@ To find where a new player gets stuck, a ghost first has to get past the loading
 - The share of moves on loading screens, menus, game over and play.
 - **Distinct screens**: a fingerprint of the frame every 0.5 s of game time, as Go-Explore's cells (grey, 11 × 8, 8 levels), and the novelty curve. **Stalls**: 10 s of game time without a screen never seen before.
 - "Nothing happened" thoughts while the screen clearly changed, clicks against keys, endings, errors and cost.
+- **Where the real time goes**: per ghost, the start (browser, page, loading, autopilot), the model’s answers, playing the game (drawing it with its clock frozen, screenshots) and the end; real seconds per second of game, game seconds per answer, and the wait for the report.
 
 ```
 node bench/real-games.mjs before --url js13kgames.com --url itch.io --url third-party/ --until 2026-11-23T17:45Z
 node bench/real-games.mjs <label> --url js13kgames.com --url itch.io --url third-party/ --since <when the new runs started> --compare before
+node bench/real-games.mjs v3-speed --url js13kgames.com --url itch.io --since 2026-11-24T09:02Z --until 2026-11-24T09:50Z --compare before,v3
 ```
 
 Run ids (or their last characters) can be given instead of `--url`. Each measurement writes `results/real-<label>.md` (a table per game, totals and the targets of our plan) and `.json` (every ghost). Decoding the frames takes about 5 minutes for 60 runs.

@@ -27,6 +27,7 @@ import {
   moveFrames,
   NOTHING_HAPPENED,
   novelty,
+  parseArgs,
   renderMarkdown,
   sampleFrames,
   screenChange,
@@ -171,6 +172,10 @@ test('"nothing happened" thoughts and the inputs of a move', () => {
   assert.deepEqual(inputKinds({ click: [], hold: [], tap: [], duration_ms: 900 }), { mouse: false, keys: false, wait: true });
   assert.deepEqual(inputKinds({ actions: [{ type: 'click', x: 3, y: 4 }, { type: 'run_jump', keys: ['ArrowRight'] }] }), { mouse: true, keys: true, wait: false });
   assert.deepEqual(inputKinds(undefined), { mouse: false, keys: false, wait: true });
+  // v3 chains (24 Nov): the actions done after the first count (`thenDone` of them); skipped ones do not.
+  const chain = { click: [], hold: ['ArrowUp'], tap: [], duration_ms: 800, then: [{ click: [{ x: 180, y: 230 }], hold: [], tap: [], duration_ms: 500 }], thenDone: 1 };
+  assert.deepEqual(inputKinds(chain), { mouse: true, keys: true, wait: false });
+  assert.deepEqual(inputKinds({ ...chain, hold: [], thenDone: 0 }), { mouse: false, keys: false, wait: true });
 });
 
 test('games, endings and run times', () => {
@@ -184,8 +189,17 @@ test('games, endings and run times', () => {
   assert.equal(endingOf('stopped', 488), 'L');
   assert.equal(endingOf('stopped', 117), 'C');
   assert.equal(endingOf('something_new'), 'something_new');
+  // Cut by its own real-time budget after 117 s of game (Prerolled, 24 Nov): the trace says time_up, it is a limit.
+  assert.equal(endingOf('time_up', 279, { kind: 'wall_time', minutes: 4.5, gameSeconds: 117 }), 'L');
+  assert.equal(endingOf('time_up', 221, null), 'R');
+  assert.equal(endingOf('too_slow', 424, { kind: 'wall_time' }), 'L');
   assert.equal(idTime('2026-11-22T12-01-21-334Z-7a5a1afd2e'), Date.parse('2026-11-22T12:01:21.334Z'));
   assert.equal(idTime('gap-run-clean-1'), null);
+  const args = parseArgs(['v3-speed', '--url', 'js13kgames.com,itch.io', '--since', '2026-11-24T09:02Z', '--compare', 'before,v3']);
+  assert.deepEqual(args.urls, ['js13kgames.com', 'itch.io']);
+  assert.deepEqual(args.compare, ['before', 'v3']);
+  assert.deepEqual(parseArgs(['x', 'abc', '--compare', 'before', '--compare', 'v3']).compare, ['before', 'v3']);
+  assert.deepEqual(parseArgs(['x', 'abc']).compare, []);
 });
 
 /** A ghost of 4 moves on a game without the SDK: a menu, a move with no effect, then two that play. */
@@ -259,6 +273,25 @@ test('per ghost: real play, time to it, groups, false "nothing happened", stalls
   const timed = structuredClone(trace);
   timed.steps.forEach((s, k) => (s.at = new Date(t0 + 2000 + 10_000 * (k + 1)).toISOString()));
   assert.equal(ghostMetrics(timed, fd).secPerMove, 10);
+  // And a step's `wallMs` (real ms since the ghost started, 24 Nov) before both.
+  const walled = structuredClone(trace);
+  walled.steps.forEach((s, k) => (s.wallMs = 2000 + 10_000 * (k + 1)));
+  const w = ghostMetrics(walled, fd);
+  assert.equal(w.secPerMove, 10);
+  assert.equal(w.play.ghostS, 32); // move 3 ended at 32 s of the ghost's real time
+  // Where its 30 s of real time went: 2 s to the first screen it decided on (frame 0), 4 answers of 0.9 s, the rest
+  // of the moves (4 × 6 s - 3.6 s), 4 s after the last move. The moves bought 20 s of game.
+  assert.deepEqual(g.time, { startS: 2, modelS: 3.6, playS: 20.4, endS: 4 });
+  assert.equal(g.movesGameS, 20);
+  assert.equal(g.modelCalls, 4);
+  // The watchdog and the autopilot, as recorded on 24 Nov; a ghost cut by its real-time budget ends in L.
+  const watched = ghostMetrics({ ...trace, frameStepMs: 100, frameStepFrom: 8110, realTimeFrom: 30_500, autopilot: { waitedMs: 4640, wallMs: 5101 }, outcome: 'time_up', stopReason: { kind: 'wall_time', minutes: 4.5, gameSeconds: 20 } }, fd, { runWallS: 279 });
+  assert.deepEqual(watched.fewerFrames, { stepMs: 100, fromS: 8.1 });
+  assert.equal(watched.realTimeFromS, 30.5);
+  assert.equal(watched.autopilotS, 4.6);
+  assert.equal(watched.autopilotWallS, 5.1);
+  assert.equal(watched.ending, 'L');
+  assert.equal(g.fewerFrames, undefined);
   // A long stall: the same screens for the last 15 s of a longer game.
   const long = { ...trace, gameMs: 30_000 };
   const stalled = ghostMetrics(long, fd);
@@ -340,15 +373,31 @@ test('the tables: a summary per game and a markdown report', () => {
   assert.deepEqual(s.pct, { loading: 0, menu: 25, gameover: 0, play: 75 });
   assert.equal(s.falseNothing, 2);
   assert.deepEqual(s.endings, { T: 1, E: 1 });
+  // Real time: 30 s for 20 s of game, 4 answers buying 5 s of game each; shares of the 30 s (the ghost that never
+  // moved is left out).
+  assert.equal(s.speed.ghostWallS, 30);
+  assert.equal(s.speed.realPerGameS, 1.5);
+  assert.equal(s.speed.calls, 4);
+  assert.equal(s.speed.gamePerCall, 5);
+  assert.deepEqual(s.speed.split, { start: 7, model: 12, play: 68, end: 13 });
+  assert.equal(s.speed.reportAfterS, null);
+  assert.equal(summarize([{ ...run, reportAfterS: 6.5 }]).speed.reportAfterS.median, 6.5);
   const md = renderMarkdown({ label: 'test', command: 'node bench/real-games.mjs test x', generatedAt: '2026-11-23T10:00:00.000Z', total: s, games: [{ game: 'some-game', name: 'some-game', platform: 'js13k', runs: [run], summary: s }], criteria: [{ criterion: 'c', measured: 'm', target: 't' }] });
   assert.match(md, /^# Real jam games — test/);
   assert.match(md, /\| \*\*Total\*\* \|/);
   assert.match(md, /## some-game/);
   assert.match(md, /abcdef1234 \(23-11 09:59\)/);
-  // Against an earlier measurement: before → now, per game and in total.
-  const before = { ...s, reached: 0, gameS: { median: 24, max: 30 } };
-  const compared = renderMarkdown({ label: 'test', command: 'x', generatedAt: '2026-11-23T10:00:00.000Z', total: s, games: [{ game: 'some-game', name: 'some-game', platform: 'js13k', runs: [run], summary: s }], criteria: [], compare: { label: 'before', total: before, games: [{ game: 'some-game', summary: before }] } });
+  assert.match(md, /## Where the real time goes/);
+  assert.match(md, /\| some-game \| 1\/2 \| 60 \| – \| 30 \| 20 \| 1\.50 \| 4 \| 5 \| 7 · 12 · 68 · 13 \|/);
+  // Against earlier measurements: before → now, per game and in total, one section each (--compare before,v3).
+  const before = { ...s, reached: 0, gameS: { median: 24, max: 30 }, speed: { ...s.speed, realPerGameS: 3.2 } };
+  const v3 = { ...s, gameS: { median: 95, max: 150 } };
+  const compared = renderMarkdown({ label: 'test', command: 'x', generatedAt: '2026-11-23T10:00:00.000Z', total: s, games: [{ game: 'some-game', name: 'some-game', platform: 'js13k', runs: [run], summary: s }], criteria: [], compares: [{ label: 'before', total: before, games: [{ game: 'some-game', summary: before }] }, { label: 'v3', total: v3, games: [{ game: 'some-game', summary: v3 }] }] });
   assert.match(compared, /## Compared with `before`/);
   assert.match(compared, /\| some-game \| 0 % → 100 % \|/);
   assert.match(compared, /\| 24 → 20 \|/);
+  assert.match(compared, /\| 3\.20 → 1\.50 \|/);
+  assert.match(compared, /## Compared with `v3`[\s\S]*\| 95 → 20 \|/);
+  // An older result object with a single `compare` still renders.
+  assert.match(renderMarkdown({ label: 'test', command: 'x', generatedAt: '2026-11-23T10:00:00.000Z', total: s, games: [], criteria: [], compare: { label: 'before', total: before, games: [] } }), /## Compared with `before`/);
 });

@@ -2,14 +2,16 @@
 // sections 2 and 5). For every run and every ghost: real time of the run and per move, seconds of game, time until it
 // really plays, share of moves on loading / menu / game over / play, distinct screens (a perceptual fingerprint of the
 // frames, as Go-Explore) and their novelty curve, stalls (10 s of game without a new screen), "nothing happened"
-// thoughts while the screen did change, clicks against keys, endings and cost.
+// thoughts while the screen did change, clicks against keys, endings and cost; and where the real time went (getting
+// to the game, the model's answers, playing it, the end) against the game time it bought.
 //
 // node bench/real-games.mjs <label> <runId | run dir | --url pattern>... [--since 2026-11-24T00:00Z] [--until …]
-//   [--compare <label>] [--workers N] [--runs <runs dir>] [--cache <file.json>]
+//   [--compare <label>[,<label>…]] [--workers N] [--runs <runs dir>] [--cache <file.json>]
 //   runId: a folder of runs/ or the end of its name (7a5a1afd2e). A folder of run folders (a bench round) adds them all.
 //   --url: every run whose config.json url (or the address the ghosts played) contains the pattern; repeatable or
 //     comma-separated. --since/--until: only runs started in that window (from the run id's time).
-//   --compare: adds a before → after table against bench/results/real-<label>.json.
+//   --compare: adds before → after tables against bench/results/real-<label>.json; repeatable or comma-separated (the
+//     first one is the baseline of the targets).
 // Writes bench/results/real-<label>.md (a table per game and totals) and real-<label>.json (every ghost in detail).
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
@@ -197,12 +199,16 @@ const LETTER = { loading: 'L', story: 'S', menu: 'M', name: 'N', other: 'O', gam
 export const NOTHING_HAPPENED =
   /did ?n[o'’]t (do|move|work|change|respond|start|confirm|revive|retry|skip|help|launch|jump)|does ?n[o'’]t (do|move|work|respond)|did nothing|does nothing|do nothing|nothing (happen|moved|works|changed|responds)|never mov|won['’]?t (move|budge|start|launch)|not moving|isn['’]?t (working|moving)|aren['’]?t (working|moving)|no effect|still (hasn['’]?t|haven['’]?t) moved|haven['’]?t moved|hasn['’]?t moved|nothing has moved/i;
 
-/** Which inputs a move used: the mouse (click, drag), keys, or none (a wait). Also reads v3 compound actions. */
+/**
+ * Which inputs a move used: the mouse (click, drag), keys, or none (a wait). Also reads v3 compound actions: the
+ * actions a move chained after its first (`then`, of which the first `thenDone` were done) and `actions`.
+ */
 export function inputKinds(move = {}) {
   const has = (v) => (Array.isArray(v) ? v.length > 0 : Boolean(v));
   let mouse = has(move?.click) || has(move?.drag);
   let keys = has(move?.hold) || has(move?.tap) || has(move?.keys);
-  for (const a of Array.isArray(move?.actions) ? move.actions : []) {
+  const then = Array.isArray(move?.then) ? move.then.slice(0, Number.isInteger(move?.thenDone) ? move.thenDone : move.then.length) : [];
+  for (const a of [...then, ...(Array.isArray(move?.actions) ? move.actions : [])]) {
     const kind = String(a?.type ?? a?.kind ?? a?.action ?? '');
     if (has(a?.click) || has(a?.drag) || /click|drag|mouse|point/i.test(kind)) mouse = true;
     if (has(a?.hold) || has(a?.tap) || has(a?.keys) || has(a?.key) || /key|hold|tap|press|run|jump|walk/i.test(kind)) keys = true;
@@ -211,14 +217,17 @@ export function inputKinds(move = {}) {
 }
 
 // too_slow: v3 stops a ghost that passes its own real-time budget (src/ghost.mjs MAX_GHOST_WALL_MS): a real-time limit.
+// So is a time_up whose stopReason is wall_time: since 24 Nov a ghost cut by that budget after 60 s of game ends in
+// time_up, without having played all its game time.
 const OUTCOME_LETTER = { out_of_steps: 'T', time_up: 'R', quit: 'A', error: 'E', won: 'W', saturated: 'S', too_slow: 'L' };
 const ENDINGS_ORDER = ['R', 'T', 'W', 'S', 'A', 'E', 'L', 'C'];
 export const ENDINGS_LEGEND =
-  'T = used its moves · R = played all its game time · W = won · S = stopped early (nothing new) · A = gave up · E = error · L = real-time limit (8 minutes for the run, or the ghost\'s own budget) · C = cancelled';
+  'T = used its moves · R = played all its game time · W = won · S = stopped early (nothing new) · A = gave up · E = error · L = real-time limit (8 minutes for the run, or the ghost\'s own budget of 4.5 minutes, however much it had played) · C = cancelled';
 
 /** How a ghost ended, as one letter (T, R, W, S, A, E, L, C) or its outcome word when unknown. */
-export function endingOf(outcome, runWallS) {
+export function endingOf(outcome, runWallS, stopReason = null) {
   if (outcome === 'stopped') return runWallS != null && runWallS >= LIMIT_WALL_S ? 'L' : 'C';
+  if (outcome === 'time_up' && stopReason?.kind === 'wall_time') return 'L';
   return OUTCOME_LETTER[outcome] ?? String(outcome ?? '?');
 }
 
@@ -256,12 +265,15 @@ export function ghostMetrics(trace, fd, { runStartMs = null, runWallS = null } =
   const frame0Ms = wallOf(0);
   const gameFrameMs = fd?.firstGame != null ? wallOf(fd.firstGame) : frame0Ms;
 
-  // Real time of each move: from the end of the one before (or the screen it decided on) to its own end. A step's
-  // `at` (when it was recorded) wins over the time its last frame was written.
+  // Real time of each move: from the end of the one before (or the screen it decided on) to its own end. The end is the
+  // step's `wallMs` (real ms since the ghost started, recorded since 24 Nov) or `at`, else the time its last frame was
+  // written (0.03-0.35 s before wallMs on 24 Nov: the move's own checks come after its last frame).
+  const endOf = (s) => (Number.isFinite(s.wallMs) && startedMs != null ? startedMs + s.wallMs : (toMs(s.at) ?? wallOf(s.frames?.[1])));
+  const firstSeenMs = steps.length ? (wallOf(Math.max(0, (steps[0].frames?.[0] ?? 1) - 1)) ?? frame0Ms) : null;
   const stepWall = [];
   let prevEnd = null;
   for (const s of steps) {
-    const end = toMs(s.at) ?? wallOf(s.frames?.[1]);
+    const end = endOf(s);
     const start = prevEnd ?? wallOf(Math.max(0, (s.frames?.[0] ?? 1) - 1)) ?? frame0Ms;
     stepWall.push(end != null && start != null ? Math.max(0, end - start) / 1000 : null);
     if (end != null) prevEnd = end;
@@ -288,7 +300,7 @@ export function ghostMetrics(trace, fd, { runStartMs = null, runWallS = null } =
   let play = null;
   if (firstK >= 0) {
     const s = steps[firstK];
-    const end = toMs(s.at) ?? wallOf(s.frames?.[1]);
+    const end = endOf(s);
     const since = (from) => (end != null && from != null ? round((end - from) / 1000, 1) : null);
     play = { step: s.step, gameS: round((s.t0 ?? 0) / 1000, 1), wallS: since(runStartMs ?? startedMs), ghostS: since(startedMs) };
   }
@@ -327,10 +339,27 @@ export function ghostMetrics(trace, fd, { runStartMs = null, runWallS = null } =
   const walls = stepWall.filter((v) => v != null);
   const lat = steps.map((s) => s.latencyMs).filter(Number.isFinite);
   const wallS = startedMs != null && endedMs != null ? round((endedMs - startedMs) / 1000, 1) : null;
+
+  // Where the ghost's real time went: getting to the first screen it decided on (browser, page, the game loading, the
+  // autopilot), the model's answers, the rest of its moves (playing the game: drawing it with its clock frozen,
+  // screenshots, our own checks) and the end (exit interview, closing).
+  let modelMs = 0;
+  let movesS = 0;
+  steps.forEach((s, k) => {
+    if (stepWall[k] == null) return;
+    movesS += stepWall[k];
+    modelMs += Number.isFinite(s.latencyMs) ? s.latencyMs : 0;
+  });
+  const time = {
+    startS: firstSeenMs != null && startedMs != null ? round((firstSeenMs - startedMs) / 1000, 1) : null,
+    modelS: round(modelMs / 1000, 1),
+    playS: round(Math.max(0, movesS - modelMs / 1000), 1),
+    endS: prevEnd != null && endedMs != null ? round(Math.max(0, endedMs - prevEnd) / 1000, 1) : null,
+  };
   return {
     persona: trace.persona,
     outcome: trace.outcome ?? null,
-    ending: endingOf(trace.outcome, runWallS),
+    ending: endingOf(trace.outcome, runWallS, trace.stopReason),
     ...(trace.error ? { error: { kind: trace.error.kind ?? null, message: String(trace.error.message ?? '').slice(0, 160) } } : {}),
     ...(trace.stopReason ? { stopReason: trace.stopReason } : {}),
     steps: steps.length,
@@ -364,7 +393,14 @@ export function ghostMetrics(trace, fd, { runStartMs = null, runWallS = null } =
     },
     quitStep: trace.outcome === 'quit' ? (steps.at(-1)?.step ?? null) : null,
     costUsd: traceCost ? round(traceCost(trace), 5) : null,
+    movesGameS: round(moveMs.reduce((a, b) => a + b, 0) / 1000, 1), // game time of the moves (without the autopilot's)
+    time,
+    // The autopilot: game seconds it waited and, since 24 Nov, the real seconds it took.
     ...(trace.autopilot ? { autopilotS: round((trace.autopilot.waitedMs ?? 0) / 1000, 1) } : {}),
+    ...(Number.isFinite(trace.autopilot?.wallMs) ? { autopilotWallS: round(trace.autopilot.wallMs / 1000, 1) } : {}),
+    // The watchdog: from which game second the game was drawn with fewer frames, or ran on in real time.
+    ...(trace.frameStepMs ? { fewerFrames: { stepMs: trace.frameStepMs, fromS: round((trace.frameStepFrom ?? 0) / 1000, 1) } } : {}),
+    ...(Number.isFinite(trace.realTimeFrom) ? { realTimeFromS: round(trace.realTimeFrom / 1000, 1) } : {}),
     ...(trace.blockedNavigations ? { blockedNavigations: trace.blockedNavigations } : {}),
     ...(Number.isFinite(trace.screens) ? { screensByGhost: trace.screens } : {}),
     frames: frames.length,
@@ -583,7 +619,16 @@ async function loadRun(dir) {
   const fromReport = Number.isFinite(report?.realMs) && ends.length ? Math.max(...ends) - report.realMs : null;
   const firstStart = Math.min(...ghosts.map((g) => toMs(g.trace.startedAt)).filter(Number.isFinite), Infinity);
   const startMs = fromReport != null ? Math.max(createdMs ?? -Infinity, fromReport) : (createdMs ?? (Number.isFinite(firstStart) ? firstStart : null));
-  return { dir, id, config, report, ghosts, createdMs, startMs, missing: personas.length - ghosts.length };
+  // When the report was ready: report.json is written after the last ghost, when the analyst has answered. Its creation
+  // time, as a report can be written again later (NILO, 21 Nov: four minutes after its run).
+  let reportMs = null;
+  try {
+    const st = statSync(join(dir, 'report.json'));
+    reportMs = Math.min(st.birthtimeMs > 0 ? st.birthtimeMs : Infinity, st.mtimeMs);
+  } catch {
+    // no report: the run was stopped or is still being played
+  }
+  return { dir, id, config, report, reportMs, ghosts, createdMs, startMs, missing: personas.length - ghosts.length };
 }
 
 function runMetrics(run, fds) {
@@ -595,6 +640,9 @@ function runMetrics(run, fds) {
   // The first frame of a ghost that got to play (one refused at a blank screen saved only that screen).
   const players = ghosts.some((g) => g.steps > 0) ? ghosts.filter((g) => g.steps > 0) : ghosts;
   const firstFrames = players.map((g) => g.firstFrameS).filter((v) => v != null);
+  // The wait for the report after the last ghost (the analyst's answer, not in realMs). A report written much later
+  // than its run (made again) says nothing about it.
+  const reportAfter = run.reportMs != null && ends.length ? (run.reportMs - Math.max(...ends)) / 1000 : null;
   return {
     id: run.id,
     path: relative(ROOT, run.dir).replaceAll('\\', '/'),
@@ -609,6 +657,7 @@ function runMetrics(run, fds) {
     maxSteps: run.config.steps ?? null,
     ...(run.config.playSeconds ? { playSeconds: run.config.playSeconds } : {}),
     wallS,
+    ...(reportAfter != null && reportAfter >= 0 && reportAfter <= 600 ? { reportAfterS: round(reportAfter, 1) } : {}),
     firstFrameS: firstFrames.length ? Math.min(...firstFrames) : null,
     costUsd: round(run.report?.cost?.total ?? ghostCost, 4),
     costFrom: run.report?.cost?.total != null ? 'report' : 'traces',
@@ -638,6 +687,14 @@ export function summarize(runs) {
   // Runs where no ghost got to move (the game did not start) end in seconds: they are counted as errors, not lengths.
   const runWalls = runs.filter((r) => r.ghosts.some((g) => g.steps > 0)).map((r) => r.wallS).filter((v) => v != null);
   const firstFrames = runs.map((r) => r.firstFrameS).filter((v) => v != null);
+  // Where the real time went, pooled over the ghosts that moved (a long ghost weighs more, as it holds its run longer).
+  const timed = moved.filter((g) => g.wallS != null && g.gameS > 0);
+  const sumOf = (xs, f) => xs.reduce((a, x) => a + (f(x) ?? 0), 0);
+  const wallAll = sumOf(timed, (g) => g.wallS);
+  const share = (k) => (wallAll ? Math.round((100 * sumOf(timed, (g) => g.time?.[k])) / wallAll) : null);
+  const calls = sumOf(moved, (g) => g.modelCalls);
+  const autopilots = moved.map((g) => g.autopilotWallS).filter((v) => v != null);
+  const reportWaits = runs.map((r) => r.reportAfterS).filter((v) => v != null);
   return {
     runs: runs.length,
     ghosts: ghosts.length,
@@ -671,6 +728,17 @@ export function summarize(runs) {
     quit: ghosts.filter((g) => g.ending === 'A').length,
     errors: ghosts.filter((g) => g.ending === 'E').length,
     costUsd: round(runs.reduce((a, r) => a + (r.costUsd ?? 0), 0), 4),
+    speed: {
+      ghostWallS: timed.length ? round(median(timed.map((g) => g.wallS)), 0) : null,
+      realPerGameS: wallAll ? round(wallAll / sumOf(timed, (g) => g.gameS), 2) : null,
+      calls: moved.length ? median(moved.map((g) => g.modelCalls)) : null,
+      gamePerCall: calls ? round(sumOf(moved, (g) => g.movesGameS) / calls, 2) : null,
+      split: { start: share('startS'), model: share('modelS'), play: share('playS'), end: share('endS') },
+      autopilotWallS: autopilots.length ? round(median(autopilots), 1) : null,
+      fewerFrames: moved.filter((g) => g.fewerFrames).length,
+      realTime: moved.filter((g) => g.realTimeFromS != null).length,
+      reportAfterS: reportWaits.length ? { median: round(median(reportWaits), 1), max: Math.max(...reportWaits) } : null,
+    },
   };
 }
 
@@ -781,6 +849,40 @@ const SUMMARY_HEAD = [
 
 const table = (head, rows) => [`| ${head.join(' | ')} |`, `|${head.map(() => '---').join('|')}|`, ...rows.map((r) => `| ${r.join(' | ')} |`)].join('\n');
 
+const SPEED_HEAD = [
+  'Game',
+  'Ghosts',
+  'Run length (s)',
+  'Report after the last ghost (s)',
+  'Real s per ghost (median)',
+  'Game s per ghost (median)',
+  'Real s per game s',
+  'Model answers per ghost (median)',
+  'Game s per answer',
+  '% of real time: start · model · playing · end',
+  'Autopilot real s (median)',
+  'Ghosts drawing fewer frames · in real time',
+];
+
+function speedRow(name, s) {
+  const p = s.speed ?? {};
+  const range = (r, f = (v) => fmt(v, 0)) => (!r ? '–' : r.min != null ? (r.min === r.max ? f(r.min) : `${f(r.min)}–${f(r.max)}`) : r.median === r.max ? f(r.median) : `${f(r.median)} (max ${f(r.max)})`);
+  return [
+    name,
+    s.moved === s.ghosts ? s.ghosts : `${s.moved}/${s.ghosts}`,
+    range(s.runWallS),
+    range(p.reportAfterS),
+    fmt(p.ghostWallS, 0),
+    s.gameS ? fmt(s.gameS.median, 0) : '–',
+    fmt(p.realPerGameS, 2),
+    fmt(p.calls, 0),
+    fmt(p.gamePerCall, 2),
+    p.split ? [p.split.start, p.split.model, p.split.play, p.split.end].map((v) => (v == null ? '–' : v)).join(' · ') : '–',
+    fmt(p.autopilotWallS),
+    `${p.fewerFrames ?? '–'} · ${p.realTime ?? '–'}`,
+  ];
+}
+
 function runRow(r) {
   const moved = r.ghosts.filter((g) => g.steps > 0);
   const s = summarize([r]);
@@ -839,12 +941,26 @@ function compareSection(prev, games, total) {
     arrow(was?.mousePct, now?.mousePct),
     arrow(was?.runWallS?.median, now?.runWallS?.median),
   ]);
+  const speedRows = [...games.map((g) => [g.name, g.summary, pg.get(g.game)]), ['**Total**', total, prev.total]].map(([name, now, was]) => [
+    name,
+    arrow(was?.runWallS?.median, now?.runWallS?.median),
+    arrow(was?.speed?.ghostWallS, now?.speed?.ghostWallS),
+    arrow(was?.gameS?.median, now?.gameS?.median),
+    arrow(was?.speed?.realPerGameS, now?.speed?.realPerGameS, (v) => fmt(v, 2)),
+    arrow(was?.speed?.gamePerCall, now?.speed?.gamePerCall, (v) => fmt(v, 2)),
+    arrow(was?.speed?.split?.model, now?.speed?.split?.model, (v) => `${v} %`),
+    arrow(was?.speed?.reportAfterS?.median, now?.speed?.reportAfterS?.median),
+  ]);
   return [
     `## Compared with \`${prev.label}\``,
     '',
     `Before → now, for the games measured now. ${prev.label}: ${prev.total?.runs ?? '?'} runs, ${prev.total?.ghosts ?? '?'} ghosts on ${prev.games?.length ?? '?'} games; now: ${total.runs} runs, ${total.ghosts} ghosts on ${games.length} games.${(prev.games?.length ?? 0) !== games.length ? ' The totals cover different games: compare game by game.' : ''}`,
     '',
     table(['Game', 'Ghosts that reached play', 'Reached play (median real s)', 'Game s per ghost (median)', '% moves playing', 'Distinct screens (median)', '% of game time in stalls', 'False "nothing happened" per 100 moves', '% moves with a click', 'Run length (median s)'], rows),
+    '',
+    'Real time, before → now:',
+    '',
+    table(['Game', 'Run length (median s)', 'Real s per ghost (median)', 'Game s per ghost (median)', 'Real s per game s', 'Game s per model answer', '% of real time waiting for the model', 'Report after the last ghost (median s)'], speedRows),
     '',
   ];
 }
@@ -866,8 +982,14 @@ export function renderMarkdown(result) {
     '',
     table(['Criterion', 'Measured', 'Target'], result.criteria.map((c) => [c.criterion, c.measured, c.target])),
     '',
+    '## Where the real time goes',
+    '',
+    table(SPEED_HEAD, [...games.map((g) => speedRow(g.name, g.summary)), speedRow('**Total**', total)]),
+    '',
+    'A run lasts as long as its slowest ghost. Start: to the first screen a ghost decided on (browser, page, game loading, autopilot). Model: waiting for its answers. Playing: the rest of the moves (drawing the game with its clock frozen, screenshots, our own checks). End: after the last move (exit interview, closing).',
+    '',
   ];
-  if (result.compare) out.push(...compareSection(result.compare, games, total));
+  for (const prev of result.compares ?? (result.compare ? [result.compare] : [])) out.push(...compareSection(prev, games, total));
   for (const g of games) {
     out.push(`## ${g.name}`, '', `${g.platform} · ${g.runs[0].url ?? ''}`, '', table(RUN_HEAD, g.runs.map(runRow)), '');
   }
@@ -881,7 +1003,9 @@ export function renderMarkdown(result) {
     '- **Moves %**: what the ghost said it saw, refined by its thought (the categories of `rediseno/v3/real-games/analyze_runs.py`): loading = loading, black screens and intros that play by themselves; menu = menus, title and name screens and anything else that is not the game; game over = it saw itself die or a game-over screen; play = playing or level complete. **% of game time playing**: the same, weighted by each move\'s game time.',
     `- **Distinct screens**: a fingerprint of the frame every ${SAMPLE_MS / 1000} s of game time, as Go-Explore's cells (the frame in grey shrunk to ${FP_W}×${FP_H}, ${FP_LEVELS} levels); the number of different fingerprints a ghost saw. The character moving to a new place makes a new fingerprint, as in Go-Explore; so do animations, which inflate the count on busy screens. **New screens every 5 s**: the novelty curve, averaged over the ghosts of the run. **Stall**: at least ${STALL_MS / 1000} s of game time without a fingerprint never seen before (also at the end of the game); the tables give the ghosts with at least one, and the share of all the game time spent in stalls (longer games have more room for them, so compare shares).`,
     `- **False "nothing happened"**: thoughts saying the last input did nothing (the regular expression of \`rediseno/v3/real-games/modes.py\`) while that move clearly changed the screen the ghost saw before and after it (mean grey change ≥ ${CHANGED_MEAN} levels on the grid, as the first analysis: a new screen, the view scrolling, something big moving), not counting loading screens. Smaller changes (a cursor, an animated background) are not counted, so this is a floor. "All" is every such thought, true or not (the first move of each ghost is left out, as before).`,
-    '- **% click · keys**: moves with a click or drag, and moves with keys (a move can have both; the rest were waits).',
+    '- **% click · keys**: moves with a click or drag, and moves with keys (a move can have both, also among the actions it chained after its first; the rest were waits).',
+    '- **Where the real time goes**: per ghost, from its start (`startedAt`) to its end (`endedAt`), split in start (to the first screen it decided on), model (each move\'s `latencyMs`), playing (the rest of each move\'s real time) and end (after its last move); shares of the real time of all the ghosts. **Real s per game s**: their real time over their game time (`trace.gameMs`, with the autopilot\'s). **Game s per answer**: the game time of their moves over the model\'s answers. **Report after the last ghost**: from the last ghost\'s end to `report.json` being written (the analyst; not in the run length). **Autopilot real s**: `trace.autopilot.wallMs` (recorded since 24 Nov). **Fewer frames · real time**: ghosts the watchdog moved to drawing fewer frames (`frameStepMs`), or to playing on in real time (`realTimeFrom`).',
+    '- **Endings**: `trace.outcome` as one letter; a ghost stopped by its own real-time budget is L even when the trace says time_up (`stopReason.kind` wall_time: it had played at least 60 s, not all its game time).',
     '- **Cost**: the run\'s `report.json` cost (ghosts and analyst); priced from the traces when there is no report.',
     '',
   );
@@ -910,7 +1034,7 @@ try {
 }
 
 export function parseArgs(argv) {
-  const out = { label: null, selectors: [], urls: [], since: null, until: null, compare: null, workers: null, runs: null, cache: null, out: null };
+  const out = { label: null, selectors: [], urls: [], since: null, until: null, compare: [], workers: null, runs: null, cache: null, out: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const value = () => {
@@ -920,7 +1044,7 @@ export function parseArgs(argv) {
     if (a === '--url') out.urls.push(...value().split(',').map((s) => s.trim()).filter(Boolean));
     else if (a === '--since') out.since = value();
     else if (a === '--until') out.until = value();
-    else if (a === '--compare') out.compare = value();
+    else if (a === '--compare') out.compare.push(...value().split(',').map((s) => s.trim()).filter(Boolean));
     else if (a === '--workers') out.workers = Number(value());
     else if (a === '--runs') out.runs = value();
     else if (a === '--cache') out.cache = value();
@@ -1005,12 +1129,16 @@ async function main() {
     games: games.map((g) => ({ game: g.game, name: g.name, platform: g.platform, summary: g.summary })),
     runs: measured,
   };
-  if (args.compare) {
-    const prev = await readJson(join(ROOT, 'bench', 'results', `real-${args.compare}.json`));
-    if (!prev) throw new Error(`bench/results/real-${args.compare}.json not found`);
-    result.compare = { label: prev.label, total: prev.total, games: prev.games };
+  if (args.compare.length) {
+    result.compares = [];
+    for (const label of args.compare) {
+      const prev = await readJson(join(ROOT, 'bench', 'results', `real-${label}.json`));
+      if (!prev) throw new Error(`bench/results/real-${label}.json not found`);
+      result.compares.push({ label: prev.label, total: prev.total, games: prev.games });
+    }
   }
-  result.criteria = criteria(games, total, result.compare ? { ...result.compare.total, label: result.compare.label } : null);
+  const baseline = result.compares?.[0]; // the targets are measured against the first one
+  result.criteria = criteria(games, total, baseline ? { ...baseline.total, label: baseline.label } : null);
   const outDir = args.out ? resolve(args.out) : join(ROOT, 'bench', 'results');
   await mkdir(outDir, { recursive: true });
   const md = renderMarkdown({ ...result, games });
