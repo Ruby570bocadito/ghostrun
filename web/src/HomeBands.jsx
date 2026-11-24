@@ -1,159 +1,260 @@
-import { useEffect, useRef, useState } from 'react';
-import { m, useInView, useReducedMotion } from 'motion/react';
-import { CountUp, EASE, Reveal, STILL } from './fx.jsx';
+import { Ghost } from './Ghost.jsx';
+import { CountUp, Item, Reveal, Stagger } from './fx.jsx';
+import { COLOR } from './personas.js';
+import { EVIDENCE, FEATURED_RUN, FIXED_RUN } from './links.js';
 
-const REPO = 'https://github.com/Ruby570bocadito/ghostrun';
+// The home page below the hero, in the chosen Swiss style: how it works, what a report gives you (real pieces of a real
+// report at full size: a tester could not read the old screenshot at 40 %), the before/after of a fix, and the
+// evidence. Every figure and every line of the analyst's card comes from the recorded playtests, nothing is invented.
 
-// The parts of the report screenshot (web/public/home/report.webp, 1100x745) each callout points at, in % of the image.
-const PARTS = [
-  { id: 'where', label: 'Where.', text: 'A box on a map of your level, rebuilt from what the ghosts saw.', box: { left: 58, top: 80.5, width: 40.5, height: 19 } },
-  { id: 'why', label: 'Why.', text: 'A card with what happens, the likely cause and one thing to try.', box: { left: 1.6, top: 39, width: 55, height: 37 } },
-  { id: 'proof', label: 'Proof.', text: "The replay of that moment, and the ghosts' own words.", box: { left: 58, top: 31.8, width: 40.5, height: 48 } },
+const STEPS = [
+  {
+    n: '01',
+    persona: 'newbie',
+    strip: '',
+    title: 'Paste a link',
+    text: 'Any web game that runs in a browser tab: itch.io, a jam page, your own site. No setup needed; games that add our small SDK get exact positions.',
+  },
+  {
+    n: '02',
+    persona: 'impatient',
+    strip: 'coral',
+    title: 'Ghosts play',
+    text: 'AI players with different personalities play at the same time, each in its own browser, thinking out loud. The game waits while they think, so action games work too.',
+  },
+  {
+    n: '03',
+    persona: 'reader',
+    strip: 'amber',
+    title: 'Get the report',
+    text: 'Every place players get stuck, worst first. A blocker is a spot nobody gets past; a missed objective, one most never find. Each comes with its replay and a fix to try.',
+  },
 ];
-const TOUR_MS = 2600;
 
-/** The report screenshot with the part each callout talks about lit up; it tours the parts until someone points at one. */
-function WhatYouGet() {
-  const [active, setActive] = useState('where');
-  const [touched, setTouched] = useState(false);
-  const ref = useRef(null);
-  const visible = useInView(ref, { margin: '0px 0px -20% 0px' });
-  const reduce = useReducedMotion();
+// From the report of the featured playtest (runs/<FEATURED_RUN>/report.json): finding F1 and the analyst's card.
+const CARD = {
+  title: 'Spike Gap Blocks All Progress',
+  stat: '4/4 ghosts died here · 38 deaths · nobody got past',
+  what: 'All 4 ghosts died 38 times trying to jump the spike pit between platforms and none ever got past it.',
+  cause: 'The horizontal gap over the spike pit is wider than the jump can clear even with a full run-up.',
+  fix: 'Narrow the spike pit or add an intermediate safe platform to make the crossing possible.',
+};
+const SAID = { persona: 'reader', text: 'I’m falling over the spikes, so I’ll steer left back toward the platform I left.' };
 
-  useEffect(() => {
-    if (touched || !visible || reduce || STILL) return undefined;
-    const t = setInterval(() => setActive((a) => PARTS[(PARTS.findIndex((p) => p.id === a) + 1) % PARTS.length].id), TOUR_MS);
-    return () => clearInterval(t);
-  }, [touched, visible, reduce]);
-
-  const pick = (id) => {
-    setTouched(true);
-    setActive(id);
-  };
-  const box = PARTS.find((p) => p.id === active)?.box;
-
+function Strip({ persona, tone = '', children }) {
   return (
-    <section className="home-band" aria-labelledby="get-title" ref={ref}>
-      <Reveal className="band-text">
-        <p className="eyebrow">What you get</p>
-        <h2 id="get-title">Every problem, with its proof</h2>
-        <ol className="callouts">
-          {PARTS.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                className={`callout ${active === p.id ? 'on' : ''}`}
-                aria-pressed={active === p.id}
-                onMouseEnter={() => pick(p.id)}
-                onFocus={() => pick(p.id)}
-                onClick={() => pick(p.id)}
-              >
-                <b>{p.label}</b> {p.text}
-              </button>
-            </li>
-          ))}
-        </ol>
+    <div className={`card-strip ${tone}`}>
+      <Ghost persona={persona} color={COLOR[persona]} size={30} still />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <section className="home-band" id="how" aria-labelledby="how-title">
+      <Reveal className="band-head">
+        <p className="eyebrow">How it works —</p>
+        <h2 id="how-title">Playtesters on demand, before the deadline</h2>
       </Reveal>
-      <Reveal as="figure" className="band-shot" delay={0.1}>
-        <div className="shot-frame">
-          <img
-            src="/home/report.webp"
-            width="1100"
-            height="745"
-            loading="lazy"
-            alt="A real Ghostrun report on Gap Run with its planted flaw: one problem to fix, a spike gap nobody could cross, with the analyst's card on the left and the replay and level map on the right."
-          />
-          {box && (
-            <m.span
-              className="shot-spot"
-              aria-hidden="true"
-              initial={false}
-              animate={{ left: `${box.left}%`, top: `${box.top}%`, width: `${box.width}%`, height: `${box.height}%` }}
-              transition={{ duration: 0.55, ease: EASE }}
-            />
-          )}
-        </div>
-        <figcaption>A real report on Gap Run, one of our test games, with its planted flaw: the third gap is too wide to jump.</figcaption>
-      </Reveal>
+      <Stagger as="ol" className="cards3" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {STEPS.map((s) => (
+          <Item as="li" key={s.n} className="card">
+            <Strip persona={s.persona} tone={s.strip}>
+              {s.n}
+            </Strip>
+            <div className="card-body">
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </div>
+          </Item>
+        ))}
+      </Stagger>
     </section>
   );
 }
 
-/** The home page below the form: what a report gives you, the before/after, and the evidence. */
-export function HomeBands() {
+function WhatYouGet() {
   return (
-    <>
-      <WhatYouGet />
-
-      <section className="home-band reverse" aria-labelledby="fix-title">
-        <Reveal className="band-text">
-          <p className="eyebrow">Fix it, then check</p>
-          <h2 id="fix-title">See your fix work</h2>
-          <p className="muted">Fixed something? One click plays the same ghosts again and compares the two reports for you.</p>
-          <div className="band-stats">
-            <div>
-              <span className="mono big">
-                <CountUp to={1} from={1} /> → <CountUp to={0} from={1} />
+    <section className="home-band" id="get" aria-labelledby="get-title">
+      <Reveal className="band-head">
+        <p className="eyebrow">What you get —</p>
+        <h2 id="get-title">Where, why, and the proof</h2>
+        <p>Three pieces of one real report: Gap Run, one of our test games, with a flaw we planted on purpose (its third gap is too wide to jump).</p>
+      </Reveal>
+      <Stagger as="div" className="get-grid">
+        <Item as="article" className="card">
+          <Strip persona="speedrunner">Where</Strip>
+          <div className="card-body">
+            <h3>On a map of your level</h3>
+            <picture>
+              {/* On a phone the whole level is too small to read: the part around the blocker instead. */}
+              <source media="(max-width: 700px)" srcSet="/home/map-crop.webp" width="900" height="445" />
+              <img src="/home/map.webp" width="1800" height="382" loading="lazy" alt="Gap Run's level rebuilt from the ghosts' screenshots, with a box around the third spike gap and crosses where ghosts died, almost all of them inside the box." />
+            </picture>
+            <p className="shot-note">The whole level, rebuilt from what the ghosts saw. ✕ = a death, in the ghost’s colour. F1 is the blocker; F2, a spot where one ghost died but the others got past.</p>
+          </div>
+        </Item>
+        <Item as="article" className="card">
+          <Strip persona="impatient" tone="coral">
+            Why
+          </Strip>
+          <div className="card-body">
+            <h3>A card that says what to fix</h3>
+            <div className="mini-card">
+              <span>
+                <span className="badge blocker">F1 · Blocker</span>
               </span>
-              <span className="muted small">critical issues</span>
+              <span className="hp-card-title">{CARD.title}</span>
+              <span className="hp-card-stat">{CARD.stat}</span>
+              <dl>
+                <dt>What happens</dt>
+                <dd>{CARD.what}</dd>
+                <dt>Likely cause</dt>
+                <dd>{CARD.cause}</dd>
+                <dt>Try this</dt>
+                <dd>{CARD.fix}</dd>
+              </dl>
             </div>
-            <div>
-              <span className="mono big">
-                0 → <CountUp to={4} />
-                /4
+          </div>
+        </Item>
+        <Item as="article" className="card">
+          <Strip persona="reader" tone="amber">
+            Proof
+          </Strip>
+          <div className="card-body">
+            <h3>The moment, replayed</h3>
+            <img src="/home/proof.webp" width="640" height="360" loading="lazy" alt="A frame of the replay: the Reader ghost's character falling into the spike pit at the third gap." />
+            <p className="said">
+              <Ghost persona={SAID.persona} color={COLOR[SAID.persona]} size={26} still />
+              <span>
+                “{SAID.text}” <span className="muted">— Reader, a second before dying</span>
               </span>
-              <span className="muted small">ghosts reached the flag</span>
-            </div>
+            </p>
           </div>
-        </Reveal>
-        <Reveal as="figure" className="band-shot" delay={0.1}>
-          <div className="shot-frame">
-            <img
-              src="/home/before-after.webp"
-              width="1100"
-              height="223"
-              loading="lazy"
-              alt="A real before and after on Gap Run: critical issues 1 to 0, ghosts that finished 0 to 4, deaths 40 to 1; the blocker is marked resolved."
-            />
-          </div>
-          <figcaption>A real re-run of Gap Run after narrowing the gap nobody could cross: the same four ghosts, compared automatically.</figcaption>
-        </Reveal>
-      </section>
+        </Item>
+      </Stagger>
+      <p className="band-foot">
+        <a className="btn-ghost" href={`#/run/${FEATURED_RUN}`}>
+          Open this report
+        </a>
+        <span className="muted">The finding comes from 38 deaths the game reported, with no AI involved; the AI analyst (Muse Spark) wrote the card from the ghosts’ words and the screen.</span>
+      </p>
+    </section>
+  );
+}
 
-      <Reveal as="section" className="proof-band" aria-labelledby="proof-title">
-        <h2 id="proof-title" className="eyebrow">
-          Measured, not claimed
-        </h2>
-        <div className="proof-grid">
-          <div>
-            <span className="mono big">
-              <CountUp to={26} />
-              /30
+function FixThenCheck() {
+  return (
+    <section className="home-band" id="fix-check" aria-labelledby="fix-title">
+      <Reveal className="band-head">
+        <p className="eyebrow">Fix it, then check —</p>
+        <h2 id="fix-title">See your fix work</h2>
+        <p>Fixed something? One click plays the same ghosts again and compares the two reports for you. A real re-run of Gap Run, after narrowing the gap:</p>
+      </Reveal>
+      <Stagger className="ba">
+        <Item className="ba-cell">
+          <span className="ba-num">
+            <span className="was">1</span>
+            <span className="arrow" aria-hidden="true">
+              →
             </span>
-            <span className="muted small">planted design flaws found, in three rounds on our test games</span>
-          </div>
-          <div>
-            <span className="mono big">
-              <CountUp to={2} />
-              /30
+            <span className="sr-only">to</span>
+            <span className="now">
+              <CountUp to={0} from={1} />
             </span>
-            <span className="muted small">clean games with a false alarm, both in a maze almost no ghost finishes</span>
-          </div>
-          <div>
-            <span className="mono big">
-              <CountUp to={151} /> s
+          </span>
+          <span className="ba-label">problems to fix</span>
+        </Item>
+        <Item className="ba-cell">
+          <span className="ba-num">
+            <span className="was">0</span>
+            <span className="arrow" aria-hidden="true">
+              →
             </span>
-            <span className="muted small">of play per ghost (median) on 13 real jam games made by other people</span>
-          </div>
-          <div>
-            <span className="mono big">$0.02–0.11</span>
-            <span className="muted small">per playtest: about a minute on our games, 2–5 on real ones</span>
-          </div>
-        </div>
-        <a className="proof-link" href={`${REPO}/blob/main/bench/README.md`} target="_blank" rel="noreferrer">
+            <span className="sr-only">to</span>
+            <span className="now">
+              <CountUp to={4} />
+              /4
+            </span>
+          </span>
+          <span className="ba-label">ghosts reached the flag</span>
+        </Item>
+        <Item className="ba-cell">
+          <span className="ba-num">
+            <span className="was">40</span>
+            <span className="arrow" aria-hidden="true">
+              →
+            </span>
+            <span className="sr-only">to</span>
+            <span className="now">
+              <CountUp to={1} from={40} />
+            </span>
+          </span>
+          <span className="ba-label">deaths in the whole playtest</span>
+        </Item>
+      </Stagger>
+      <p className="band-foot">
+        <a className="btn-ghost" href={`#/run/${FIXED_RUN}`}>
+          See the comparison
+        </a>
+        <span className="muted">Same four ghosts, same time each; the new report marks the blocker as resolved.</span>
+      </p>
+    </section>
+  );
+}
+
+function Evidence() {
+  return (
+    <section className="home-band" id="evidence" aria-labelledby="proof-title">
+      <Reveal className="band-head">
+        <p className="eyebrow">Measured, not claimed —</p>
+        <h2 id="proof-title">How well it works</h2>
+      </Reveal>
+      <Stagger className="proof-grid">
+        <Item>
+          <span className="big">
+            <CountUp to={26} />
+            /30
+          </span>
+          <span className="small">planted design flaws found, in three rounds on our test games</span>
+        </Item>
+        <Item>
+          <span className="big">
+            <CountUp to={2} />
+            /30
+          </span>
+          <span className="small">clean games with a false alarm, both in a maze almost no ghost finishes</span>
+        </Item>
+        <Item>
+          <span className="big">
+            <CountUp to={151} /> s
+          </span>
+          <span className="small">of play per ghost (median) on 13 real jam games made by other people</span>
+        </Item>
+        <Item>
+          <span className="big">$0.02–0.11</span>
+          <span className="small">of AI per playtest: about a minute on our games, 2–5 on real ones</span>
+        </Item>
+      </Stagger>
+      <p className="band-foot">
+        <a className="proof-link" href={EVIDENCE} target="_blank" rel="noreferrer">
           See the evidence, and where it falls short
         </a>
-      </Reveal>
+      </p>
+    </section>
+  );
+}
+
+/** The home page below the hero. `gallery` (the demo's recorded playtests) goes after "What you get". */
+export function HomeBands({ gallery = null }) {
+  return (
+    <>
+      <HowItWorks />
+      <WhatYouGet />
+      {gallery}
+      <FixThenCheck />
+      <Evidence />
     </>
   );
 }

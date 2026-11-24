@@ -1,7 +1,10 @@
-// The ghosts: one line-art mark (design 21, chosen by Rafa), drawn in SVG so it stays sharp from favicon to poster size
-// and can be animated by parts. Each persona has its own colour, accessory and way of moving; each mood its own face.
+// The ghosts: one mark (design 21, chosen by Rafa), drawn in SVG so it stays sharp from favicon to poster size and can
+// be animated by parts. Each persona has its own colour, accessory and way of moving; each mood its own face. Since the
+// Swiss redesign (25 Nov, Rafa's pick among 16 Muse ideas) the body is filled with the persona's colour and drawn in
+// ink, with an ink face: line art in yellow on white was barely visible.
 
-const LINE = '#7cf5e6';
+const LINE = '#5ee9c0';
+const INK = '#0a0a0a';
 export const MOODS = ['calm', 'think', 'confused', 'happy', 'angry', 'dead', 'sleep'];
 
 // The body, in a 64 × 72 box: a dome, straight sides and a wavy hem.
@@ -75,7 +78,7 @@ function Accessory({ persona, color }) {
     case 'completionist': // a magnifying glass
       return (
         <g {...s}>
-          <circle cx="50" cy="47" r="6" fill="#0b0d17" />
+          <circle cx="50" cy="47" r="6" fill="#ffffff" />
           <path d="M54.5 51.5l5 5" />
         </g>
       );
@@ -93,10 +96,10 @@ export function GhostShape({ persona, color = LINE, mood = 'calm', detail = true
   return (
     <g className={`g-art p-${persona ?? 'mark'} m-${mood}`}>
       <g className="g-float">
-        <path d={BODY} fill={color} fillOpacity="0.08" stroke={color} strokeWidth="3" strokeLinejoin="round" />
-        <Eyes mood={mood} color={color} />
-        {detail && !(mood === 'angry' && persona === 'impatient') && <Accessory persona={persona} color={color} />}
-        {detail && <MoodMarks mood={mood} color={color} />}
+        <path d={BODY} fill={color} stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        <Eyes mood={mood} color={INK} />
+        {detail && !(mood === 'angry' && persona === 'impatient') && <Accessory persona={persona} color={INK} />}
+        {detail && <MoodMarks mood={mood} color={INK} />}
       </g>
     </g>
   );

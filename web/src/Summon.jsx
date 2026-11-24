@@ -75,8 +75,9 @@ export function Summon({ config, onStarted }) {
     }
   };
 
-  const [gameId, setGameId] = useState('gap-run');
-  const game = config?.games?.find((g) => g.id === gameId) ?? config?.games?.[0];
+  // The test game whose link is in the box, if any. The list starts on "Pick a test game…", so choosing the first game
+  // also fills the link (choosing the game already shown did nothing).
+  const game = config?.games?.find((g) => url.trim().startsWith(here(g.url)));
 
   const chosen = (config?.personas ?? []).filter((p) => selected.includes(p.id));
 
@@ -85,8 +86,11 @@ export function Summon({ config, onStarted }) {
       <div className="hero">
         <div className="hero-copy">
           <RiseWords as="h1" text="Who gets stuck in your game?" />
-          <Reveal as="p" className="lede" delay={0.35} y={10}>
-            Paste your web game's link. AI ghosts with different personalities play it, think out loud, and show you where players will get stuck, before the deadline.
+          <Reveal as="p" className="kicker" delay={0.3} y={8}>
+            AI ghost players test your web game — and show where real players fail
+          </Reveal>
+          <Reveal as="p" className="lede" delay={0.38} y={10}>
+            Paste your game’s link. Ghosts with different personalities play it, think out loud, and come back with every place players get stuck, its replay and a fix to try.
           </Reveal>
           <Reveal as="form" className="hero-form" onSubmit={submit} noValidate delay={0.5} y={10}>
             <label className="sr-only" htmlFor="game-url">
@@ -108,7 +112,7 @@ export function Summon({ config, onStarted }) {
               </button>
             </div>
             <p className="summon-hint muted small">
-              {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · {playSeconds >= 120 ? `${playSeconds / 60} minutes` : `${playSeconds} s`} of play each · about $0.05–0.10 of AI · keyboard and mouse games
+              {selected.length} {selected.length === 1 ? 'ghost' : 'ghosts'} · {playSeconds >= 120 ? `${playSeconds / 60} minutes` : `${playSeconds} s`} of play each · about <span className="nowrap">$0.02–0.11</span> of AI · keyboard and mouse games
             </p>
             {error && (
               <p className="form-error" role="alert" id="link-error">
@@ -120,7 +124,7 @@ export function Summon({ config, onStarted }) {
               <summary>
                 <span className="chosen" aria-hidden="true">
                   {chosen.map((p) => (
-                    <Ghost key={p.id} persona={p.id} color={p.color} size={30} />
+                    <Ghost key={p.id} persona={p.id} color={p.color} size={40} />
                   ))}
                 </span>
                 <span className="picker-label">Change ghosts and options</span>
@@ -176,7 +180,7 @@ export function Summon({ config, onStarted }) {
                 </label>
               </details>
             </details>
-            {game && (
+            {config?.games?.length > 0 && (
               <div className="quick-picks">
                 <label className="muted" htmlFor="test-game">
                   No game handy? Try ours:
@@ -184,20 +188,27 @@ export function Summon({ config, onStarted }) {
                 <select
                   id="test-game"
                   className="game-select"
-                  value={game.id}
+                  value={game?.id ?? ''}
                   onChange={(e) => {
                     // Choosing a game fills in its link: two test agents chose one and got "Paste your game's link first".
-                    setGameId(e.target.value);
                     const g = config.games.find((x) => x.id === e.target.value);
                     if (g) setUrl(here(g.url));
+                    setError(null);
                   }}
                 >
+                  <option value="" disabled>
+                    Pick a test game…
+                  </option>
                   {config.games.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name} · {g.kind}
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+            {game && (
+              <div className="quick-picks" role="group" aria-label={`Which version of ${game.name}`}>
                 <button type="button" className="chip-btn" aria-pressed={url === here(game.url)} onClick={() => setUrl(here(game.url))}>
                   As designed
                 </button>
@@ -209,7 +220,7 @@ export function Summon({ config, onStarted }) {
                     aria-pressed={url === here(`${game.url}?fault=${f.id}`)}
                     onClick={() => setUrl(here(`${game.url}?fault=${f.id}`))}
                   >
-                    With a planted flaw: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
+                    With a flaw we planted: {f.label.charAt(0).toLowerCase() + f.label.slice(1)}
                   </button>
                 ))}
               </div>

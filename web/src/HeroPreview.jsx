@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, m, useInView, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import { Ghost, GhostShape } from './Ghost.jsx';
 import { EASE, STILL } from './fx.jsx';
+import { COLOR, NAME } from './personas.js';
 
 // The home page's opening: a real recorded playtest (scripts/make-hero.mjs builds web/public/hero/ from a run).
 // One ghost plays and thinks out loud; every ghost's deaths pile up at the same gap; then the rules draw the box
 // and the analyst's card rises. Everything shown is what the app recorded, nothing is staged. It can be paused and
-// scrubbed, the deaths are counted per ghost, and the four ghosts that played peek around the window.
-const COLOR = { newbie: '#ffd166', speedrunner: '#4cc9f0', reader: '#80ed99', impatient: '#ff6b6b', completionist: '#c77dff' };
-const NAME = { newbie: 'Newbie', speedrunner: 'Speedrunner', reader: 'Reader', impatient: 'Impatient', completionist: 'Completionist' };
+// scrubbed, the deaths are counted per ghost, and the four ghosts that played peek around the window. In the Swiss
+// redesign the ghost's thoughts and the analyst's card moved under the game (they covered its HUD), and the game is a
+// link to the report of this playtest (a tester clicked it and nothing happened).
 const HOLD_MS = 5200;
 // Where each ghost peeks from behind the window, and how much it follows the pointer (depth).
 const PEEKS = [
@@ -142,15 +143,10 @@ export function HeroPreview() {
         ))}
         <div className="hp-frame">
           <div className="hp-bar">
-            <span className="hp-dots" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
             <span className="hp-title">{hero.game}</span>
-            <span className={`hp-pill ${done ? 'found' : ''}`}>{done ? 'Found' : playing ? '● Live playtest' : 'Paused'}</span>
+            <span className={`hp-pill ${done ? 'found' : playing ? '' : 'paused'}`}>{done ? 'Found a blocker' : playing ? '● Recorded playtest' : 'Paused'}</span>
           </div>
-          <div className="hp-screen">
+          <a className="hp-screen hp-link" href={`#/run/${hero.runId}`} aria-label="Open the report of this playtest">
             <img src={f.src} alt="" width="640" height="360" />
             <svg className="hp-over" viewBox="0 0 640 360" aria-hidden="true">
               {hero.marks.slice(0, shown).map((mk, k) => (
@@ -163,39 +159,43 @@ export function HeroPreview() {
               )}
               {done && (
                 <g className="hp-box">
-                  <rect x={box.x0 - f.cam} y={box.y0} width={box.x1 - box.x0} height={box.y1 - box.y0} rx="8" pathLength="100" />
-                  <text x={box.x0 - f.cam + 10} y={box.y0 + 22}>
-                    Blocker · 4/4
-                  </text>
+                  <rect x={box.x0 - f.cam} y={box.y0} width={box.x1 - box.x0} height={box.y1 - box.y0} rx="6" pathLength="100" />
+                  <rect className="hp-box-edge" x={box.x0 - f.cam - 3} y={box.y0 - 3} width={box.x1 - box.x0 + 6} height={box.y1 - box.y0 + 6} rx="8" />
+                  <g className="hp-label">
+                    <rect x={box.x0 - f.cam + 8} y={box.y0 + 8} width="132" height="26" rx="3" />
+                    <text x={box.x0 - f.cam + 18} y={box.y0 + 26}>
+                      BLOCKER · 4/4
+                    </text>
+                  </g>
                 </g>
               )}
             </svg>
-            <AnimatePresence>
-              {!done && f.thought && (
-                <m.p
-                  className="hp-thought"
-                  key={f.thought}
-                  initial={still ? false : { opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                  transition={{ duration: 0.3, ease: EASE }}
-                >
-                  <b style={{ color: COLOR[hero.persona] }}>{NAME[hero.persona]}</b> {f.thought}
-                </m.p>
+          </a>
+          <div className="hp-panel" aria-live="off">
+            <AnimatePresence mode="wait" initial={false}>
+              {done ? (
+                <m.div key="card" initial={still ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} style={{ display: 'grid', gap: 6 }}>
+                  <span className="hp-card-row">
+                    <span className="badge blocker">F1 · Blocker</span>
+                    <span className="hp-card-stat">{hero.stat}</span>
+                  </span>
+                  <span className="hp-card-title">{hero.card.title}</span>
+                  {hero.card.fix && (
+                    <span>
+                      <b>Try this:</b> {hero.card.fix}
+                    </span>
+                  )}
+                </m.div>
+              ) : (
+                <m.div key={f.thought ?? 'none'} initial={still ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.1 } }} transition={{ duration: 0.25, ease: EASE }} style={{ display: 'grid', gap: 4 }}>
+                  <span className="hp-who">
+                    <Ghost persona={hero.persona} color={COLOR[hero.persona]} size={20} still />
+                    {NAME[hero.persona]} thinks
+                  </span>
+                  <span className="hp-said">“{f.thought ?? '…'}”</span>
+                </m.div>
               )}
             </AnimatePresence>
-            {done && (
-              <div className="hp-card">
-                <span className="badge blocker">F1 · Blocker</span>
-                <b>{hero.card.title}</b>
-                <span className="mono small">{hero.stat}</span>
-                {hero.card.fix && (
-                  <span className="small">
-                    <em>Try this:</em> {hero.card.fix}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
           <div className="hp-controls">
             <button
@@ -261,9 +261,14 @@ export function HeroPreview() {
             </m.b>
           </span>
         ))}
-        <span className="hp-deaths-note small muted">deaths at the same gap</span>
+        <span className="hp-deaths-note">deaths at the same gap</span>
       </div>
-      <figcaption className="small muted">A real recorded playtest, not a mock-up: drag the timeline or pause it. Played by Ghostrun's AI ghosts on one of its test games.</figcaption>
+      <figcaption>
+        A real recorded playtest, not a mock-up: drag the timeline or pause it.{' '}
+        <a className="text-link" href={`#/run/${hero.runId}`}>
+          Open its report
+        </a>
+      </figcaption>
     </figure>
   );
 }

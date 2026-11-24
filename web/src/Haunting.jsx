@@ -3,6 +3,8 @@ import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { gameName, gameSource } from './game.js';
 import { Ghost, GhostSprite, OUTCOME_LABEL, moodFor } from './Ghost.jsx';
 import { EASE, STILL } from './fx.jsx';
+import { FailurePanel } from './Failure.jsx';
+import { DEMO } from './demo.js';
 
 /** A ghost's new thought types itself out, quickly (at once for people who ask for less motion). */
 function TypeText({ text }) {
@@ -187,12 +189,13 @@ function GhostTile({ runId, g, p, viewport, playSeconds }) {
   );
 }
 
-/** Newest first; a ghost dying again and again in a row is one line ("died ×9") with its latest thought. */
+/** Newest first; a ghost dying again and again is one line ("died ×9") with its latest thought, also when other ghosts'
+ * lines come in between (four ghosts dying at the same gap filled the feed with the same line). */
 function groupLog(log) {
   const out = [];
   for (const l of [...log].reverse()) {
-    const last = out.at(-1);
-    if (last && l.kind === 'death' && last.kind === 'death' && last.ghost === l.ghost) last.n += 1;
+    const near = l.kind === 'death' ? out.slice(-4).find((o) => o.kind === 'death' && o.ghost === l.ghost) : null;
+    if (near) near.n += 1;
     else out.push({ ...l, n: 1 });
   }
   return out;
@@ -208,7 +211,7 @@ export function Haunting({ run, runId, personas, onHome }) {
     return (
       <section className="panel center">
         <p className="eyebrow">Waiting for your turn</p>
-        <h2 className="report-title">{gameName(run.config.url)}</h2>
+        <h1 className="report-title">{gameName(run.config.url)}</h1>
         <p className="muted">
           {run.position === 1 ? 'One playtest is ahead of yours.' : `${run.position} playtests are ahead of yours.`} The ghosts play one game at a time; yours starts by itself.
         </p>
@@ -220,15 +223,14 @@ export function Haunting({ run, runId, personas, onHome }) {
   }
 
   if (run.status === 'failed' && !run.report) {
+    const message = run.failure?.message ?? '';
     return (
-      <section className="panel center state-panel">
-        <span className="state-art"><Ghost mood="dead" size={120} /></span>
-        <h2>{run.failure?.message?.startsWith('Cancelled') ? 'Playtest cancelled' : 'The ghosts could not play this game'}</h2>
-        <p className="muted">{run.failure?.message}</p>
-        <button className="btn-primary" onClick={onHome}>
-          Try another link
-        </button>
-      </section>
+      <FailurePanel
+        title={run.failure?.kind === 'not_found' ? 'No playtest here' : message.startsWith('Cancelled') ? 'Playtest cancelled' : 'The ghosts could not play this game'}
+        message={message}
+        action={run.failure?.kind === 'not_found' ? (DEMO ? 'See all playtests' : 'Start a playtest') : 'Try another link'}
+        onAction={onHome}
+      />
     );
   }
 
@@ -240,7 +242,7 @@ export function Haunting({ run, runId, personas, onHome }) {
             {run.status === 'running' && <span className="live-dot" aria-hidden="true" />}
             Live playtest
           </p>
-          <h2 className="report-title">{run.config ? gameName(run.config.url) : 'Connecting…'}</h2>
+          <h1 className="report-title">{run.config ? gameName(run.config.url) : 'Connecting…'}</h1>
           {run.config && <p className="run-url small">{gameSource(run.config.url)}</p>}
         </div>
         <div className="run-bar-right">
@@ -275,7 +277,7 @@ export function Haunting({ run, runId, personas, onHome }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, ease: EASE }}
                 >
-                  <span className="log-icon" style={{ color: p?.color }}>
+                  <span className="log-icon" style={{ '--c': p?.color }} aria-hidden="true">
                     {LOG_ICON[l.kind]}
                   </span>
                   <span>

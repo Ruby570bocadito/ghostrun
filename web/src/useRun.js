@@ -76,7 +76,7 @@ function reducer(state, e) {
         finishedAt: e.at,
       };
     case 'failed':
-      return { ...state, status: 'failed', failure: { kind: 'server', message: e.message } };
+      return { ...state, status: 'failed', failure: { kind: e.notFound ? 'not_found' : 'server', message: e.message } };
     case 'reset':
       return { ...initial, runId: e.runId };
     default:
@@ -100,7 +100,7 @@ export function useRun(runId) {
       fetch(api(`/api/runs/${runId}`))
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
         .then((j) => !cancelled && dispatch({ type: 'report', report: j.report }))
-        .catch(() => !cancelled && dispatch({ type: 'failed', message: 'This playtest is not part of the demo.' }));
+        .catch(() => !cancelled && dispatch({ type: 'failed', notFound: true, message: 'This playtest is not part of the demo: the link may be incomplete.' }));
       return () => {
         cancelled = true;
       };
@@ -118,8 +118,7 @@ export function useRun(runId) {
         if (e.type === 'report' || e.type === 'failed') ended = true;
         dispatch(e);
       };
-      es.onerror = () => {
-        es.close();
+      const again = () => {
         if (ended) return;
         if (++misses > 20) {
           ended = true;
@@ -127,6 +126,21 @@ export function useRun(runId) {
           return;
         }
         retry = setTimeout(open, 2000);
+      };
+      es.onerror = () => {
+        es.close();
+        if (ended) return;
+        // A run that does not exist answers 404 for ever: say so at once instead of "Connecting…" for 40 s (a test
+        // agent opened #/run/does-not-exist).
+        fetch(`/api/runs/${runId}`)
+          .then((r) => {
+            if (ended) return;
+            if (r.status === 404) {
+              ended = true;
+              dispatch({ type: 'failed', notFound: true, message: 'There is no playtest at this address: the link may be incomplete, or the playtest was deleted.' });
+            } else again();
+          })
+          .catch(again);
       };
     };
     open();

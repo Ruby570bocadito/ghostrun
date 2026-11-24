@@ -8,6 +8,7 @@ import { DEMO, api } from './demo.js';
 import { DemoGallery } from './DemoGallery.jsx';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { DUR, EASE, STILL } from './fx.jsx';
+import { EVIDENCE, REPO, RUN_LOCALLY, scrollToSection } from './links.js';
 
 export const APP_NAME = 'Ghostrun';
 
@@ -65,6 +66,8 @@ export default function App() {
   const [runId, setRunId] = useState(runIdFromHash);
   const [hash, setHash] = useState(() => location.hash);
   const [scrolled, setScrolled] = useState(false);
+  // A section of the home page to show once the home page is back (the menu works from every page).
+  const [pendingSection, setPendingSection] = useState(null);
   const first = useRef(true);
   const run = useRun(runId);
 
@@ -128,6 +131,29 @@ export default function App() {
   const waitingForReport = DEMO && runId && !showReport && run.status !== 'failed';
   const page = hash === '#/cast' ? 'cast' : !runId ? 'home' : showReport ? `report-${runId}` : waitingForReport ? `wait-${runId}` : `live-${runId}`;
 
+  const goSection = (id) => {
+    if (page === 'home' && scrollToSection(id)) return;
+    setPendingSection(id);
+    goHome();
+  };
+  useEffect(() => {
+    if (page !== 'home' || !pendingSection) return undefined;
+    // After the page change and its scroll to the top.
+    const t = setTimeout(() => {
+      scrollToSection(pendingSection);
+      if (pendingSection === 'game-url') document.getElementById('game-url')?.focus({ preventScroll: true });
+      setPendingSection(null);
+    }, 450);
+    return () => clearTimeout(t);
+  }, [page, pendingSection]);
+  const newPlaytest = () => {
+    const input = document.getElementById('game-url');
+    if (page === 'home' && input) {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input.focus({ preventScroll: true });
+    } else goSection('game-url');
+  };
+
   return (
     <>
       <button className="skip" type="button" onClick={() => document.getElementById('main')?.focus()}>
@@ -136,13 +162,40 @@ export default function App() {
       <header className={`site-top ${scrolled ? 'scrolled' : ''}`}>
         <div className="topbar">
           <button className="brand" onClick={goHome} aria-label={`${APP_NAME} home`}>
-            <GhostIcon size={26} />
+            <GhostIcon size={30} />
             <span className="wordmark">{APP_NAME}</span>
           </button>
           {DEMO && (
-            <span className="chip mono" title="No server: these playtests were recorded from the real app">
-              Free demo · recorded playtests
+            <span className="tag amber top-tag" title="No server: these playtests were recorded from the real app">
+              Recorded demo
             </span>
+          )}
+          <nav className="nav" aria-label="Main">
+            <button type="button" onClick={() => goSection('how')}>
+              How it works
+            </button>
+            {DEMO && (
+              <button type="button" onClick={() => goSection('runs')}>
+                Playtests
+              </button>
+            )}
+            <a className="nav-extra" href={EVIDENCE} target="_blank" rel="noreferrer">
+              Evidence
+            </a>
+            <a href={REPO} target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          </nav>
+          {DEMO ? (
+            <a className="btn-cta" href={RUN_LOCALLY} target="_blank" rel="noreferrer">
+              <span className="cta-long">Run it on your game</span>
+              <span className="cta-short">Get it</span>
+            </a>
+          ) : (
+            <button type="button" className="btn-cta" onClick={newPlaytest}>
+              <span className="cta-long">New playtest</span>
+              <span className="cta-short">New</span>
+            </button>
           )}
         </div>
       </header>
@@ -164,6 +217,21 @@ export default function App() {
         </ErrorBoundary>
       </main>
       </div>
+      <footer className="site-foot">
+        <div className="foot-in">
+          <span>{APP_NAME}</span>
+          <span className="dot" aria-hidden="true" />
+          <span>AI ghost players test your web game</span>
+          <span className="dot" aria-hidden="true" />
+          <a href={REPO} target="_blank" rel="noreferrer">
+            Open source · MIT
+          </a>
+          <span className="dot" aria-hidden="true" />
+          <a href={EVIDENCE} target="_blank" rel="noreferrer">
+            How we measured it
+          </a>
+        </div>
+      </footer>
     </>
   );
 }

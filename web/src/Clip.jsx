@@ -109,7 +109,7 @@ export function Clip({ frames, fps = 10, label, autoPlay = true, captions = null
             <m.p key={caption ?? ''} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2, ease: EASE }}>
               {caption ? (
                 <>
-                  {who && <b style={{ color }}>{who} planned: </b>}“{caption}”
+                  {who && <b className="clip-who" style={{ "--c": color }}>{who} planned: </b>}“{caption}”
                 </>
               ) : (
                 <span className="muted">…</span>

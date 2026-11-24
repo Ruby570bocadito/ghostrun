@@ -31,7 +31,7 @@ export function Heatmap({ runId, report, traces, personas, selected, hovered = n
     (async () => {
       const ctx = baseRef.current?.getContext('2d');
       if (!ctx || !traces.length) return;
-      ctx.fillStyle = '#141726';
+      ctx.fillStyle = '#0b0d17';
       ctx.fillRect(0, 0, W, H);
       if (report.positionSource === 'ghosts') {
         // No SDK: there is no camera information to stitch a level from. Use a screen from the middle of
@@ -101,6 +101,7 @@ export function Heatmap({ runId, report, traces, personas, selected, hovered = n
     }
   }, [report, personas, W, H]);
 
+  const crowded = (report.findings ?? report.hotspots).filter((h) => h.severity !== 'low').length > 2;
   return (
     <div className="heatmap" style={{ aspectRatio: `${W} / ${H}` }}>
       {/* Pictures of the level and the heat: the findings themselves are the buttons below, with text. */}
@@ -124,7 +125,12 @@ export function Heatmap({ runId, report, traces, personas, selected, hovered = n
             }
           >
             <span className={`hot-tag${r.x1 / W > 0.85 ? ' edge-right' : r.x0 / W < 0.15 ? ' edge-left' : ''}`}>
-              {h.id} · {TYPE_LABEL[h.type] ?? h.type} · {h.type === 'hard_to_see' ? `${h.contrast}:1` : `${h.ghosts.length}/${report.ghostsTotal}`}
+              {h.id}
+              {/* With three or more boxes the labels overlapped (two test agents): the rest shows on the box in focus. */}
+              <span className={`hot-more ${crowded ? 'crowded' : ''}`}>
+                {' '}
+                · {TYPE_LABEL[h.type] ?? h.type} · {h.type === 'hard_to_see' ? `${h.contrast}:1` : `${h.ghosts.length}/${report.ghostsTotal}`}
+              </span>
             </span>
           </button>
         );

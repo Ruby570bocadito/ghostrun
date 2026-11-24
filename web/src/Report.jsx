@@ -8,6 +8,7 @@ import { gameName, gameSource } from './game.js';
 import { buildIssues } from './issues.js';
 import { Compare, useBefore, diffFindings } from './Compare.jsx';
 import { CountUp, EASE, Item, Reveal, STILL, Stagger } from './fx.jsx';
+import { FailurePanel } from './Failure.jsx';
 
 
 function useTraces(runId, personaIds) {
@@ -132,6 +133,47 @@ function statLine(f, report) {
   }
 }
 
+/** A finding's title when the AI analyst wrote no card for it: words, not coordinates (found by a test agent). */
+function plainTitle(f, report) {
+  const n = `${f.ghosts?.length ?? 0}/${report.ghostsTotal}`;
+  switch (f.type) {
+    case 'blocker':
+      return `Nobody got past this spot: ${n} ghosts died here`;
+    case 'friction':
+      return `A hard spot: ${n} ghosts died here`;
+    case 'missed':
+      return `Most ghosts never reached “${f.milestone}”`;
+    case 'stuck':
+      return `${n} ghosts ended up stuck here`;
+    case 'confusion':
+      return `${n} ghosts were confused here`;
+    case 'hard_to_see':
+      return `“${f.milestone}” is hard to see`;
+    default:
+      return TYPE_LABEL[f.type] ?? f.type;
+  }
+}
+
+/** One thing to try for each kind of problem, when there is no card written for this one. */
+function plainFix(f) {
+  switch (f.type) {
+    case 'blocker':
+      return 'Make this spot passable for a first-time player: a shorter jump, a safe platform or a checkpoint just before it.';
+    case 'friction':
+      return 'Probably fine: most ghosts that reached it got past. Check it is the challenge you meant.';
+    case 'missed':
+      return `Point players to “${f.milestone}”: show where it is, or say in a few words on screen what to do.`;
+    case 'stuck':
+      return 'Show where to go next from here: an arrow, a sign or an open path.';
+    case 'confusion':
+      return 'Say what to do here in a few words, where the player is already looking.';
+    case 'hard_to_see':
+      return `Raise the contrast of “${f.milestone}” against its background to at least 3:1.`;
+    default:
+      return null;
+  }
+}
+
 function provenance(f) {
   switch (f.type) {
     case 'blocker':
@@ -230,14 +272,14 @@ function Finding({ f, card, report, personas, selected, onHover = () => {}, onSe
         <span className={`badge ${f.type}`}>
           {f.id} · {TYPE_LABEL[f.type] ?? f.type}
         </span>
-        <h3>{card?.title ?? `${TYPE_LABEL[f.type]} around (${f.center.x}, ${f.center.y})`}</h3>
+        <h3>{card?.title ?? plainTitle(f, report)}</h3>
         {card?.confidence && (
           <p className={`confidence conf-${card.confidence}`}>
             Confidence: {card.confidence}
             {card.could_be_ghost_skill && f.type !== 'friction' ? ' · could be the ghosts’ own lack of skill, not the design' : ''}
           </p>
         )}
-        <p className="stat-line mono">
+        <p className="stat-line">
           {statLine(f, report)}
           {extra.length ? ` · ${extra.join(' · ')}` : ''}
         </p>
@@ -249,7 +291,13 @@ function Finding({ f, card, report, personas, selected, onHover = () => {}, onSe
             <dt>Likely cause</dt>
             <dd>{capital(card.likely_cause)}</dd>
             <dt>Try this</dt>
-            <dd>{capital(card.suggested_fix)}</dd>
+            <dd className="fix">{capital(card.suggested_fix)}</dd>
+          </dl>
+        )}
+        {!card && plainFix(f) && (
+          <dl className="card-fields">
+            <dt>Try this</dt>
+            <dd className="fix">{plainFix(f)}</dd>
           </dl>
         )}
         {quotes.length > 0 && (
@@ -280,7 +328,7 @@ function Finding({ f, card, report, personas, selected, onHover = () => {}, onSe
         </ul>
       </div>
       <p className="provenance">
-        {provenance(f)} {card ? `Explanation written by ${card.model} from the ghosts' words and the screen.` : ''}
+        {provenance(f)} {card ? `Explanation written by ${card.model} from the ghosts' words and the screen.` : 'No AI explanation for this one: its title and fix come from the kind of problem.'}
       </p>
     </article>
   );
@@ -305,7 +353,7 @@ function GoalIssue({ issue, report, personas }) {
         <h3>
           {issue.unclear.length} of {issue.asked} ghosts never worked out what the game wants them to do
         </h3>
-        <p className="stat-line mono">
+        <p className="stat-line">
           From the exit interview · {issue.wouldStop.length}/{issue.asked} would stop playing · the ghosts’ own words after playing, not a measurement
         </p>
         <dl className="card-fields">
@@ -362,7 +410,7 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
     ? ''
     : first.kind === 'goal'
       ? `${first.unclear.length} of ${first.asked} ghosts never worked out the goal`
-      : (report.cards?.find((c) => c.hotspot === first.primary.id)?.title ?? `${TYPE_LABEL[first.primary.type] ?? first.primary.type}, ${first.primary.ghosts.length} of ${report.ghostsTotal} ghosts`);
+      : (report.cards?.find((c) => c.hotspot === first.primary.id)?.title ?? plainTitle(first.primary, report));
 
   // The exit interviews (the ghosts' own answers after playing): worth a warning when half or more never got it.
   const exit = report.debrief;
@@ -403,26 +451,42 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
 
   if (report.failure) {
     return (
-      <section className="panel center state-panel">
-        <span className="state-art"><Ghost mood="dead" size={120} /></span>
-        <h2>The ghosts could not play this game</h2>
-        <p className="muted">{report.failure.message}</p>
-        <p className="muted small">Check that the link opens a playable web game (HTML5 canvas).</p>
-        {!(report.cost?.total > 0) && <p className="state-cost small mono">Caught before any AI call: this cost $0.</p>}
-        <button className="btn-primary" onClick={onHome}>
-          {DEMO ? 'All playtests' : 'Try another link'}
-        </button>
-      </section>
+      <FailurePanel
+        title="The ghosts could not play this game"
+        message={report.failure.message}
+        note={
+          <>
+            <p className="muted small">Check that the link opens a playable web game (HTML5 canvas).</p>
+            {!(report.cost?.total > 0) && <p className="state-cost small mono">Caught before any AI call: this cost $0.</p>}
+          </>
+        }
+        action={DEMO ? 'All playtests' : 'Try another link'}
+        onAction={onHome}
+      />
     );
   }
+
+  // A playtest someone stopped is not a clean bill of health (a test agent stopped one after 6 s and read "Nothing to fix").
+  const stopped = report.ghosts.filter((g) => g.outcome === 'stopped');
+  const tone = critical ? 'bad' : exitWarning || stopped.length ? 'warn' : 'good';
+  const kicker = critical ? `${critical} problem${critical === 1 ? '' : 's'} to fix` : stopped.length ? 'Stopped early' : exitWarning ? 'Worth a look' : 'Nothing to fix';
+  const verdictText = critical
+    ? `${critical > 1 ? 'First: ' : ''}${topCritical}`
+    : stopped.length
+      ? 'Nothing found in what the ghosts played before the playtest was stopped.'
+      : fair.length
+        ? `${fair.length} hard spot${fair.length === 1 ? '' : 's'} where ghosts died but most got past: probably a fair challenge.`
+        : exitWarning
+          ? 'No critical issues in what the game showed: no ghost died again and again or got stuck in one place.'
+          : 'No problems found: no ghost died again and again, got stuck or got confused.';
 
   return (
     <section className="report">
       <div className="run-bar">
         <div>
           <p className="eyebrow">Playtest report</p>
-          <h2 className="report-title">{gameName(url)}</h2>
-          <p className="run-url small">{gameSource(url)}</p>
+          <h1 className="report-title">{gameName(url)}</h1>
+          <p className="run-url">{gameSource(url)}</p>
         </div>
         <div className="run-bar-right">
           <button className="btn-ghost" onClick={onHome}>
@@ -435,14 +499,6 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           )}
         </div>
       </div>
-      <ReportNav
-        sections={[
-          ['fix', 'Problems'],
-          ...(report.ghosts.some((g) => g.debrief) ? [['exit-interview', 'Exit interview']] : []),
-          ['players', 'Who played'],
-          ['method', 'How it was made'],
-        ]}
-      />
       {showRerun && (
         <form className="rerun-form" onSubmit={rerun}>
           <label htmlFor="rerun-url">Fixed your game? Re-run the same ghosts and see what changed. Change the link if the fixed build lives somewhere else.</label>
@@ -459,6 +515,80 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         <p className="sim-banner">Test run: an AI outage was simulated for {personas[report.config.simulateOutage.ghost]?.name ?? report.config.simulateOutage.ghost} from its move {report.config.simulateOutage.fromCall}.</p>
       )}
       {before && <Compare before={before} after={report} beforeId={report.config.compareTo} />}
+      <div className={`verdict-block ${tone}`}>
+        <div className="verdict-line">
+          {allClear && !stopped.length && (
+            <span className="verdict-art">
+              <Ghost mood="happy" size={64} />
+            </span>
+          )}
+          <div className="verdict-text">
+            <span className={`verdict-kicker ${tone}`}>{kicker}</span>
+            <p className="verdict">{verdictText}</p>
+          </div>
+        </div>
+        {exitWarning && (
+          <p className="verdict-note">
+            {exitWarning}{' '}
+            <button type="button" className="text-link" onClick={() => document.getElementById('exit-interview')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+              Read what they said
+            </button>
+          </p>
+        )}
+        {stopped.length > 0 && (
+          <p className="stopped-note">
+            This playtest was stopped after {Math.round(report.realMs / 1000)} s: {stopped.length} of {report.ghostsTotal} ghosts did not play their full time, so this report only
+            covers what they played.
+          </p>
+        )}
+        <ul className="stats-line" aria-label="Summary">
+          <li className="st">
+            <b>
+              <CountUp to={fair.length} />
+            </b>
+            fair challenge{fair.length === 1 ? '' : 's'}
+          </li>
+          <li className="st">
+            <b>
+              <CountUp to={finished} />/{report.ghostsTotal}
+            </b>
+            ghosts finished
+          </li>
+          <li className="st">
+            <b>
+              <CountUp to={report.quits.length} />
+            </b>
+            quit
+          </li>
+        </ul>
+        {report.milestones?.length > 0 && (
+          <div className="milestones-row">
+            <span className="ms-label">How far they got</span>
+            <ol className="milestones" aria-label="How far the ghosts got">
+              {report.milestones.map((m) => (
+                <li key={m.name} className={`ms ${m.reachedBy.length ? '' : 'none'}`}>
+                  <span>{m.name}</span>
+                  <b>
+                    {m.reachedBy.length}/{report.ghostsTotal}
+                  </b>
+                </li>
+              ))}
+              <li className={`ms ${finished ? '' : 'none'}`}>
+                <span>finish</span>
+                <b>
+                  {finished}/{report.ghostsTotal}
+                </b>
+              </li>
+            </ol>
+          </div>
+        )}
+        <p className="run-foot">
+          Played in {Math.round(report.realMs / 1000)} s · AI cost ${report.cost.total.toFixed(3)} · {report.config?.model ?? report.ghosts[0]?.model}
+          {report.config?.requestedViewport && report.config?.viewport
+            ? ` · window enlarged to ${report.config.viewport.width}×${report.config.viewport.height} to show the whole game`
+            : ''}
+        </p>
+      </div>
       {report.notices?.length > 0 && (
         <div className="notices" role="status">
           <h3>What went wrong during the run, and how it was handled</h3>
@@ -485,84 +615,46 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
           </ul>
         </div>
       )}
-
-      <div className={`verdict-row ${allClear ? 'with-art' : ''}`}>
-      {allClear && <span className="verdict-art"><Ghost mood="happy" size={64} /></span>}
-      <p className={`verdict ${critical ? 'bad' : exitWarning ? 'warn' : 'good'}`}>
-        {critical
-          ? `${critical} problem${critical === 1 ? '' : 's'} to fix: ${topCritical}`
-          : fair.length
-            ? `Nothing to fix. ${fair.length} hard spot${fair.length === 1 ? '' : 's'} where ghosts died but most got past: probably a fair challenge.`
-            : exitWarning
-              ? 'No critical issues in what the game showed: no ghost died again and again or got stuck in one place.'
-              : 'No problems found: no ghost died again and again, got stuck or got confused.'}
-      </p>
-      {exitWarning && (
-        <p className="verdict-note">
-          {exitWarning}{' '}
-          <button type="button" className="text-link" onClick={() => document.getElementById('exit-interview')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-            Read what they said
-          </button>
-        </p>
+      <ReportNav
+        sections={[
+          ...(report.hasPositions ? [['where', 'Where']] : []),
+          ['fix', 'Problems'],
+          ...(report.ghosts.some((g) => g.debrief) ? [['exit-interview', 'Exit interview']] : []),
+          ['players', 'Who played'],
+          ['method', 'How it was made'],
+        ]}
+      />
+      <section className="where" id="where" aria-labelledby="where-title">
+      <h2 className="section-title" id="where-title">Where it happened</h2>
+      {report.hasPositions ? (
+        <div className="heat-wrap">
+          <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} hovered={hovered} onHover={setHovered} onSelect={select} resolved={resolved} />
+          <p className="legend small muted">
+            {report.positionSource === 'ghosts'
+              ? "This game has no Ghostrun SDK: positions and deaths are what each ghost reported seeing on screen · ✕ = where a ghost died, in its colour · click a box to see its replay"
+              : "Level rebuilt from the ghosts' screenshots · ✕ = where a ghost died, in its colour · click a box to see its replay"}
+          </p>
+        </div>
+      ) : (
+        <p className="muted">This game does not report positions, so findings are shown without a level map.</p>
       )}
-      </div>
-      <div className="summary">
-        <div className={`stat ${critical ? 'bad' : 'good'}`}>
-          <b>
-            <CountUp to={critical} />
-          </b>
-          <span>problem{critical === 1 ? '' : 's'} to fix</span>
-        </div>
-        <div className="stat">
-          <b>
-            <CountUp to={fair.length} />
-          </b>
-          <span>fair challenge{fair.length === 1 ? '' : 's'}</span>
-        </div>
-        <div className="stat">
-          <b>
-            <CountUp to={finished} />/{report.ghostsTotal}
-          </b>
-          <span>ghosts finished</span>
-        </div>
-        <div className="stat">
-          <b>
-            <CountUp to={report.quits.length} />
-          </b>
-          <span>quit</span>
-        </div>
-      </div>
-      <p className="run-foot small muted mono">
-        Played in {Math.round(report.realMs / 1000)} s · AI cost ${report.cost.total.toFixed(3)} · {report.config?.model ?? report.ghosts[0]?.model}
-        {report.config?.requestedViewport && report.config?.viewport
-          ? ` · window enlarged to ${report.config.viewport.width}×${report.config.viewport.height} to show the whole game`
-          : ''}
-      </p>
 
-      {report.milestones?.length > 0 && (
-        <ol className="milestones">
-          {report.milestones.map((m) => (
-            <li key={m.name} className={m.reachedBy.length ? '' : 'none'}>
-              <span className="mono">{m.name}</span>
-              <b>
-                {m.reachedBy.length}/{report.ghostsTotal}
-              </b>
+      {shown.length > 0 && (
+        <ul className="legend-chips" aria-label="What the boxes mean">
+          {LEGEND.filter(([type]) => shown.some((f) => f.type === type)).map(([type, label, meaning]) => (
+            <li key={type} className={`legend-chip ${type}`}>
+              <b>{label}</b> {meaning}
             </li>
           ))}
-          <li className={finished ? '' : 'none'}>
-            <span className="mono">finish</span>
-            <b>
-              {finished}/{report.ghostsTotal}
-            </b>
-          </li>
-        </ol>
+          <li className="legend-note muted">Blocker, missed objective, stuck and hard to see are problems to fix; friction is usually a fair challenge.</li>
+        </ul>
       )}
-
-      <div className="report-body">
+      </section>
+      <div className={`report-body ${active ? '' : 'single'}`}>
       <div className="report-main">
-      <h3 className="section-title" id="fix">
+      <h2 className="section-title" id="fix">
         What to fix first
-      </h3>
+      </h2>
       <div className="findings">
         {issues.length === 0 && <p className="panel">Nothing to fix: no place where ghosts died again and again, got stuck or never found an objective.</p>}
         {issues.map((i, k) =>
@@ -626,43 +718,17 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
       )}
 
       </div>
-      <aside className="report-side" aria-label="Where it happened and its replay">
-        {active && (
-          <>
-            <h3 className="section-title">Replay{active.kind === 'quit' ? `: ${personas[active.q.persona]?.name} quits` : `: ${active.f.id}`}</h3>
-            <Replay key={active.id} item={active} runId={runId} byPersona={byPersona} personas={personas} />
-          </>
-        )}
-      <h3 className="section-title">Where it happened</h3>
-      {report.hasPositions ? (
-        <div className="heat-wrap">
-          <Heatmap runId={runId} report={report} traces={traces} personas={personas} selected={selected} hovered={hovered} onHover={setHovered} onSelect={select} resolved={resolved} />
-          <p className="legend small muted">
-            {report.positionSource === 'ghosts'
-              ? "This game has no Ghostrun SDK: positions and deaths are what each ghost reported seeing on screen · ✕ = where a ghost died, in its colour · click a box to see its replay"
-              : "Level rebuilt from the ghosts' screenshots · ✕ = where a ghost died, in its colour · click a box to see its replay"}
-          </p>
-        </div>
-      ) : (
-        <p className="muted">This game does not report positions, so findings are shown without a level map.</p>
+      {active && (
+        <aside className="report-side" aria-label="Replay of the selected problem">
+          <h2 className="section-title">Replay{active.kind === 'quit' ? `: ${personas[active.q.persona]?.name} quits` : `: ${active.f.id}`}</h2>
+          <Replay key={active.id} item={active} runId={runId} byPersona={byPersona} personas={personas} />
+        </aside>
       )}
-
-      {shown.length > 0 && (
-        <ul className="legend-chips" aria-label="What the boxes mean">
-          {LEGEND.filter(([type]) => shown.some((f) => f.type === type)).map(([type, label, meaning]) => (
-            <li key={type} className={`legend-chip ${type}`}>
-              <b>{label}</b> {meaning}
-            </li>
-          ))}
-          <li className="legend-note muted">Blocker, missed objective, stuck and hard to see are problems to fix; friction is usually a fair challenge.</li>
-        </ul>
-      )}
-      </aside>
       </div>
 
       {report.ghosts.some((g) => g.debrief) && (
         <section id="exit-interview" className="exit" aria-labelledby="exit-title">
-          <h3 id="exit-title" className="section-title">Exit interview</h3>
+          <h2 id="exit-title" className="section-title">Exit interview</h2>
           <p className="small muted exit-intro">
             After its last move, each ghost answered a few questions about the whole game, in character. These are the ghosts’ own opinions, not measurements: read them as what a
             first-time player might say.
@@ -680,11 +746,10 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
                       <GhostSprite persona={g.persona} color={p.color} size={32} mood={moodFor(g.outcome)} />
                       <b>{p.name}</b>
                     </header>
+                    <p className="exit-q">What stopped you?</p>
                     <p className="exit-quote">“{capital(d.stopped_me)}”</p>
-                    <p className="exit-goal small">
-                      <span className="muted">Thought the goal was: </span>
-                      {noIdea ? 'no idea' : capital(d.goal)}
-                    </p>
+                    <p className="exit-q">What was the goal?</p>
+                    <p className="exit-goal">{noIdea ? 'No idea' : capital(d.goal)}</p>
                     <ul className="exit-chips" aria-label="Answers">
                       <li className={d.understood_goal ? 'yes' : 'no'}>{d.understood_goal ? 'Understood the goal' : 'Never understood the goal'}</li>
                       <li className={d.understood_controls ? 'yes' : 'no'}>{d.understood_controls ? 'Worked out the controls' : 'Never worked out the controls'}</li>
@@ -697,9 +762,9 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         </section>
       )}
 
-      <h3 className="section-title" id="players">
+      <h2 className="section-title" id="players">
         Who played
-      </h3>
+      </h2>
       {report.ghosts.some((g) => g.sdk === false && g.novelty?.length) && (
         <p className="small muted roster-legend">
           Each line is how many different screens a ghost saw over its game time: it goes flat when the ghost stops finding anything new. The dashed mark is when it
@@ -757,9 +822,9 @@ export function Report({ run, runId, personas, onHome, onRerun }) {
         })}
       </Stagger>
 
-      <h3 className="section-title" id="method">
+      <h2 className="section-title" id="method">
         How this was made
-      </h3>
+      </h2>
       {report.ghosts.every((g) => g.sdk === false) ? (
         <p className="method small muted">
           Each ghost played in its own browser with the game clock frozen while it thought ({report.ghosts[0]?.model}). This game does not tell Ghostrun what happens in it,
