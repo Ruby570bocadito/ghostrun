@@ -44,6 +44,8 @@ Five small web games, each with a clean version and a version with one planted d
 
 On the new games, the three misses and the false alarm are all in Spike Maze: its clean version is a maze almost no ghost finishes (2 of 24), so in one run the ghosts that ended stuck in it made a false alarm, and its invisible spikes were twice reported as a missed objective instead of a blocker. The other four games: 24/24 found, 0/24 false alarms ([details](bench/README.md#new-art-for-the-five-games-three-new-rounds-23-nov)).
 
+After the ghosts were rebuilt to play real games for minutes (24 November), the same benchmark in three more rounds: **26/30** found, **2/30** false alarms, 73–78% of ghosts finishing the clean games. Again every miss and false alarm is in Spike Maze; the other four games stay at 24/24 and 0/24 ([round 1](bench/results/v3-a.md), [2](bench/results/v3-b.md), [3](bench/results/v3-c.md)).
+
 - **Cost and time per playtest** (4 ghosts and the analyst): about $0.02 and under a minute on these games (about 45 s on average; the maze takes about a minute). On real jam games, where each ghost plays 2:30 of the game, a playtest costs about $0.03–0.11 and takes 2–5 minutes ([measurement](bench/results/real-v3-speed.md)).
 - **People vs ghosts:** every spot where a person died or got stuck was also flagged by the ghosts, 4/4 (2 of them only as friction). One person, the developer, not blind ([details](bench/README.md#people-vs-ghosts)).
 
