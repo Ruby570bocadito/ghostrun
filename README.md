@@ -6,6 +6,8 @@
 
 **Evidence:** [benchmark with known answers](bench/README.md) · [AI design decisions, measured](bench/README.md#experiments-on-our-ai-design-decisions) · [people vs ghosts](bench/README.md#people-vs-ghosts) · [what happens when things fail](docs/failure-handling.md) · [where a person checked the AI's work](docs/ai-review-log.md)
 
+**Watch the 2.5-minute demo video:** <https://youtu.be/ibNYpprsoWI>
+
 **Try it without installing anything:** [free demo with 13 real playtests, recorded](https://huggingface.co/spaces/Ruby570/ghostrun) (reports, replays and before/after; new playtests need the app and your own API key).
 
 Built by Rafael Gálvez (solo, student) for the [Global AI Builder's Challenge](https://global-ai-builders-challenge.devpost.com/), 21–28 November 2026.
@@ -183,6 +185,7 @@ More in [the benchmark's limitations](bench/README.md#limitations).
 - [Phaser 3](https://phaser.io) (MIT), for the test games.
 - Fonts from Google Fonts (SIL Open Font License): Space Grotesk, JetBrains Mono, Silkscreen.
 - [NILO](games/third-party/nilo/README.md) by Rojen Maharjan, js13kGames 2020 (MIT).
+- The demo video: narration by an AI voice (Google Gemini 3.8 Flash-Lite TTS, voice "Algieba"); music "A Pinch of Mischief" (Adobe Stock, licensed); sound effects synthesized in code; SPACETAXI by Christoph Schansky (js13kGames 2021, GPL-3.0) shown as a real jam game.
 
 ## License
 
