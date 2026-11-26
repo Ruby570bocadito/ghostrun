@@ -2,11 +2,11 @@
 
 **Ghosts play your game first.** Paste your web game's link: AI ghost players with different personalities play it, think out loud, and show you exactly where real players will get stuck, before the jam deadline.
 
-![Four AI ghosts playing a test game live, each with its last thought, and a log of deaths and confusion](docs/img/live.jpg)
+![Four AI ghosts playtesting a game live: each tile shows its last thought, the Impatient has just quit after its fourth death at the same gap, and a log lists every death and quit](docs/img/live.jpg)
 
 **Evidence:** [benchmark with known answers](bench/README.md) · [AI design decisions, measured](bench/README.md#experiments-on-our-ai-design-decisions) · [people vs ghosts](bench/README.md#people-vs-ghosts) · [what happens when things fail](docs/failure-handling.md) · [where a person checked the AI's work](docs/ai-review-log.md)
 
-**Try it without installing anything:** [free demo with 9 real playtests, recorded](https://huggingface.co/spaces/Ruby570/ghostrun) (reports, replays and before/after; new playtests need the app and your own API key).
+**Try it without installing anything:** [free demo with 13 real playtests, recorded](https://huggingface.co/spaces/Ruby570/ghostrun) (reports, replays and before/after; new playtests need the app and your own API key).
 
 Built by Rafael Gálvez (solo, student) for the [Global AI Builder's Challenge](https://global-ai-builders-challenge.devpost.com/), 21–28 November 2026.
 
@@ -27,7 +27,7 @@ It is not a small group: the GMTK Game Jam 2025 alone received [more than 9,500 
    - **Confusing**: where they said they did not understand.
    - **Hard to see**: an objective drawn with too little contrast.
    - **Exit interview**: after playing, each ghost says whether it understood the goal and the controls, and what stopped it most. If half or more never worked out the goal, the verdict says so.
-4. **You fix it and re-run**: the new report is compared with the old one ("critical issues 1 → 0, ghosts that finished 0/4 → 3/4").
+4. **You fix it and re-run**: the new report is compared with the old one ("critical issues 1 → 0, ghosts that finished 0/4 → 4/4").
 
 ![A playtest report after a fix, compared with the run before: critical issues 1 to 0, ghosts that finished 0 to 4, deaths 40 to 1](docs/img/report-before-after.jpg)
 
@@ -60,7 +60,7 @@ One rule decides "found" and "false alarm", so neither can be bought with the ot
 | Harder: 9 more real jam games by other people (js13kGames), no SDK, compared with what their players wrote | Judged blind by an independent agent: with the exit interview, the report raised the players' complaint in 5 of 9 games (1 match, 4 partial) and never came back empty; without it, 4 of 9 and 2 of 9 in two runs ([table](bench/results/outside-games.md#three-runs-judged-blind)). The games also exposed five Ghostrun bugs, now fixed |
 | Real games, played for minutes: 13 jam games by other people (js13kGames and itch.io, some made with engines), no SDK, measured without AI on the recorded runs | Before 23 November a ghost played a median of 21–29 s of each game, and on two itch.io games no ghost ever got past the start screens. On 24 November each ghost played a median of 151 s of game time, with 2–5× more different screens seen; the ghosts reached the game in 11 of 12 games, and in the 13th (Decogear) all four did after a fix the same day; a run took a median of 195 s on js13k games and 243 s on itch.io games, and no ghost ended in an error. The first frame of an itch.io game came after a median of 19 s; that evening, with WebGL drawn through Vulkan, 15 s (Broken Repair 8 s, Prerolled 15 s, Decogear 31 s: alone, its own start-up takes 13 s on our PC) ([measurement](bench/results/real-v3-vulkan.md)). On the two games played with the mouse, 49% of the moves used it; once the ghosts knew which inputs a game can hear, 94% ([measurement](bench/results/real-v3-hearing.md)) |
 
-![A problem with its proof: the key is too faint against the background (contrast 1.09:1, measured), next to its replay and its place on the level map](docs/img/report-hard-to-see.jpg)
+![A problem with its proof: the key is too faint against the background (contrast 1.09:1, measured), next to its replay](docs/img/report-hard-to-see.jpg)
 
 ![The exit interview on SPACETAXI, a real jam game: none of the four ghosts worked out the goal, and the Newbie kept crashing into planets, as its players wrote](docs/img/exit-interview.jpg)
 
@@ -145,7 +145,7 @@ On Windows, `npm run local` does the build and starts the server in that termina
 
 Then pick "No game handy? Try ours" on the home page, or paste any web game's link (itch.io pages work: the ghosts open the game inside them). The test games are also playable by people at <http://localhost:5180/play/>: every version "as designed" can be finished; the versions with a planted flaw have one design flaw on purpose, and Gap Run's cannot be finished at all.
 
-- `npm test`: 80 tests (analysis, ghost feedback, failure handling, public-demo protections), no API key needed.
+- `npm test`: 130 tests (analysis, ghost feedback, failure handling, public-demo protections, the web app's wording), no API key needed.
 - `npm run bench -- --label mine --reps 2`: the benchmark (about $0.30 with Ember).
 - Public deployment (Docker, protections for strangers' links): [docs/deploy.md](docs/deploy.md).
 
